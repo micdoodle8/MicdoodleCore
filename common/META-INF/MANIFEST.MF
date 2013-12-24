@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+FMLCorePlugin: micdoodle8.mods.miccore.MicdoodlePlugin
+AccessTransformer: micdoodlecore_at.cfg
