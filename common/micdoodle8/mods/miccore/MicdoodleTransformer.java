@@ -2,9 +2,13 @@ package micdoodle8.mods.miccore;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+
 import net.minecraft.launchwrapper.LaunchClassLoader;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -19,6 +23,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
+
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
@@ -778,11 +783,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         int injectionCount = 0;
 
         final Iterator<MethodNode> methods = node.methods.iterator();
+        List<String> ignoredMods = new ArrayList<String>();
 
         while (methods.hasNext())
         {
             MethodNode methodnode = methods.next();
 
+            methodLabel:
             if (methodnode.visibleAnnotations != null && methodnode.visibleAnnotations.size() > 0)
             {
                 final Iterator<AnnotationNode> annotations = methodnode.visibleAnnotations.iterator();
@@ -791,15 +798,33 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 {
                     AnnotationNode annotation = annotations.next();
 
-                    if (annotation.desc.equals("Lmicdoodle8/mods/galacticraft/core/ASMHelper$RuntimeInterface;") && Loader.isModLoaded(String.valueOf(annotation.values.get(3))))
+                    if (annotation.desc.equals("Lmicdoodle8/mods/galacticraft/core/GCCoreAnnotations$RuntimeInterface;"))
                     {
-                        String inter = String.valueOf(annotation.values.get(1)).replace(".", "/");
+                    	String modID = String.valueOf(annotation.values.get(3));
+                    	
+                    	if (!ignoredMods.contains(modID))
+                    	{
+                        	boolean modFound = Loader.isModLoaded(modID);
+                        	
+                        	if (modFound)
+                        	{
+                                String inter = String.valueOf(annotation.values.get(1)).replace(".", "/");
 
-                        if (!node.interfaces.contains(inter))
-                        {
-                            node.interfaces.add(inter);
-                            injectionCount++;
-                        }
+                                if (!node.interfaces.contains(inter))
+                                {
+                                	System.out.println("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
+                                    node.interfaces.add(inter);
+                                    injectionCount++;
+                                }
+                        	}
+                        	else
+                        	{
+                        		ignoredMods.add(modID);
+                            	System.out.println("Galacticraft ignored dynamic interface insertion since \"" + modID + "\" was not found.");
+                        	}
+                    	}
+                    	
+                    	break methodLabel;
                     }
                 }
             }
