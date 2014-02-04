@@ -35,7 +35,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private boolean deobfuscated = true;
     private boolean optifinePresent;
 
-    public MicdoodleTransformer()
+    @SuppressWarnings("resource")
+	public MicdoodleTransformer()
     {
         try
         {
@@ -773,13 +774,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         return bytes;
     }
 
-    public byte[] transform9(String name, byte[] bytes, HashMap<String, String> map)
+    @SuppressWarnings("unchecked")
+	public byte[] transform9(String name, byte[] bytes, HashMap<String, String> map)
     {
         final ClassNode node = new ClassNode();
         final ClassReader reader = new ClassReader(bytes);
         reader.accept(node, 0);
 
-        int operationCount = 1;
         int injectionCount = 0;
 
         final Iterator<MethodNode> methods = node.methods.iterator();
@@ -800,7 +801,26 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                     if (annotation.desc.equals("Lmicdoodle8/mods/galacticraft/core/GCCoreAnnotations$RuntimeInterface;"))
                     {
-                    	String modID = String.valueOf(annotation.values.get(3));
+                    	List<String> desiredInterfaces = new ArrayList<String>();
+                    	String modID = "";
+                    	
+                    	for (int i = 0; i < annotation.values.size(); i++)
+                    	{
+                    		Object value = annotation.values.get(i);
+                    		
+                    		if (value.equals("clazz"))
+                    		{
+                    			desiredInterfaces.add(String.valueOf(annotation.values.get(i + 1)));
+                    		}
+                    		else if (value.equals("modID"))
+                    		{
+                    			modID = String.valueOf(annotation.values.get(i + 1));
+                    		}
+                    		else if (value.equals("altClasses"))
+                    		{
+                    			desiredInterfaces.addAll((ArrayList<String>) annotation.values.get(i + 1));
+                    		}
+                    	}
                     	
                     	if (!ignoredMods.contains(modID))
                     	{
@@ -808,26 +828,29 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         	
                         	if (modFound)
                         	{
-                                String inter = String.valueOf(annotation.values.get(1));
-                                
-                                try
-                                {
-                                	Class.forName(inter);
-                                }
-                                catch (ClassNotFoundException e)
-                                {
-                                	System.out.println("Galacticraft ignored missing interface \"" + inter + "\" from mod \"" + modID + "\".");
-                                	break;
-                                }
-                                
-                                inter = inter.replace(".", "/");
+                        		for (String inter : desiredInterfaces)
+                        		{
+                                    try
+                                    {
+                                    	Class.forName(inter);
+                                    }
+                                    catch (ClassNotFoundException e)
+                                    {
+                                    	System.out.println("Galacticraft ignored missing interface \"" + inter + "\" from mod \"" + modID + "\".");
+                                    	continue;
+                                    }
+                                    
+                                    inter = inter.replace(".", "/");
 
-                                if (!node.interfaces.contains(inter))
-                                {
-                                	System.out.println("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
-                                    node.interfaces.add(inter);
-                                    injectionCount++;
-                                }
+                                    if (!node.interfaces.contains(inter))
+                                    {
+                                    	System.out.println("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
+                                        node.interfaces.add(inter);
+                                        injectionCount++;
+                                    }
+                                    
+                                    break;
+                        		}
                         	}
                         	else
                         	{
@@ -848,7 +871,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         if (injectionCount > 0)
         {
-            System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
+            System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + ")");
         }
 
         return bytes;
