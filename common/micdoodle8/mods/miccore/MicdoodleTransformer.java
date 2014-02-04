@@ -808,7 +808,19 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         	
                         	if (modFound)
                         	{
-                                String inter = String.valueOf(annotation.values.get(1)).replace(".", "/");
+                                String inter = String.valueOf(annotation.values.get(1));
+                                
+                                try
+                                {
+                                	Class.forName(inter);
+                                }
+                                catch (ClassNotFoundException e)
+                                {
+                                	System.out.println("Galacticraft ignored missing interface \"" + inter + "\" from mod \"" + modID + "\".");
+                                	break;
+                                }
+                                
+                                inter = inter.replace(".", "/");
 
                                 if (!node.interfaces.contains(inter))
                                 {
