@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
+
 import cpw.mods.fml.common.asm.transformers.AccessTransformer;
 
 public class MicdoodleAccessTransformer extends AccessTransformer

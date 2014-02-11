@@ -24,6 +24,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
@@ -74,7 +75,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put("netLoginHandler", "net/minecraft/network/NetLoginHandler");
             this.nodemap.put("confManagerClass", "net/minecraft/server/management/ServerConfigurationManager");
             this.nodemap.put("createPlayerMethod", "createPlayerForUser");
-            this.nodemap.put("createPlayerDesc", "(Ljava/lang/String;)L" + this.nodemap.get("playerMP") + ";");
+            this.nodemap.put("gameProfileClass", "com/mojang/authlib/GameProfile");
+            // CHANGED:
+            this.nodemap.put("createPlayerDesc", "(L" + this.nodemap.get("gameProfileClass") + ";)L" + this.nodemap.get("playerMP") + ";");
             this.nodemap.put("respawnPlayerDesc", "(L" + this.nodemap.get("playerMP") + ";IZ)L" + this.nodemap.get("playerMP") + ";");
             this.nodemap.put("itemInWorldManagerClass", "net/minecraft/src/ItemInWorldManager");
 
@@ -345,6 +348,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         {
             final MethodNode methodnode = methods.next();
 
+        	FMLLog.info("" + methodnode.name + " " + map.get("createPlayerMethod") + " " + methodnode.desc + " " + map.get("createPlayerDesc"));
             if (methodnode.name.equals(map.get("createPlayerMethod")) && methodnode.desc.equals(map.get("createPlayerDesc")))
             {
                 for (int count = 0; count < methodnode.instructions.size(); count++)
@@ -360,6 +364,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                             final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerMP");
 
                             methodnode.instructions.set(nodeAt, overwriteNode);
+                            System.out.println("1");
                             injectionCount++;
                         }
                     }
@@ -370,6 +375,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         if (nodeAt.owner.contains(map.get("playerMP")) && nodeAt.getOpcode() == Opcodes.INVOKESPECIAL)
                         {
                             methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerMP", "<init>", "(Lnet/minecraft/server/MinecraftServer;Lnet/minecraft/world/World;Ljava/lang/String;Lnet/minecraft/item/ItemInWorldManager;)V"));
+                            System.out.println("2");
                             injectionCount++;
                         }
                     }
@@ -391,6 +397,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                             final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerMP");
 
                             methodnode.instructions.set(nodeAt, overwriteNode);
+                            System.out.println("3");
                             injectionCount++;
                         }
                     }
@@ -401,6 +408,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(map.get("playerMP")))
                         {
                             methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerMP", "<init>", "(Lnet/minecraft/server/MinecraftServer;Lnet/minecraft/world/World;Ljava/lang/String;Lnet/minecraft/item/ItemInWorldManager;)V"));
+
+                            System.out.println("4");
                             injectionCount++;
                         }
                     }
@@ -422,6 +431,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                             final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerMP");
 
                             methodnode.instructions.set(nodeAt, overwriteNode);
+                            System.out.println("5");
                             injectionCount++;
                         }
                     }
@@ -432,6 +442,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         if (nodeAt.getOpcode() == Opcodes.INVOKESPECIAL && nodeAt.name.equals("<init>") && nodeAt.owner.equals(map.get("playerMP")))
                         {
                             methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerMP", "<init>", "(Lnet/minecraft/server/MinecraftServer;L" + map.get("worldClass") + ";Ljava/lang/String;L" + map.get("itemInWorldManagerClass") + ";)V"));
+
+                            System.out.println("6");
                             injectionCount++;
                         }
                     }

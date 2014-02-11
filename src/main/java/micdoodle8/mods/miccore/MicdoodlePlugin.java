@@ -6,12 +6,14 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.Event;
+import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
 import cpw.mods.fml.relauncher.FMLInjectionData;
@@ -24,14 +26,8 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 {
     private static String transformerMain = "micdoodle8.mods.miccore.MicdoodleTransformer";
     public static boolean hasRegistered = false;
-    public static final String mcVersion = "[1.6.4]";
+    public static final String mcVersion = "[1.7.2]";
     public static File mcDir;
-
-    @Override
-    public String[] getLibraryRequestClass()
-    {
-        return null;
-    }
 
     public static void versionCheck(String reqVersion, String mod)
     {
@@ -170,4 +166,10 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
             e.printStackTrace();
         }
     }
+
+	@Override
+	public String getAccessTransformerClass()
+	{
+		return "micdoodle8.mods.miccore.MicdoodleAccessTransformer";
+	}
 }
