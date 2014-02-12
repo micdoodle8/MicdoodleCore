@@ -125,7 +125,6 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
     @Override
     public Void call() throws Exception
     {
-        MicdoodleAccessTransformer.addTransformerMap("micdoodlecore_at.cfg");
         return null;
     }
 
