@@ -87,8 +87,12 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put("playerControllerClass", "net/minecraft/client/multiplayer/PlayerControllerMP");
             this.nodemap.put("playerClient", "net/minecraft/client/entity/EntityClientPlayerMP");
             this.nodemap.put("netClientHandler", "net/minecraft/client/multiplayer/NetClientHandler");
-            this.nodemap.put("createClientPlayerMethod", "func_78754_a");
-            this.nodemap.put("createClientPlayerDesc", "(L" + this.nodemap.get("worldClass") + ";)L" + this.nodemap.get("playerClient") + ";");
+            // CHANGED:
+            this.nodemap.put("statFileWriterClass", "net/minecraft/stats/StatFileWriter");
+            this.nodemap.put("createClientPlayerMethod", "func_147493_a");
+            // (Lnet/minecraft/world/World;Lnet/minecraft/stats/StatFileWriter;)Lnet/minecraft/client/entity/EntityClientPlayerMP;
+            this.nodemap.put("createClientPlayerDesc", "(L" + this.nodemap.get("worldClass") + ";L" + this.nodemap.get("statFileWriterClass") + ";)L" + this.nodemap.get("playerClient") + ";");
+            this.nodemap.put("netHandlerPlayClientClass", "net/minecraft/client/network/NetHandlerPlayClient");
 
             this.nodemap.put("entityLivingClass", "net/minecraft/entity/EntityLivingBase");
             this.nodemap.put("moveEntityMethod", "moveEntityWithHeading");
@@ -293,10 +297,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         {
             bytes = this.transform1(name, bytes, this.nodemap);
         }
-//        else if (name.replace('.', '/').equals(this.nodemap.get("playerControllerClass")))
-//        {
-//            bytes = this.transform2(name, bytes, this.nodemap);
-//        }
+        else if (name.replace('.', '/').equals(this.nodemap.get("playerControllerClass")))
+        {
+            bytes = this.transform2(name, bytes, this.nodemap);
+        }
 //        else if (name.replace('.', '/').equals(this.nodemap.get("entityLivingClass")))
 //        {
 //            bytes = this.transform3(name, bytes, this.nodemap);
@@ -351,7 +355,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         {
             final MethodNode methodnode = methods.next();
 
-        	FMLLog.info("" + methodnode.name + " " + map.get("createPlayerMethod") + " " + methodnode.desc + " " + map.get("createPlayerDesc"));
             if (methodnode.name.equals(map.get("createPlayerMethod")) && methodnode.desc.equals(map.get("createPlayerDesc")))
             {
                 for (int count = 0; count < methodnode.instructions.size(); count++)
@@ -367,7 +370,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                             final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, customPlayerClass);
 
                             methodnode.instructions.set(nodeAt, overwriteNode);
-                            System.out.println("1");
                             injectionCount++;
                         }
                     }
@@ -378,7 +380,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         if (nodeAt.owner.contains(map.get("playerMP")) && nodeAt.getOpcode() == Opcodes.INVOKESPECIAL)
                         {
                             methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, customPlayerClass, "<init>", customPlayerConstructorDesc));
-                            System.out.println("2");
                             injectionCount++;
                         }
                     }
@@ -400,7 +401,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                             final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, customPlayerClass);
 
                             methodnode.instructions.set(nodeAt, overwriteNode);
-                            System.out.println("3");
                             injectionCount++;
                         }
                     }
@@ -412,7 +412,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         {
                             methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, customPlayerClass, "<init>", customPlayerConstructorDesc));
 
-                            System.out.println("4");
                             injectionCount++;
                         }
                     }
@@ -478,6 +477,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         {
             final MethodNode methodnode = methods.next();
 
+            FMLLog.info("DOINER " + methodnode.name + " " + map.get("createClientPlayerMethod") + "  " + methodnode.desc + " " + map.get("createClientPlayerDesc"));
             if (methodnode.name.equals(map.get("createClientPlayerMethod")) && methodnode.desc.equals(map.get("createClientPlayerDesc")))
             {
                 for (int count = 0; count < methodnode.instructions.size(); count++)
@@ -502,7 +502,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(map.get("playerClient")))
                         {
-                            methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerSP", "<init>", "(L" + map.get("minecraft") + ";L" + map.get("worldClass") + ";L" + map.get("session") + ";L" + map.get("netClientHandler") + ";)V"));
+                            methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, "micdoodle8/mods/galacticraft/core/entities/player/GCCorePlayerSP", "<init>", "(L" + map.get("minecraft") + ";L" + map.get("worldClass") + ";L" + map.get("session") + ";L" + map.get("netHandlerPlayClientClass") + ";L" + map.get("statFileWriterClass") + ";)V"));
                             injectionCount++;
                         }
                     }
