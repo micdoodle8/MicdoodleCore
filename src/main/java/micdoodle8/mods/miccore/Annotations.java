@@ -16,7 +16,7 @@ public interface Annotations
 		String clazz();
 
 		String modID();
-		
+
 		String[] altClasses() default {};
 	}
 

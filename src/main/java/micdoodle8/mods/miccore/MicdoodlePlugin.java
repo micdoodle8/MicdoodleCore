@@ -24,147 +24,147 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 @TransformerExclusions(value = { "micdoodle8.mods.miccore" })
 public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 {
-    private static String transformerMain = "micdoodle8.mods.miccore.MicdoodleTransformer";
-    public static boolean hasRegistered = false;
-    public static final String mcVersion = "[1.7.2]";
-    public static File mcDir;
+	private static String transformerMain = "micdoodle8.mods.miccore.MicdoodleTransformer";
+	public static boolean hasRegistered = false;
+	public static final String mcVersion = "[1.7.2]";
+	public static File mcDir;
 
-    public static void versionCheck(String reqVersion, String mod)
-    {
-        final String mcVersion = (String) FMLInjectionData.data()[4];
+	public static void versionCheck(String reqVersion, String mod)
+	{
+		final String mcVersion = (String) FMLInjectionData.data()[4];
 
-        if (!VersionParser.parseRange(reqVersion).containsVersion(new DefaultArtifactVersion(mcVersion)))
-        {
-            final String err = "This version of " + mod + " does not support minecraft version " + mcVersion;
-            System.err.println(err);
+		if (!VersionParser.parseRange(reqVersion).containsVersion(new DefaultArtifactVersion(mcVersion)))
+		{
+			final String err = "This version of " + mod + " does not support minecraft version " + mcVersion;
+			System.err.println(err);
 
-            final JEditorPane ep = new JEditorPane("text/html", "<html>" + err + "<br>Remove it from your mods folder and check <a href=\"http://micdoodle8.com\">here</a> for updates" + "</html>");
+			final JEditorPane ep = new JEditorPane("text/html", "<html>" + err + "<br>Remove it from your mods folder and check <a href=\"http://micdoodle8.com\">here</a> for updates" + "</html>");
 
-            ep.setEditable(false);
-            ep.setOpaque(false);
-            ep.addHyperlinkListener(new HyperlinkListener()
-            {
-                @Override
-                public void hyperlinkUpdate(HyperlinkEvent event)
-                {
-                    try
-                    {
-                        if (event.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
-                        {
-                            Desktop.getDesktop().browse(event.getURL().toURI());
-                        }
-                    }
-                    catch (final Exception e)
-                    {
-                    }
-                }
-            });
+			ep.setEditable(false);
+			ep.setOpaque(false);
+			ep.addHyperlinkListener(new HyperlinkListener()
+			{
+				@Override
+				public void hyperlinkUpdate(HyperlinkEvent event)
+				{
+					try
+					{
+						if (event.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
+						{
+							Desktop.getDesktop().browse(event.getURL().toURI());
+						}
+					}
+					catch (final Exception e)
+					{
+					}
+				}
+			});
 
-            JOptionPane.showMessageDialog(null, ep, "Fatal error", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-        }
-    }
+			JOptionPane.showMessageDialog(null, ep, "Fatal error", JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
+		}
+	}
 
-    @Override
-    public String[] getASMTransformerClass()
-    {
-        MicdoodlePlugin.versionCheck(MicdoodlePlugin.mcVersion, "MicdoodleCore");
-        final String[] asmStrings = new String[] { MicdoodlePlugin.transformerMain };
+	@Override
+	public String[] getASMTransformerClass()
+	{
+		MicdoodlePlugin.versionCheck(MicdoodlePlugin.mcVersion, "MicdoodleCore");
+		final String[] asmStrings = new String[] { MicdoodlePlugin.transformerMain };
 
-        if (!MicdoodlePlugin.hasRegistered)
-        {
-            final List<String> asm = Arrays.asList(asmStrings);
+		if (!MicdoodlePlugin.hasRegistered)
+		{
+			final List<String> asm = Arrays.asList(asmStrings);
 
-            for (final String s : asm)
-            {
-                try
-                {
-                    final Class<?> c = Class.forName(s);
+			for (final String s : asm)
+			{
+				try
+				{
+					final Class<?> c = Class.forName(s);
 
-                    if (c != null)
-                    {
-                        System.out.println("Successfully Registered Transformer");
-                    }
-                }
-                catch (final Exception ex)
-                {
-                    System.out.println("Error while running transformer " + s);
-                    return null;
-                }
-            }
+					if (c != null)
+					{
+						System.out.println("Successfully Registered Transformer");
+					}
+				}
+				catch (final Exception ex)
+				{
+					System.out.println("Error while running transformer " + s);
+					return null;
+				}
+			}
 
-            MicdoodlePlugin.hasRegistered = true;
-        }
+			MicdoodlePlugin.hasRegistered = true;
+		}
 
-        return asmStrings;
-    }
+		return asmStrings;
+	}
 
-    @Override
-    public String getModContainerClass()
-    {
-        return "micdoodle8.mods.miccore.MicdoodleModContainer";
-    }
+	@Override
+	public String getModContainerClass()
+	{
+		return "micdoodle8.mods.miccore.MicdoodleModContainer";
+	}
 
-    @Override
-    public String getSetupClass()
-    {
-        return "micdoodle8.mods.miccore.MicdoodlePlugin";
-    }
+	@Override
+	public String getSetupClass()
+	{
+		return "micdoodle8.mods.miccore.MicdoodlePlugin";
+	}
 
-    @Override
-    public void injectData(Map<String, Object> data)
-    {
-        if (data.containsKey("mcLocation"))
-        {
-            MicdoodlePlugin.mcDir = (File) data.get("mcLocation");
-        }
+	@Override
+	public void injectData(Map<String, Object> data)
+	{
+		if (data.containsKey("mcLocation"))
+		{
+			MicdoodlePlugin.mcDir = (File) data.get("mcLocation");
+		}
 
-        System.out.println("[Micdoodle8Core]: " + "Patching game...");
-    }
+		System.out.println("[Micdoodle8Core]: " + "Patching game...");
+	}
 
-    @Override
-    public Void call() throws Exception
-    {
-        return null;
-    }
+	@Override
+	public Void call() throws Exception
+	{
+		return null;
+	}
 
-    private static Constructor<?> sleepCancelledConstructor;
-    private static Constructor<?> orientCameraConstructor;
-    private static String galacticraftCoreClass = "micdoodle8.mods.galacticraft.core.GalacticraftCore";
+	private static Constructor<?> sleepCancelledConstructor;
+	private static Constructor<?> orientCameraConstructor;
+	private static String galacticraftCoreClass = "micdoodle8.mods.galacticraft.core.GalacticraftCore";
 
-    public static void onSleepCancelled()
-    {
-        try
-        {
-            if (MicdoodlePlugin.sleepCancelledConstructor == null)
-            {
-                MicdoodlePlugin.sleepCancelledConstructor = Class.forName(MicdoodlePlugin.galacticraftCoreClass + "$SleepCancelledEvent").getConstructor();
-            }
+	public static void onSleepCancelled()
+	{
+		try
+		{
+			if (MicdoodlePlugin.sleepCancelledConstructor == null)
+			{
+				MicdoodlePlugin.sleepCancelledConstructor = Class.forName(MicdoodlePlugin.galacticraftCoreClass + "$SleepCancelledEvent").getConstructor();
+			}
 
-            MinecraftForge.EVENT_BUS.post((Event) MicdoodlePlugin.sleepCancelledConstructor.newInstance());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
+			MinecraftForge.EVENT_BUS.post((Event) MicdoodlePlugin.sleepCancelledConstructor.newInstance());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
 
-    public static void orientCamera()
-    {
-        try
-        {
-            if (MicdoodlePlugin.orientCameraConstructor == null)
-            {
-                MicdoodlePlugin.orientCameraConstructor = Class.forName(MicdoodlePlugin.galacticraftCoreClass + "$OrientCameraEvent").getConstructor();
-            }
+	public static void orientCamera()
+	{
+		try
+		{
+			if (MicdoodlePlugin.orientCameraConstructor == null)
+			{
+				MicdoodlePlugin.orientCameraConstructor = Class.forName(MicdoodlePlugin.galacticraftCoreClass + "$OrientCameraEvent").getConstructor();
+			}
 
-            MinecraftForge.EVENT_BUS.post((Event) MicdoodlePlugin.orientCameraConstructor.newInstance());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
+			MinecraftForge.EVENT_BUS.post((Event) MicdoodlePlugin.orientCameraConstructor.newInstance());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public String getAccessTransformerClass()
