@@ -548,7 +548,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 						if (nodeAt.cst.equals(Double.valueOf(0.08D)))
 						{
 							final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
-							final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getGravityForEntity", "(L" + map.get("entityLivingClass") + ";)D");
+							final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getGravityForEntity", "(L" + map.get("entityClass") + ";)D");
 
 							methodnode.instructions.insertBefore(nodeAt, beforeNode);
 							methodnode.instructions.set(nodeAt, overwriteNode);
@@ -574,7 +574,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		final ClassReader reader = new ClassReader(bytes);
 		reader.accept(node, 0);
 
-		int operationCount = 2;
+		int operationCount = 1;
 		int injectionCount = 0;
 
 		final Iterator<MethodNode> methods = node.methods.iterator();
@@ -597,16 +597,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 						{
 							final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
 							final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getItemGravity", "(L" + map.get("entityItemClass") + ";)D");
-
-							methodnode.instructions.insertBefore(nodeAt, beforeNode);
-							methodnode.instructions.set(nodeAt, overwriteNode);
-							injectionCount++;
-						}
-
-						if (nodeAt.cst.equals(Double.valueOf(0.9800000190734863D)))
-						{
-							final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
-							final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getItemGravity2", "(L" + map.get("entityItemClass") + ";)D");
 
 							methodnode.instructions.insertBefore(nodeAt, beforeNode);
 							methodnode.instructions.set(nodeAt, overwriteNode);
