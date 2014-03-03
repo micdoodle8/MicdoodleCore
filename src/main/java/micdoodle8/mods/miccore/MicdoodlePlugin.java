@@ -130,7 +130,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
 	private static Constructor<?> sleepCancelledConstructor;
 	private static Constructor<?> orientCameraConstructor;
-	private static String galacticraftCoreClass = "micdoodle8.mods.galacticraft.core.GalacticraftCore";
+	private static String galacticraftCoreClass = "micdoodle8.mods.galacticraft.core.event.GCEvents";
 
 	public static void onSleepCancelled()
 	{
