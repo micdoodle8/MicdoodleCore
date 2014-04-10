@@ -143,6 +143,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			this.nodemap.put("blockClass", "net/minecraft/block/Block");
 			this.nodemap.put("breakBlockMethod", "breakBlock");
 			this.nodemap.put("breakBlockDesc", "(L" + this.nodemap.get("worldClass") + ";IIIII)V");
+
+			this.nodemap.put("effectRendererClass", "net/minecraft/client/particle/EffectRenderer");
+			this.nodemap.put("renderParticlesMethod", "renderParticles");
+			this.nodemap.put("renderParticlesDesc", "(L" + this.nodemap.get("entityClass") + ";F)V");
 		}
 		else
 		{
@@ -323,6 +327,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (name.equals("net.minecraftforge.client.ForgeHooksClient"))
 		{
 			bytes = this.transform8(name, bytes, this.nodemap);
+		}
+		else if (name.replace('.', '/').equals(this.nodemap.get("effectRendererClass")))
+		{
+			bytes = this.transform10(name, bytes, this.nodemap);
 		}
 
 		if (name.contains("galacticraft"))
@@ -878,6 +886,41 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + ")");
 		}
+
+		return bytes;
+	}
+
+	public byte[] transform10(String name, byte[] bytes, HashMap<String, String> map)
+	{
+		final ClassNode node = new ClassNode();
+		final ClassReader reader = new ClassReader(bytes);
+		reader.accept(node, 0);
+
+		int operationCount = 1;
+		int injectionCount = 0;
+
+		final Iterator<MethodNode> methods = node.methods.iterator();
+
+		findmethod: while (methods.hasNext())
+		{
+			final MethodNode methodnode = methods.next();
+
+			if (methodnode.name.equals(map.get("renderParticlesMethod")) && methodnode.desc.equals(map.get("renderParticlesDesc")))
+			{
+				InsnList toAdd = new InsnList();
+				toAdd.add(new VarInsnNode(Opcodes.FLOAD, 2));
+				toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/proxy/ClientProxy", "renderFootprints", "(F)V"));
+				methodnode.instructions.insert(methodnode.instructions.get(0), toAdd);
+				injectionCount++;
+				break findmethod;
+			}
+		}
+
+		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+		node.accept(writer);
+		bytes = writer.toByteArray();
+
+		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
 
 		return bytes;
 	}
