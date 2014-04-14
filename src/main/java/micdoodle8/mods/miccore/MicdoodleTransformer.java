@@ -25,15 +25,65 @@ import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
-import cpw.mods.fml.common.versioning.VersionParser;
-import cpw.mods.fml.relauncher.FMLInjectionData;
 
 public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassTransformer
 {
-	HashMap<String, String> nodemap = new HashMap<String, String>();
+	HashMap<String, ObfuscationEntry> nodemap = new HashMap<String, ObfuscationEntry>();
 	private boolean deobfuscated = true;
 	private boolean optifinePresent;
+
+
+    private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
+    private static final String KEY_CLASS_WORLD = "worldClass";
+    private static final String KEY_CLASS_CONF_MANAGER = "confManagerClass";
+    private static final String KEY_CLASS_GAME_PROFILE = "gameProfileClass";
+    private static final String KEY_CLASS_ITEM_IN_WORLD_MANAGER = "itemInWorldManagerClass";
+    private static final String KEY_CLASS_PLAYER_CONTROLLER = "playerControllerClass";
+    private static final String KEY_CLASS_PLAYER_SP = "playerClient";
+    private static final String KEY_CLASS_STAT_FILE_WRITER = "statFileWriterClass";
+    private static final String KEY_CLASS_NET_HANDLER_PLAY = "netHandlerPlayClientClass";
+    private static final String KEY_CLASS_ENTITY_LIVING = "entityLivingClass";
+    private static final String KEY_CLASS_ENTITY_ITEM = "entityItemClass";
+    private static final String KEY_CLASS_ENTITY_RENDERER = "entityRendererClass";
+    private static final String KEY_CLASS_CONTAINER_PLAYER = "containerPlayer";
+    private static final String KEY_CLASS_MINECRAFT = "minecraft";
+    private static final String KEY_CLASS_SESSION = "session";
+    private static final String KEY_CLASS_GUI_SCREEN = "guiScreen";
+    private static final String KEY_CLASS_ITEM_RENDERER = "itemRendererClass";
+    private static final String KEY_CLASS_VEC3 = "vecClass";
+    private static final String KEY_CLASS_ENTITY = "entityClass";
+    private static final String KEY_CLASS_GUI_SLEEP = "guiSleepClass";
+    private static final String KEY_CLASS_EFFECT_RENDERER = "effectRendererClass";
+    private static final String KEY_CLASS_FORGE_HOOKS_CLIENT = "forgeHooks";
+    private static final String KEY_CLASS_CUSTOM_PLAYER_MP = "customPlayerMP";
+    private static final String KEY_CLASS_CUSTOM_PLAYER_SP = "customPlayerSP";
+
+    private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
+
+    private static final String KEY_METHOD_CREATE_PLAYER = "createPlayerMethod";
+    private static final String KEY_METHOD_RESPAWN_PLAYER = "respawnPlayerMethod";
+    private static final String KEY_METHOD_CREATE_CLIENT_PLAYER = "createClientPlayerMethod";
+    private static final String KEY_METHOD_MOVE_ENTITY = "moveEntityMethod";
+    private static final String KEY_METHOD_ON_UPDATE = "onUpdateMethod";
+    private static final String KEY_METHOD_UPDATE_LIGHTMAP = "updateLightmapMethod";
+    private static final String KEY_METHOD_RENDER_OVERLAYS = "renderOverlaysMethod";
+    private static final String KEY_METHOD_UPDATE_FOG_COLOR = "updateFogColorMethod";
+    private static final String KEY_METHOD_GET_FOG_COLOR = "getFogColorMethod";
+    private static final String KEY_METHOD_GET_SKY_COLOR = "getSkyColorMethod";
+    private static final String KEY_METHOD_WAKE_ENTITY = "wakeEntityMethod";
+    private static final String KEY_METHOD_ORIENT_CAMERA = "orientBedCamera";
+    private static final String KEY_METHOD_RENDER_PARTICLES = "renderParticlesMethod";
+    private static final String KEY_METHOD_CUSTOM_PLAYER_MP = "customPlayerMPConstructor";
+    private static final String KEY_METHOD_CUSTOM_PLAYER_SP = "customPlayerSPConstructor";
+    private static final String KEY_METHOD_ATTEMPT_LOGIN_BUKKIT = "attemptLoginMethodBukkit";
+
+    private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
+    private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
+    private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxy";
+    private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
+
+    private static int operationCount = 0;
+    private static int injectionCount = 0;
 
 	@SuppressWarnings("resource")
 	public MicdoodleTransformer()
@@ -42,760 +92,459 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			final URLClassLoader loader = new LaunchClassLoader(((URLClassLoader) this.getClass().getClassLoader()).getURLs());
 			URL classResource = loader.findResource(String.valueOf("net.minecraft.world.World").replace('.', '/').concat(".class"));
-			if (classResource == null)
-			{
-				this.deobfuscated = false;
-			}
-			else
-			{
-				this.deobfuscated = true;
-			}
+            this.deobfuscated = classResource != null;
 
 			classResource = loader.findResource(String.valueOf("CustomColorizer").replace('.', '/').concat(".class"));
-			if (classResource == null)
-			{
-				this.optifinePresent = false;
-			}
-			else
-			{
-				this.optifinePresent = true;
-			}
+            this.optifinePresent = classResource != null;
 		}
 		catch (final Exception e)
 		{
 			e.printStackTrace();
 		}
 
-		if (this.deobfuscated)
-		{
-			this.nodemap.put("respawnPlayerMethod", "respawnPlayer");
-			this.nodemap.put("worldClass", "net/minecraft/world/World");
-			this.nodemap.put("playerMP", "net/minecraft/entity/player/EntityPlayerMP");
-			this.nodemap.put("netLoginHandler", "net/minecraft/network/NetLoginHandler");
-			this.nodemap.put("confManagerClass", "net/minecraft/server/management/ServerConfigurationManager");
-			this.nodemap.put("createPlayerMethod", "createPlayerForUser");
-			this.nodemap.put("gameProfileClass", "com/mojang/authlib/GameProfile");
-			// CHANGED:
-			this.nodemap.put("createPlayerDesc", "(L" + this.nodemap.get("gameProfileClass") + ";)L" + this.nodemap.get("playerMP") + ";");
-			this.nodemap.put("respawnPlayerDesc", "(L" + this.nodemap.get("playerMP") + ";IZ)L" + this.nodemap.get("playerMP") + ";");
-			this.nodemap.put("itemInWorldManagerClass", "net/minecraft/src/ItemInWorldManager");
+        this.nodemap.put(KEY_CLASS_PLAYER_MP, new ObfuscationEntry("net/minecraft/entity/player/EntityPlayerMP", "jv"));
+        this.nodemap.put(KEY_CLASS_WORLD, new ObfuscationEntry("net/minecraft/world/World", "TODO"));
+        this.nodemap.put(KEY_CLASS_CONF_MANAGER, new ObfuscationEntry("net/minecraft/server/management/ServerConfigurationManager", "TODO"));
+        this.nodemap.put(KEY_CLASS_GAME_PROFILE, new ObfuscationEntry("com/mojang/authlib/GameProfile", "TODO"));
+        this.nodemap.put(KEY_CLASS_ITEM_IN_WORLD_MANAGER, new ObfuscationEntry("net/minecraft/src/ItemInWorldManager", "TODO"));
+        this.nodemap.put(KEY_CLASS_PLAYER_CONTROLLER, new ObfuscationEntry("net/minecraft/client/multiplayer/PlayerControllerMP", "TODO"));
+        this.nodemap.put(KEY_CLASS_PLAYER_SP, new ObfuscationEntry("net/minecraft/client/entity/EntityClientPlayerMP", "TODO"));
+        this.nodemap.put(KEY_CLASS_STAT_FILE_WRITER, new ObfuscationEntry("net/minecraft/stats/StatFileWriter", "TODO"));
+        this.nodemap.put(KEY_CLASS_NET_HANDLER_PLAY, new ObfuscationEntry("net/minecraft/client/network/NetHandlerPlayClient", "TODO"));
+        this.nodemap.put(KEY_CLASS_ENTITY_LIVING, new ObfuscationEntry("net/minecraft/entity/EntityLivingBase", "TODO"));
+        this.nodemap.put(KEY_CLASS_ENTITY_ITEM, new ObfuscationEntry("net/minecraft/entity/item/EntityItem", "TODO"));
+        this.nodemap.put(KEY_CLASS_ENTITY_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/EntityRenderer", "TODO"));
+        this.nodemap.put(KEY_CLASS_CONTAINER_PLAYER, new ObfuscationEntry("net/minecraft/inventory/ContainerPlayer", "TODO"));
+        this.nodemap.put(KEY_CLASS_MINECRAFT, new ObfuscationEntry("net/minecraft/client/Minecraft", "TODO"));
+        this.nodemap.put(KEY_CLASS_SESSION, new ObfuscationEntry("net/minecraft/util/Session", "TODO"));
+        this.nodemap.put(KEY_CLASS_GUI_SCREEN, new ObfuscationEntry("net/minecraft/src/GuiScreen", "TODO"));
+        this.nodemap.put(KEY_CLASS_ITEM_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/ItemRenderer", "TODO"));
+        this.nodemap.put(KEY_CLASS_VEC3, new ObfuscationEntry("net/minecraft/util/Vec3", "TODO"));
+        this.nodemap.put(KEY_CLASS_ENTITY, new ObfuscationEntry("net/minecraft/entity/Entity", "TODO"));
+        this.nodemap.put(KEY_CLASS_GUI_SLEEP, new ObfuscationEntry("net/minecraft/client/gui/GuiSleepMP", "TODO"));
+        this.nodemap.put(KEY_CLASS_EFFECT_RENDERER, new ObfuscationEntry("net/minecraft/client/particle/EffectRenderer", "TODO"));
+        this.nodemap.put(KEY_CLASS_FORGE_HOOKS_CLIENT, new ObfuscationEntry("net/minecraftforge/client/ForgeHooksClient", "TODO"));
+        this.nodemap.put(KEY_CLASS_CUSTOM_PLAYER_MP, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityPlayerMP", "TODO"));
+        this.nodemap.put(KEY_CLASS_CUSTOM_PLAYER_SP, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityClientPlayerMP", "TODO"));
 
-			this.nodemap.put("attemptLoginMethodBukkit", "");
-			this.nodemap.put("attemptLoginDescBukkit", "");
+        this.nodemap.put(KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "TODO"));
 
-			this.nodemap.put("playerControllerClass", "net/minecraft/client/multiplayer/PlayerControllerMP");
-			this.nodemap.put("playerClient", "net/minecraft/client/entity/EntityClientPlayerMP");
-			this.nodemap.put("netClientHandler", "net/minecraft/client/multiplayer/NetClientHandler");
-			// CHANGED:
-			this.nodemap.put("statFileWriterClass", "net/minecraft/stats/StatFileWriter");
-			this.nodemap.put("createClientPlayerMethod", "func_147493_a");
-			// (Lnet/minecraft/world/World;Lnet/minecraft/stats/StatFileWriter;)Lnet/minecraft/client/entity/EntityClientPlayerMP;
-			this.nodemap.put("createClientPlayerDesc", "(L" + this.nodemap.get("worldClass") + ";L" + this.nodemap.get("statFileWriterClass") + ";)L" + this.nodemap.get("playerClient") + ";");
-			this.nodemap.put("netHandlerPlayClientClass", "net/minecraft/client/network/NetHandlerPlayClient");
-
-			this.nodemap.put("entityLivingClass", "net/minecraft/entity/EntityLivingBase");
-			this.nodemap.put("moveEntityMethod", "moveEntityWithHeading");
-			this.nodemap.put("moveEntityDesc", "(FF)V");
-
-			this.nodemap.put("entityItemClass", "net/minecraft/entity/item/EntityItem");
-			this.nodemap.put("onUpdateMethod", "onUpdate");
-			this.nodemap.put("onUpdateDesc", "()V");
-
-			this.nodemap.put("entityRendererClass", "net/minecraft/client/renderer/EntityRenderer");
-			this.nodemap.put("updateLightmapMethod", "updateLightmap");
-			this.nodemap.put("updateLightmapDesc", "(F)V");
-
-			this.nodemap.put("player", "net/minecraft/entity/player/EntityPlayer");
-			this.nodemap.put("containerPlayer", "net/minecraft/inventory/ContainerPlayer");
-			this.nodemap.put("invPlayerClass", "net/minecraft/entity/player/InventoryPlayer");
-
-			this.nodemap.put("minecraft", "net/minecraft/client/Minecraft");
-			this.nodemap.put("session", "net/minecraft/util/Session");
-			this.nodemap.put("guiPlayer", "net/minecraft/client/gui/inventory/GuiInventory");
-			this.nodemap.put("thePlayer", "thePlayer");
-			this.nodemap.put("displayGui", "displayGuiScreen");
-			this.nodemap.put("guiScreen", "net/minecraft/src/GuiScreen");
-			this.nodemap.put("displayGuiDesc", "(L" + this.nodemap.get("guiScreen") + ";)V");
-			this.nodemap.put("runTick", "runTick");
-			this.nodemap.put("runTickDesc", "()V");
-			this.nodemap.put("clickMiddleMouseButton", "clickMiddleMouseButton");
-			this.nodemap.put("clickMiddleMouseButtonDesc", "()V");
-
-			this.nodemap.put("itemRendererClass", "net/minecraft/client/renderer/ItemRenderer");
-			this.nodemap.put("renderOverlaysMethod", "renderOverlays");
-			this.nodemap.put("renderOverlaysDesc", "(F)V");
-
-			this.nodemap.put("updateFogColorMethod", "updateFogColor");
-			this.nodemap.put("updateFogColorDesc", "(F)V");
-			this.nodemap.put("getFogColorMethod", "getFogColor");
-			this.nodemap.put("getSkyColorMethod", "getSkyColor");
-			this.nodemap.put("vecClass", "net/minecraft/util/Vec3");
-			this.nodemap.put("entityClass", "net/minecraft/entity/Entity");
-			this.nodemap.put("getFogColorDesc", "(F)L" + this.nodemap.get("vecClass") + ";");
-			this.nodemap.put("getSkyColorDesc", "(L" + this.nodemap.get("entityClass") + ";F)L" + this.nodemap.get("vecClass") + ";");
-
-			this.nodemap.put("guiSleepClass", "net/minecraft/client/gui/GuiSleepMP");
-			this.nodemap.put("wakeEntityMethod", "wakeEntity");
-			this.nodemap.put("wakeEntityDesc", "()V");
-
-			this.nodemap.put("orientCameraDesc", "(L" + this.nodemap.get("minecraft") + ";L" + this.nodemap.get("entityLivingClass") + ";)V");
-
-			this.nodemap.put("blockClass", "net/minecraft/block/Block");
-			this.nodemap.put("breakBlockMethod", "breakBlock");
-			this.nodemap.put("breakBlockDesc", "(L" + this.nodemap.get("worldClass") + ";IIIII)V");
-
-			this.nodemap.put("effectRendererClass", "net/minecraft/client/particle/EffectRenderer");
-			this.nodemap.put("renderParticlesMethod", "renderParticles");
-			this.nodemap.put("renderParticlesDesc", "(L" + this.nodemap.get("entityClass") + ";F)V");
-		}
-		else
-		{
-			final String mcVersion = (String) FMLInjectionData.data()[4];
-
-			if (VersionParser.parseRange("[1.6.4]").containsVersion(new DefaultArtifactVersion(mcVersion)))
-			{
-				this.nodemap.put("worldClass", "abw");
-
-				this.nodemap.put("playerMP", "jv");
-				this.nodemap.put("netLoginHandler", "jy");
-				this.nodemap.put("confManagerClass", "hn");
-				this.nodemap.put("createPlayerMethod", "a");
-				this.nodemap.put("createPlayerDesc", "(Ljava/lang/String;)L" + this.nodemap.get("playerMP") + ";");
-				this.nodemap.put("respawnPlayerMethod", "a");
-				this.nodemap.put("respawnPlayerDesc", "(L" + this.nodemap.get("playerMP") + ";IZ)L" + this.nodemap.get("playerMP") + ";");
-				this.nodemap.put("itemInWorldManagerClass", "jw");
-
-				this.nodemap.put("attemptLoginMethodBukkit", "attemptLogin");
-				this.nodemap.put("attemptLoginDescBukkit", "(L" + this.nodemap.get("netLoginHandler") + ";Ljava/lang/String;Ljava/lang/String;)L" + this.nodemap.get("playerMP") + ";");
-
-				this.nodemap.put("playerControllerClass", "bdc");
-				this.nodemap.put("playerClient", "bdi");
-				this.nodemap.put("netClientHandler", "bcw");
-				this.nodemap.put("createClientPlayerMethod", "a");
-				this.nodemap.put("createClientPlayerDesc", "(L" + this.nodemap.get("worldClass") + ";)L" + this.nodemap.get("playerClient") + ";");
-
-				this.nodemap.put("entityLivingClass", "of");
-				this.nodemap.put("moveEntityMethod", "e");
-				this.nodemap.put("moveEntityDesc", "(FF)V");
-
-				this.nodemap.put("entityItemClass", "ss");
-				this.nodemap.put("onUpdateMethod", "l_");
-				this.nodemap.put("onUpdateDesc", "()V");
-
-				this.nodemap.put("entityRendererClass", "bfe");
-				this.nodemap.put("updateLightmapMethod", "h");
-				this.nodemap.put("updateLightmapDesc", "(F)V");
-
-				this.nodemap.put("player", "uf");
-				this.nodemap.put("containerPlayer", "vv");
-				this.nodemap.put("invPlayerClass", "ud");
-
-				this.nodemap.put("minecraft", "atv");
-				this.nodemap.put("session", "aus");
-				this.nodemap.put("guiPlayer", "axv");
-				this.nodemap.put("thePlayer", "h");
-				this.nodemap.put("displayGui", "a");
-				this.nodemap.put("guiScreen", "awe");
-				this.nodemap.put("displayGuiDesc", "(L" + this.nodemap.get("guiScreen") + ";)V");
-				this.nodemap.put("runTick", "k");
-				this.nodemap.put("runTickDesc", "()V");
-				this.nodemap.put("clickMiddleMouseButton", "W");
-				this.nodemap.put("clickMiddleMouseButtonDesc", "()V");
-
-				this.nodemap.put("itemRendererClass", "bfj");
-				this.nodemap.put("renderOverlaysMethod", "b");
-				this.nodemap.put("renderOverlaysDesc", "(F)V");
-
-				this.nodemap.put("updateFogColorMethod", "i");
-				this.nodemap.put("updateFogColorDesc", "(F)V");
-				this.nodemap.put("getFogColorMethod", "f");
-				this.nodemap.put("getSkyColorMethod", "a");
-				this.nodemap.put("vecClass", "atc");
-				this.nodemap.put("entityClass", "nn");
-				this.nodemap.put("getFogColorDesc", "(F)L" + this.nodemap.get("vecClass") + ";");
-				this.nodemap.put("getSkyColorDesc", "(L" + this.nodemap.get("entityClass") + ";F)L" + this.nodemap.get("vecClass") + ";");
-
-				this.nodemap.put("guiSleepClass", "avm");
-				this.nodemap.put("wakeEntityMethod", "g");
-				this.nodemap.put("wakeEntityDesc", "()V");
-
-				this.nodemap.put("orientCameraDesc", "(L" + this.nodemap.get("minecraft") + ";L" + this.nodemap.get("entityLivingClass") + ";)V");
-			}
-			else if (VersionParser.parseRange("[1.6.2]").containsVersion(new DefaultArtifactVersion(mcVersion)))
-			{
-				this.nodemap.put("worldClass", "abv");
-
-				this.nodemap.put("playerMP", "ju");
-				this.nodemap.put("netLoginHandler", "jx");
-				this.nodemap.put("confManagerClass", "hm");
-				this.nodemap.put("createPlayerMethod", "a");
-				this.nodemap.put("createPlayerDesc", "(Ljava/lang/String;)L" + this.nodemap.get("playerMP") + ";");
-				this.nodemap.put("respawnPlayerMethod", "a");
-				this.nodemap.put("respawnPlayerDesc", "(L" + this.nodemap.get("playerMP") + ";IZ)L" + this.nodemap.get("playerMP") + ";");
-				this.nodemap.put("itemInWorldManagerClass", "jv");
-
-				this.nodemap.put("attemptLoginMethodBukkit", "attemptLogin");
-				this.nodemap.put("attemptLoginDescBukkit", "(L" + this.nodemap.get("netLoginHandler") + ";Ljava/lang/String;Ljava/lang/String;)L" + this.nodemap.get("playerMP") + ";");
-
-				this.nodemap.put("playerControllerClass", "bcz");
-				this.nodemap.put("playerClient", "bdf");
-				this.nodemap.put("netClientHandler", "bct");
-				this.nodemap.put("createClientPlayerMethod", "a");
-				this.nodemap.put("createClientPlayerDesc", "(L" + this.nodemap.get("worldClass") + ";)L" + this.nodemap.get("playerClient") + ";");
-
-				this.nodemap.put("entityLivingClass", "oe");
-				this.nodemap.put("moveEntityMethod", "e");
-				this.nodemap.put("moveEntityDesc", "(FF)V");
-
-				this.nodemap.put("entityItemClass", "sr");
-				this.nodemap.put("onUpdateMethod", "l_");
-				this.nodemap.put("onUpdateDesc", "()V");
-
-				this.nodemap.put("entityRendererClass", "bfb");
-				this.nodemap.put("updateLightmapMethod", "h");
-				this.nodemap.put("updateLightmapDesc", "(F)V");
-
-				this.nodemap.put("player", "ue");
-				this.nodemap.put("containerPlayer", "vu");
-				this.nodemap.put("invPlayerClass", "uc");
-
-				this.nodemap.put("minecraft", "ats");
-				this.nodemap.put("session", "aup");
-				this.nodemap.put("guiPlayer", "axs");
-				this.nodemap.put("thePlayer", "g");
-				this.nodemap.put("displayGui", "a");
-				this.nodemap.put("guiScreen", "avv");
-				this.nodemap.put("displayGuiDesc", "(L" + this.nodemap.get("guiScreen") + ";)V");
-				this.nodemap.put("runTick", "k");
-				this.nodemap.put("runTickDesc", "()V");
-				this.nodemap.put("clickMiddleMouseButton", "W");
-				this.nodemap.put("clickMiddleMouseButtonDesc", "()V");
-
-				this.nodemap.put("itemRendererClass", "bfg");
-				this.nodemap.put("renderOverlaysMethod", "b");
-				this.nodemap.put("renderOverlaysDesc", "(F)V");
-
-				this.nodemap.put("updateFogColorMethod", "i");
-				this.nodemap.put("updateFogColorDesc", "(F)V");
-				this.nodemap.put("getFogColorMethod", "f");
-				this.nodemap.put("getSkyColorMethod", "a");
-				this.nodemap.put("vecClass", "asz");
-				this.nodemap.put("entityClass", "nm");
-				this.nodemap.put("getFogColorDesc", "(F)L" + this.nodemap.get("vecClass") + ";");
-				this.nodemap.put("getSkyColorDesc", "(L" + this.nodemap.get("entityClass") + ";F)L" + this.nodemap.get("vecClass") + ";");
-
-				this.nodemap.put("guiSleepClass", "avj");
-				this.nodemap.put("wakeEntityMethod", "g");
-				this.nodemap.put("wakeEntityDesc", "()V");
-
-				this.nodemap.put("orientCameraDesc", "(L" + this.nodemap.get("minecraft") + ";L" + this.nodemap.get("entityLivingClass") + ";)V");
-			}
-		}
+        this.nodemap.put(KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "(L" + getName(KEY_CLASS_GAME_PROFILE) + ";)L" + getName(KEY_CLASS_PLAYER_MP) + ";", "TODO", "TODO"));
+        this.nodemap.put(KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("respawnPlayer", "(L" + getName(KEY_CLASS_PLAYER_MP) + ";IZ)L" + getName(KEY_CLASS_PLAYER_MP) + ";", "a", "(L" + getObfName(KEY_CLASS_PLAYER_MP) + ";IZ)L" + getObfName(KEY_CLASS_PLAYER_MP) + ";"));
+        this.nodemap.put(KEY_METHOD_CREATE_CLIENT_PLAYER, new MethodObfuscationEntry("func_147493_a", "(L" + getName(KEY_CLASS_WORLD) + ";L" + getName(KEY_CLASS_STAT_FILE_WRITER) + ";)L" + getName(KEY_CLASS_PLAYER_SP) + ";", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_MOVE_ENTITY, new MethodObfuscationEntry("moveEntityWithHeading", "(FF)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_ON_UPDATE, new MethodObfuscationEntry("onUpdate", "()V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_UPDATE_LIGHTMAP, new MethodObfuscationEntry("updateLightmap", "(F)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_RENDER_OVERLAYS, new MethodObfuscationEntry("renderOverlays", "(F)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_UPDATE_FOG_COLOR, new MethodObfuscationEntry("updateFogColor", "(F)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_GET_FOG_COLOR, new MethodObfuscationEntry("getFogColor", "(F)L" + getName(KEY_CLASS_VEC3) + ";", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_GET_SKY_COLOR, new MethodObfuscationEntry("getSkyColor", "(L" + getName(KEY_CLASS_ENTITY) + ";F)L" + getName(KEY_CLASS_VEC3) + ";", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_WAKE_ENTITY, new MethodObfuscationEntry("wakeEntity", "()V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "(L" + getName(KEY_CLASS_MINECRAFT) + ";L" + getName(KEY_CLASS_ENTITY_LIVING) + ";)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_RENDER_PARTICLES, new MethodObfuscationEntry("renderParticles", "(L" + getName(KEY_CLASS_ENTITY) + ";F)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_MP, new MethodObfuscationEntry("<init>", "(Lnet/minecraft/server/MinecraftServer;Lnet/minecraft/world/WorldServer;Lcom/mojang/authlib/GameProfile;Lnet/minecraft/server/management/ItemInWorldManager;)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_SP, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_WORLD) + ";L" + getNameDynamic(KEY_CLASS_SESSION) + ";L" + getNameDynamic(KEY_CLASS_NET_HANDLER_PLAY) + ";L" + getNameDynamic(KEY_CLASS_STAT_FILE_WRITER) + ";)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("", "", "TODO", "TODOdesc"));
 	}
 
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes)
 	{
-		if (name.replace('.', '/').equals(this.nodemap.get("confManagerClass")))
+        if (classPathMatches(KEY_CLASS_CONF_MANAGER, name))
 		{
-			bytes = this.transform1(name, bytes, this.nodemap);
+			bytes = this.transformConfigManager(name, bytes);
 		}
-		else if (name.replace('.', '/').equals(this.nodemap.get("playerControllerClass")))
+		else if (classPathMatches(KEY_CLASS_PLAYER_CONTROLLER, name))
 		{
-			bytes = this.transform2(name, bytes, this.nodemap);
+			bytes = this.transformPlayerController(name, bytes);
 		}
-		else if (name.replace('.', '/').equals(this.nodemap.get("entityLivingClass")))
+		else if (classPathMatches(KEY_CLASS_ENTITY_LIVING, name))
 		{
-			bytes = this.transform3(name, bytes, this.nodemap);
+			bytes = this.transformEntityLiving(name, bytes);
 		}
-		else if (name.replace('.', '/').equals(this.nodemap.get("entityItemClass")))
+		else if (classPathMatches(KEY_CLASS_ENTITY_ITEM, name))
 		{
-			bytes = this.transform4(name, bytes, this.nodemap);
+			bytes = this.transformEntityItem(name, bytes);
 		}
-		else if (name.replace('.', '/').equals(this.nodemap.get("entityRendererClass")))
+		else if (classPathMatches(KEY_CLASS_ENTITY_RENDERER, name))
 		{
-			bytes = this.transform5(name, bytes, this.nodemap);
+			bytes = this.transformEntityRenderer(name, bytes);
 		}
-		else if (name.replace('.', '/').equals(this.nodemap.get("itemRendererClass")))
+		else if (classPathMatches(KEY_CLASS_ITEM_RENDERER, name))
 		{
-			bytes = this.transform14(name, bytes, this.nodemap);
+			bytes = this.transformItemRenderer(name, bytes);
 		}
-		else if (name.replace('.', '/').equals(this.nodemap.get("guiSleepClass")))
+		else if (classPathMatches(KEY_CLASS_GUI_SLEEP, name))
 		{
-			bytes = this.transform7(name, bytes, this.nodemap);
+			bytes = this.transformGuiSleep(name, bytes);
 		}
-		else if (name.equals("net.minecraftforge.client.ForgeHooksClient"))
+		else if (classPathMatches(KEY_CLASS_FORGE_HOOKS_CLIENT, name))
 		{
-			bytes = this.transform8(name, bytes, this.nodemap);
+			bytes = this.transformForgeHooks(name, bytes);
 		}
-		else if (name.replace('.', '/').equals(this.nodemap.get("effectRendererClass")))
+		else if (classPathMatches(KEY_CLASS_EFFECT_RENDERER, name))
 		{
-			bytes = this.transform10(name, bytes, this.nodemap);
+			bytes = this.transformEffectRenderer(name, bytes);
 		}
 
 		if (name.contains("galacticraft"))
 		{
-			bytes = this.transform9(name, bytes, this.nodemap);
+			bytes = this.transformCustomAnnotations(name, bytes);
 		}
 
 		return bytes;
 	}
 
 	/**
-	 * replaces EntityPlayerMP initialization with GCCorePlayerMP ones
+	 * replaces EntityPlayerMP initialization with custom ones
 	 */
-	public byte[] transform1(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformConfigManager(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 6;
-		int injectionCount = 0;
+		operationCount = 6;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode createPlayerMethod = getMethod(node, KEY_METHOD_CREATE_PLAYER);
+        MethodNode respawnPlayerMethod = getMethod(node, KEY_METHOD_RESPAWN_PLAYER);
+        MethodNode attemptLoginMethod = getMethod(node, KEY_METHOD_ATTEMPT_LOGIN_BUKKIT);
 
-		String customPlayerClass = "micdoodle8/mods/galacticraft/core/entities/player/GCEntityPlayerMP";
-		String customPlayerConstructorDesc = "(Lnet/minecraft/server/MinecraftServer;Lnet/minecraft/world/WorldServer;Lcom/mojang/authlib/GameProfile;Lnet/minecraft/server/management/ItemInWorldManager;)V";
+        if (createPlayerMethod != null)
+        {
+            for (int count = 0; count < createPlayerMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = createPlayerMethod.instructions.get(count);
 
-		while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+                if (list instanceof TypeInsnNode)
+                {
+                    final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-			if (methodnode.name.equals(map.get("createPlayerMethod")) && methodnode.desc.equals(map.get("createPlayerDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+                    if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(getNameDynamic(KEY_CLASS_PLAYER_MP)))
+                    {
+                        final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, getName(KEY_CLASS_CUSTOM_PLAYER_MP));
 
-					if (list instanceof TypeInsnNode)
-					{
-						final TypeInsnNode nodeAt = (TypeInsnNode) list;
+                        createPlayerMethod.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                    }
+                }
+                else if (list instanceof MethodInsnNode)
+                {
+                    final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-						if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(map.get("playerMP")))
-						{
-							final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, customPlayerClass);
+                    if (nodeAt.owner.contains(getNameDynamic(KEY_CLASS_PLAYER_MP)) && nodeAt.getOpcode() == Opcodes.INVOKESPECIAL)
+                    {
+                        createPlayerMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, getName(KEY_CLASS_CUSTOM_PLAYER_MP), getName(KEY_METHOD_CUSTOM_PLAYER_MP), getDescDynamic(KEY_METHOD_CUSTOM_PLAYER_MP)));
+                        injectionCount++;
+                    }
+                }
+            }
+        }
 
-							methodnode.instructions.set(nodeAt, overwriteNode);
-							injectionCount++;
-						}
-					}
-					else if (list instanceof MethodInsnNode)
-					{
-						final MethodInsnNode nodeAt = (MethodInsnNode) list;
+        if (respawnPlayerMethod != null)
+        {
+            for (int count = 0; count < respawnPlayerMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = respawnPlayerMethod.instructions.get(count);
 
-						if (nodeAt.owner.contains(map.get("playerMP")) && nodeAt.getOpcode() == Opcodes.INVOKESPECIAL)
-						{
-							methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, customPlayerClass, "<init>", customPlayerConstructorDesc));
-							injectionCount++;
-						}
-					}
-				}
-			}
+                if (list instanceof TypeInsnNode)
+                {
+                    final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-			if (methodnode.name.equals(map.get("respawnPlayerMethod")) && methodnode.desc.equals(map.get("respawnPlayerDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+                    if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(getNameDynamic(KEY_CLASS_PLAYER_MP)))
+                    {
+                        final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, getName(KEY_CLASS_CUSTOM_PLAYER_MP));
 
-					if (list instanceof TypeInsnNode)
-					{
-						final TypeInsnNode nodeAt = (TypeInsnNode) list;
+                        respawnPlayerMethod.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                    }
+                }
+                else if (list instanceof MethodInsnNode)
+                {
+                    final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-						if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(map.get("playerMP")))
-						{
-							final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, customPlayerClass);
+                    if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(getNameDynamic(KEY_CLASS_PLAYER_MP)))
+                    {
+                        respawnPlayerMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, getName(KEY_CLASS_CUSTOM_PLAYER_MP), getName(KEY_METHOD_CUSTOM_PLAYER_MP), getDescDynamic(KEY_METHOD_CUSTOM_PLAYER_MP)));
 
-							methodnode.instructions.set(nodeAt, overwriteNode);
-							injectionCount++;
-						}
-					}
-					else if (list instanceof MethodInsnNode)
-					{
-						final MethodInsnNode nodeAt = (MethodInsnNode) list;
+                        injectionCount++;
+                    }
+                }
+            }
+        }
 
-						if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(map.get("playerMP")))
-						{
-							methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, customPlayerClass, "<init>", customPlayerConstructorDesc));
+        if (attemptLoginMethod != null)
+        {
+            for (int count = 0; count < attemptLoginMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = attemptLoginMethod.instructions.get(count);
 
-							injectionCount++;
-						}
-					}
-				}
-			}
+                if (list instanceof TypeInsnNode)
+                {
+                    final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-			if (methodnode.name.equals(map.get("attemptLoginMethodBukkit")) && methodnode.desc.equals(map.get("attemptLoginDescBukkit")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+                    if (nodeAt.getOpcode() == Opcodes.NEW && nodeAt.desc.contains(getNameDynamic(KEY_CLASS_PLAYER_MP)))
+                    {
+                        final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, getName(KEY_CLASS_CUSTOM_PLAYER_MP));
 
-					if (list instanceof TypeInsnNode)
-					{
-						final TypeInsnNode nodeAt = (TypeInsnNode) list;
+                        attemptLoginMethod.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                    }
+                }
+                else if (list instanceof MethodInsnNode)
+                {
+                    final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-						if (nodeAt.getOpcode() == Opcodes.NEW && nodeAt.desc.contains(map.get("playerMP")))
-						{
-							final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, customPlayerClass);
+                    if (nodeAt.getOpcode() == Opcodes.INVOKESPECIAL && nodeAt.name.equals("<init>") && nodeAt.owner.equals(getNameDynamic(KEY_CLASS_PLAYER_MP)))
+                    {
+                        attemptLoginMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, getName(KEY_CLASS_CUSTOM_PLAYER_MP), getName(KEY_METHOD_CUSTOM_PLAYER_MP), "(Lnet/minecraft/server/MinecraftServer;L" + getNameDynamic(KEY_CLASS_WORLD) + ";Ljava/lang/String;L" + getNameDynamic(KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V"));
 
-							methodnode.instructions.set(nodeAt, overwriteNode);
-							System.out.println("5");
-							injectionCount++;
-						}
-					}
-					else if (list instanceof MethodInsnNode)
-					{
-						final MethodInsnNode nodeAt = (MethodInsnNode) list;
+                        injectionCount++;
+                    }
+                }
+            }
+        }
 
-						if (nodeAt.getOpcode() == Opcodes.INVOKESPECIAL && nodeAt.name.equals("<init>") && nodeAt.owner.equals(map.get("playerMP")))
-						{
-							methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, customPlayerClass, "<init>", "(Lnet/minecraft/server/MinecraftServer;L" + map.get("worldClass") + ";Ljava/lang/String;L" + map.get("itemInWorldManagerClass") + ";)V"));
-
-							System.out.println("6");
-							injectionCount++;
-						}
-					}
-				}
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
-	public byte[] transform2(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformPlayerController(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 2;
-		int injectionCount = 0;
+		operationCount = 2;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode method = getMethod(node, KEY_METHOD_CREATE_CLIENT_PLAYER);
 
-		String customPlayerClass = "micdoodle8/mods/galacticraft/core/entities/player/GCEntityClientPlayerMP";
-		String customPlayetDesc = "(L" + map.get("minecraft") + ";L" + map.get("worldClass") + ";L" + map.get("session") + ";L" + map.get("netHandlerPlayClientClass") + ";L" + map.get("statFileWriterClass") + ";)V";
+        if (method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = method.instructions.get(count);
 
-		while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+                if (list instanceof TypeInsnNode)
+                {
+                    final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-			if (methodnode.name.equals(map.get("createClientPlayerMethod")) && methodnode.desc.equals(map.get("createClientPlayerDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+                    if (nodeAt.desc.contains(getNameDynamic(KEY_CLASS_PLAYER_SP)))
+                    {
+                        final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, getName(KEY_CLASS_CUSTOM_PLAYER_SP));
 
-					if (list instanceof TypeInsnNode)
-					{
-						final TypeInsnNode nodeAt = (TypeInsnNode) list;
+                        method.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                    }
+                }
+                else if (list instanceof MethodInsnNode)
+                {
+                    final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-						if (nodeAt.desc.contains(map.get("playerClient")))
-						{
-							final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, customPlayerClass);
+                    if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(getNameDynamic(KEY_CLASS_PLAYER_SP)))
+                    {
+                        method.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, getName(KEY_CLASS_CUSTOM_PLAYER_SP), getName(KEY_METHOD_CUSTOM_PLAYER_SP), getDescDynamic(KEY_METHOD_CUSTOM_PLAYER_SP)));
+                        injectionCount++;
+                    }
+                }
+            }
+        }
 
-							methodnode.instructions.set(nodeAt, overwriteNode);
-							injectionCount++;
-						}
-					}
-					else if (list instanceof MethodInsnNode)
-					{
-						final MethodInsnNode nodeAt = (MethodInsnNode) list;
-
-						if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(map.get("playerClient")))
-						{
-							methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, customPlayerClass, "<init>", customPlayetDesc));
-							injectionCount++;
-						}
-					}
-				}
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
-	public byte[] transform3(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformEntityLiving(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 1;
-		int injectionCount = 0;
+		operationCount = 1;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode method = getMethod(node, KEY_METHOD_MOVE_ENTITY);
 
-		while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+        if (method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = method.instructions.get(count);
 
-			if (methodnode.name.equals(map.get("moveEntityMethod")) && methodnode.desc.equals(map.get("moveEntityDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+                if (list instanceof LdcInsnNode)
+                {
+                    final LdcInsnNode nodeAt = (LdcInsnNode) list;
 
-					if (list instanceof LdcInsnNode)
-					{
-						final LdcInsnNode nodeAt = (LdcInsnNode) list;
+                    if (nodeAt.cst.equals(Double.valueOf(0.08D)))
+                    {
+                        final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
+                        final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getGravityForEntity", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";)D");
 
-						if (nodeAt.cst.equals(Double.valueOf(0.08D)))
-						{
-							final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
-							final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getGravityForEntity", "(L" + map.get("entityClass") + ";)D");
+                        method.instructions.insertBefore(nodeAt, beforeNode);
+                        method.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                    }
+                }
+            }
+        }
 
-							methodnode.instructions.insertBefore(nodeAt, beforeNode);
-							methodnode.instructions.set(nodeAt, overwriteNode);
-							injectionCount++;
-						}
-					}
-				}
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
-	public byte[] transform4(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformEntityItem(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 1;
-		int injectionCount = 0;
+		operationCount = 1;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode method = getMethod(node, KEY_METHOD_ON_UPDATE);
 
-		while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+        if (method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = method.instructions.get(count);
 
-			if (methodnode.name.equals(map.get("onUpdateMethod")) && methodnode.desc.equals(map.get("onUpdateDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+                if (list instanceof LdcInsnNode)
+                {
+                    final LdcInsnNode nodeAt = (LdcInsnNode) list;
 
-					if (list instanceof LdcInsnNode)
-					{
-						final LdcInsnNode nodeAt = (LdcInsnNode) list;
+                    if (nodeAt.cst.equals(0.03999999910593033D))
+                    {
+                        final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
+                        final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getItemGravity", "(L" + getNameDynamic(KEY_CLASS_ENTITY_ITEM) + ";)D");
 
-						if (nodeAt.cst.equals(Double.valueOf(0.03999999910593033D)))
-						{
-							final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
-							final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getItemGravity", "(L" + map.get("entityItemClass") + ";)D");
+                        method.instructions.insertBefore(nodeAt, beforeNode);
+                        method.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                    }
+                }
+            }
+        }
 
-							methodnode.instructions.insertBefore(nodeAt, beforeNode);
-							methodnode.instructions.set(nodeAt, overwriteNode);
-							injectionCount++;
-						}
-					}
-				}
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
-	public byte[] transform5(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformEntityRenderer(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 3;
-		int injectionCount = 0;
+		operationCount = 3;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode updateLightMapMethod = getMethod(node, KEY_METHOD_UPDATE_LIGHTMAP);
+        MethodNode updateFogColorMethod = getMethod(node, KEY_METHOD_UPDATE_FOG_COLOR);
 
-		while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+        if (updateLightMapMethod != null)
+        {
+            for (int count = 0; count < updateLightMapMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = updateLightMapMethod.instructions.get(count);
 
-			if (methodnode.name.equals(map.get("updateLightmapMethod")) && methodnode.desc.equals(map.get("updateLightmapDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+                if (list instanceof IntInsnNode)
+                {
+                    final IntInsnNode nodeAt = (IntInsnNode) list;
 
-					if (list instanceof IntInsnNode)
-					{
-						final IntInsnNode nodeAt = (IntInsnNode) list;
+                    if (nodeAt.operand == 255)
+                    {
+                        final InsnList nodesToAdd = new InsnList();
 
-						if (nodeAt.operand == 255)
-						{
-							final InsnList nodesToAdd = new InsnList();
+                        nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 11));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
+                        nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getColorRed", "(L" + getNameDynamic(KEY_CLASS_WORLD) + ";)F"));
+                        nodesToAdd.add(new InsnNode(Opcodes.FMUL));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 11));
 
-							nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 11));
-							nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-							nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getColorRed", "(L" + map.get("worldClass") + ";)F"));
-							nodesToAdd.add(new InsnNode(Opcodes.FMUL));
-							nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 11));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 12));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
+                        nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getColorGreen", "(L" + getNameDynamic(KEY_CLASS_WORLD) + ";)F"));
+                        nodesToAdd.add(new InsnNode(Opcodes.FMUL));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 12));
 
-							nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 12));
-							nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-							nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getColorGreen", "(L" + map.get("worldClass") + ";)F"));
-							nodesToAdd.add(new InsnNode(Opcodes.FMUL));
-							nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 12));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 13));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
+                        nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getColorBlue", "(L" + getNameDynamic(KEY_CLASS_WORLD) + ";)F"));
+                        nodesToAdd.add(new InsnNode(Opcodes.FMUL));
+                        nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 13));
 
-							nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 13));
-							nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-							nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getColorBlue", "(L" + map.get("worldClass") + ";)F"));
-							nodesToAdd.add(new InsnNode(Opcodes.FMUL));
-							nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 13));
+                        updateLightMapMethod.instructions.insertBefore(nodeAt, nodesToAdd);
+                        injectionCount++;
+                        break;
+                    }
+                }
+            }
+        }
 
-							methodnode.instructions.insertBefore(nodeAt, nodesToAdd);
-							injectionCount++;
-							break;
-						}
-					}
-				}
-			}
-			else if (methodnode.name.equals(map.get("updateFogColorMethod")) && methodnode.desc.equals(map.get("updateFogColorDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode list = methodnode.instructions.get(count);
+        if (updateFogColorMethod != null)
+        {
+            for (int count = 0; count < updateFogColorMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = updateFogColorMethod.instructions.get(count);
 
-					if (list instanceof MethodInsnNode)
-					{
-						final MethodInsnNode nodeAt = (MethodInsnNode) list;
+                if (list instanceof MethodInsnNode)
+                {
+                    final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-						if (!this.optifinePresent && nodeAt.name.equals(map.get("getFogColorMethod")) && nodeAt.desc.equals(map.get("getFogColorDesc")))
-						{
-							InsnList toAdd = new InsnList();
+                    if (!this.optifinePresent && methodMatches(KEY_METHOD_GET_FOG_COLOR, nodeAt))
+                    {
+                        InsnList toAdd = new InsnList();
 
-							toAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-							toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getFogColorHook", "(L" + map.get("worldClass") + ";)L" + map.get("vecClass") + ";"));
-							toAdd.add(new VarInsnNode(Opcodes.ASTORE, 9));
+                        toAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
+                        toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getFogColorHook", "(L" + getNameDynamic(KEY_CLASS_WORLD) + ";)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
+                        toAdd.add(new VarInsnNode(Opcodes.ASTORE, 9));
 
-							methodnode.instructions.insertBefore(methodnode.instructions.get(count + 2), toAdd);
-							injectionCount++;
-						}
-						else if (nodeAt.name.equals(map.get("getSkyColorMethod")) && nodeAt.desc.equals(map.get("getSkyColorDesc")))
-						{
-							InsnList toAdd = new InsnList();
+                        updateFogColorMethod.instructions.insertBefore(updateFogColorMethod.instructions.get(count + 2), toAdd);
+                        injectionCount++;
+                    }
+                    else if (methodMatches(KEY_METHOD_GET_SKY_COLOR, nodeAt))
+                    {
+                        InsnList toAdd = new InsnList();
 
-							toAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-							toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/util/WorldUtil", "getSkyColorHook", "(L" + map.get("worldClass") + ";)L" + map.get("vecClass") + ";"));
-							toAdd.add(new VarInsnNode(Opcodes.ASTORE, 5));
+                        toAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
+                        toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getSkyColorHook", "(L" + getNameDynamic(KEY_CLASS_WORLD) + ";)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
+                        toAdd.add(new VarInsnNode(Opcodes.ASTORE, 5));
 
-							methodnode.instructions.insertBefore(methodnode.instructions.get(count + 2), toAdd);
-							injectionCount++;
-						}
-					}
-				}
-			}
-		}
+                        updateFogColorMethod.instructions.insertBefore(updateFogColorMethod.instructions.get(count + 2), toAdd);
+                        injectionCount++;
+                    }
+                }
+            }
+        }
 
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
-	public byte[] transform7(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformGuiSleep(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 1;
-		int injectionCount = 0;
+		operationCount = 1;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode method = getMethod(node, KEY_METHOD_WAKE_ENTITY);
 
-		while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+        if (method != null)
+        {
+            method.instructions.insertBefore(method.instructions.get(method.instructions.size() - 3), new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_MICDOODLE_PLUGIN, "onSleepCancelled", "()V"));
+            injectionCount++;
+        }
 
-			if (methodnode.name.equals(map.get("wakeEntityMethod")) && methodnode.desc.equals(map.get("wakeEntityDesc")))
-			{
-				methodnode.instructions.insertBefore(methodnode.instructions.get(methodnode.instructions.size() - 3), new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/miccore/MicdoodlePlugin", "onSleepCancelled", "()V"));
-				injectionCount++;
-				break;
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
-	public byte[] transform8(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformForgeHooks(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 1;
-		int injectionCount = 0;
+		operationCount = 1;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode method = getMethod(node, KEY_METHOD_ORIENT_CAMERA);
 
-		while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+        if (method != null)
+        {
+            method.instructions.insertBefore(method.instructions.get(0), new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_MICDOODLE_PLUGIN, "orientCamera", "()V"));
+            injectionCount++;
+        }
 
-			if (methodnode.name.equals("orientBedCamera") && methodnode.desc.equals(map.get("orientCameraDesc")))
-			{
-				methodnode.instructions.insertBefore(methodnode.instructions.get(0), new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/miccore/MicdoodlePlugin", "orientCamera", "()V"));
-				injectionCount++;
-				break;
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
 	@SuppressWarnings("unchecked")
-	public byte[] transform9(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformCustomAnnotations(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int injectionCount = 0;
+        operationCount = 0;
+		injectionCount = 0;
 
 		final Iterator<MethodNode> methods = node.methods.iterator();
 		List<String> ignoredMods = new ArrayList<String>();
@@ -812,7 +561,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				{
 					AnnotationNode annotation = annotations.next();
 
-					if (annotation.desc.equals("Lmicdoodle8/mods/miccore/Annotations$RuntimeInterface;"))
+					if (annotation.desc.equals("L" + CLASS_RUNTIME_INTERFACE + ";"))
 					{
 						List<String> desiredInterfaces = new ArrayList<String>();
 						String modID = "";
@@ -849,7 +598,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 									}
 									catch (ClassNotFoundException e)
 									{
-										System.out.println("Galacticraft ignored missing interface \"" + inter + "\" from mod \"" + modID + "\".");
+                                        printLog("Galacticraft ignored missing interface \"" + inter + "\" from mod \"" + modID + "\".");
 										continue;
 									}
 
@@ -857,7 +606,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 									if (!node.interfaces.contains(inter))
 									{
-										System.out.println("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
+                                        printLog("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
 										node.interfaces.add(inter);
 										injectionCount++;
 									}
@@ -868,7 +617,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 							else
 							{
 								ignoredMods.add(modID);
-								System.out.println("Galacticraft ignored dynamic interface insertion since \"" + modID + "\" was not found.");
+                                printLog("Galacticraft ignored dynamic interface insertion since \"" + modID + "\" was not found.");
 							}
 						}
 
@@ -878,95 +627,216 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			}
 		}
 
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
+        if (injectionCount > 0)
+        {
+            printLog("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + ")");
+        }
 
-		if (injectionCount > 0)
-		{
-			System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + ")");
-		}
-
-		return bytes;
+        return finishInjection(node, false);
 	}
 
-	public byte[] transform10(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformEffectRenderer(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+        ClassNode node = startInjection(bytes);
 
-		int operationCount = 1;
-		int injectionCount = 0;
+		operationCount = 1;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode renderParticlesMethod = getMethod(node, KEY_METHOD_RENDER_PARTICLES);
 
-		findmethod: while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+        if (renderParticlesMethod != null)
+        {
+            InsnList toAdd = new InsnList();
+            toAdd.add(new VarInsnNode(Opcodes.FLOAD, 2));
+            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "renderFootprints", "(F)V"));
+            renderParticlesMethod.instructions.insert(renderParticlesMethod.instructions.get(0), toAdd);
+            injectionCount++;
+        }
 
-			if (methodnode.name.equals(map.get("renderParticlesMethod")) && methodnode.desc.equals(map.get("renderParticlesDesc")))
-			{
-				InsnList toAdd = new InsnList();
-				toAdd.add(new VarInsnNode(Opcodes.FLOAD, 2));
-				toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/proxy/ClientProxy", "renderFootprints", "(F)V"));
-				methodnode.instructions.insert(methodnode.instructions.get(0), toAdd);
-				injectionCount++;
-				break findmethod;
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
 
-	public byte[] transform14(String name, byte[] bytes, HashMap<String, String> map)
+	public byte[] transformItemRenderer(String name, byte[] bytes)
 	{
-		final ClassNode node = new ClassNode();
-		final ClassReader reader = new ClassReader(bytes);
-		reader.accept(node, 0);
+		ClassNode node = startInjection(bytes);
 
-		int operationCount = 1;
-		int injectionCount = 0;
+		operationCount = 1;
 
-		final Iterator<MethodNode> methods = node.methods.iterator();
+        MethodNode renderOverlaysMethod = getMethod(node, KEY_METHOD_RENDER_OVERLAYS);
 
-		findmethod: while (methods.hasNext())
-		{
-			final MethodNode methodnode = methods.next();
+        if (renderOverlaysMethod != null)
+        {
+            instructionLoop:
+            for (int count = 0; count < renderOverlaysMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode glEnable = renderOverlaysMethod.instructions.get(count);
 
-			if (methodnode.name.equals(map.get("renderOverlaysMethod")) && methodnode.desc.equals(map.get("renderOverlaysDesc")))
-			{
-				for (int count = 0; count < methodnode.instructions.size(); count++)
-				{
-					final AbstractInsnNode glEnable = methodnode.instructions.get(count);
+                if (glEnable instanceof MethodInsnNode && ((MethodInsnNode) glEnable).name.equals("glEnable"))
+                {
+                    InsnList toAdd = new InsnList();
 
-					if (glEnable instanceof MethodInsnNode && ((MethodInsnNode) glEnable).name.equals("glEnable"))
-					{
-						InsnList toAdd = new InsnList();
+                    toAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "renderLiquidOverlays", "(F)V"));
 
-						toAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
-						toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "micdoodle8/mods/galacticraft/core/proxy/ClientProxy", "renderLiquidOverlays", "(F)V"));
+                    renderOverlaysMethod.instructions.insertBefore(glEnable, toAdd);
+                    injectionCount++;
+                    break instructionLoop;
+                }
+            }
+        }
 
-						methodnode.instructions.insertBefore(glEnable, toAdd);
-						injectionCount++;
-						break findmethod;
-					}
-				}
-			}
-		}
-
-		final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		node.accept(writer);
-		bytes = writer.toByteArray();
-
-		System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
-
-		return bytes;
+        return finishInjection(node);
 	}
+
+    private class ObfuscationEntry
+    {
+        public String name;
+        public String obfuscatedName;
+
+        public ObfuscationEntry(String name, String obfuscatedName)
+        {
+            this.name = name;
+            this.obfuscatedName = obfuscatedName;
+        }
+    }
+
+    private class MethodObfuscationEntry extends ObfuscationEntry
+    {
+        public String methodDesc;
+        public String obfuscatedMethodDesc;
+
+        public MethodObfuscationEntry(String name, String methodDesc, String obfuscatedName, String obfuscatedMethodDesc)
+        {
+            super(name, obfuscatedName);
+            this.methodDesc = methodDesc;
+            this.obfuscatedMethodDesc = obfuscatedMethodDesc;
+        }
+    }
+
+    private class FieldObfuscationEntry extends ObfuscationEntry
+    {
+        public FieldObfuscationEntry(String name, String obfuscatedName)
+        {
+            super(name, obfuscatedName);
+        }
+    }
+
+    private void printResultsAndReset(String nodeName)
+    {
+        if (injectionCount >= operationCount)
+        {
+            printLog("Galacticraft successfully injected bytecode into: " + nodeName + " (" + injectionCount + " / " + operationCount + ")");
+        }
+        else
+        {
+            System.err.println("Galacticraft successfully injected bytecode into: " + nodeName + " (" + injectionCount + " / " + operationCount + ")");
+        }
+    }
+
+    private MethodNode getMethod(ClassNode node, String keyName)
+    {
+        Iterator<MethodNode> methods = node.methods.iterator();
+
+        while (methods.hasNext())
+        {
+            MethodNode methodNode = methods.next();
+
+            if (methodMatches(keyName, methodNode))
+            {
+                return methodNode;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean methodMatches(String keyName, MethodInsnNode node)
+    {
+        return node.name.equals(getNameDynamic(keyName)) && node.desc.equals(getDescDynamic(keyName));
+    }
+
+    private boolean methodMatches(String keyName, MethodNode node)
+    {
+        return node.name.equals(getNameDynamic(keyName)) && node.desc.equals(getDescDynamic(keyName));
+    }
+
+    public String getName(String keyName)
+    {
+        return this.nodemap.get(keyName).name;
+    }
+
+    public String getObfName(String keyName)
+    {
+        return this.nodemap.get(keyName).obfuscatedName;
+    }
+
+    public String getNameDynamic(String keyName)
+    {
+        try
+        {
+            if (this.deobfuscated)
+            {
+                return this.nodemap.get(keyName).name;
+            }
+            else
+            {
+                return this.nodemap.get(keyName).obfuscatedName;
+            }
+        }
+        catch (NullPointerException e)
+        {
+            System.err.println("Could not find key: " + keyName);
+            throw e;
+        }
+    }
+
+    public String getDescDynamic(String keyName)
+    {
+        if (this.deobfuscated)
+        {
+            return ((MethodObfuscationEntry) this.nodemap.get(keyName)).methodDesc;
+        }
+        else
+        {
+            return ((MethodObfuscationEntry) this.nodemap.get(keyName)).obfuscatedMethodDesc;
+        }
+    }
+
+    private boolean classPathMatches(String keyName, String className)
+    {
+        return className.replace('.', '/').equals(getNameDynamic(keyName));
+    }
+
+    private void printLog(String message)
+    {
+        // TODO: Add custom log file
+        System.out.println(message);
+    }
+
+    private ClassNode startInjection(byte[] bytes)
+    {
+        final ClassNode node = new ClassNode();
+        final ClassReader reader = new ClassReader(bytes);
+        reader.accept(node, 0);
+        injectionCount = 0;
+        operationCount = 0;
+        return node;
+    }
+
+    private byte[] finishInjection(ClassNode node)
+    {
+        return finishInjection(node, true);
+    }
+
+    private byte[] finishInjection(ClassNode node, boolean printLog)
+    {
+        final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        node.accept(writer);
+
+        if (printLog)
+        {
+            printResultsAndReset(node.name);
+        }
+
+        return writer.toByteArray();
+    }
 }
