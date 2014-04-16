@@ -137,6 +137,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put("blockClass", "net/minecraft/block/Block");
             this.nodemap.put("breakBlockMethod", "breakBlock");
             this.nodemap.put("breakBlockDesc", "(L" + this.nodemap.get("worldClass") + ";IIIII)V");
+
+            this.nodemap.put("packetHandleNamedSpawn", "net/minecraft/network/packet/Packet20NamedEntitySpawn");
+            this.nodemap.put("entityOtherPlayerMP", "net/minecraft/client/entity/EntityOtherPlayerMP");
+            this.nodemap.put("handleNamedSpawnMethod", "handleNamedEntitySpawn");
+            this.nodemap.put("handleNamedSpawnDesc", "(L" + this.nodemap.get("packetHandleNamedSpawn") + ";)V");
         }
         else
         {
@@ -210,6 +215,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 this.nodemap.put("wakeEntityDesc", "()V");
 
                 this.nodemap.put("orientCameraDesc", "(L" + this.nodemap.get("minecraft") + ";L" + this.nodemap.get("entityLivingClass") + ";)V");
+
+                this.nodemap.put("packetHandleNamedSpawn", "di");
+                this.nodemap.put("entityOtherPlayerMP", "bey");
+                this.nodemap.put("handleNamedSpawnMethod", "a");
+                this.nodemap.put("handleNamedSpawnDesc", "(L" + this.nodemap.get("packetHandleNamedSpawn") + ";)V");
             }
             else if (VersionParser.parseRange("[1.6.2]").containsVersion(new DefaultArtifactVersion(mcVersion)))
             {
@@ -279,6 +289,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 this.nodemap.put("wakeEntityDesc", "()V");
 
                 this.nodemap.put("orientCameraDesc", "(L" + this.nodemap.get("minecraft") + ";L" + this.nodemap.get("entityLivingClass") + ";)V");
+
+                this.nodemap.put("packetHandleNamedSpawn", "dh");
+                this.nodemap.put("entityOtherPlayerMP", "bev");
+                this.nodemap.put("handleNamedSpawnMethod", "a");
+                this.nodemap.put("handleNamedSpawnDesc", "(L" + this.nodemap.get("packetHandleNamedSpawn") + ";)V");
             }
         }
     }
@@ -313,6 +328,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         else if (name.replace('.', '/').equals(this.nodemap.get("guiSleepClass")))
         {
             bytes = this.transform7(name, bytes, this.nodemap);
+        }
+        else if (name.replace('.', '/').equals(this.nodemap.get("netClientHandler")))
+        {
+            bytes = this.transform11(name, bytes, this.nodemap);
         }
         else if (name.equals("net.minecraftforge.client.ForgeHooksClient"))
         {
@@ -873,6 +892,63 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         {
             System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + ")");
         }
+
+        return bytes;
+    }
+
+
+    public byte[] transform11(String name, byte[] bytes, HashMap<String, String> map)
+    {
+        final ClassNode node = new ClassNode();
+        final ClassReader reader = new ClassReader(bytes);
+        reader.accept(node, 0);
+
+        int operationCount = 2;
+        int injectionCount = 0;
+
+        final Iterator<MethodNode> methods = node.methods.iterator();
+
+        while (methods.hasNext())
+        {
+            final MethodNode methodnode = methods.next();
+
+            if (methodnode.name.equals(map.get("handleNamedSpawnMethod")) && methodnode.desc.equals(map.get("handleNamedSpawnDesc")))
+            {
+                for (int count = 0; count < methodnode.instructions.size(); count++)
+                {
+                    final AbstractInsnNode list = methodnode.instructions.get(count);
+
+                    if (list instanceof TypeInsnNode)
+                    {
+                        final TypeInsnNode nodeAt = (TypeInsnNode) list;
+
+                        if (nodeAt.desc.contains(map.get("entityOtherPlayerMP")))
+                        {
+                            final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, "micdoodle8/mods/galacticraft/core/entities/player/GCCoreOtherPlayerMP");
+
+                            methodnode.instructions.set(nodeAt, overwriteNode);
+                            injectionCount++;
+                        }
+                    }
+                    else if (list instanceof MethodInsnNode)
+                    {
+                        final MethodInsnNode nodeAt = (MethodInsnNode) list;
+
+                        if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(map.get("entityOtherPlayerMP")))
+                        {
+                            methodnode.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, "micdoodle8/mods/galacticraft/core/entities/player/GCCoreOtherPlayerMP", "<init>", "(L" + map.get("worldClass") + ";L" + "java/lang/String" + ";)V"));
+                            injectionCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        node.accept(writer);
+        bytes = writer.toByteArray();
+
+        System.out.println("Galacticraft successfully injected bytecode into: " + node.name + " (" + injectionCount + " / " + operationCount + ")");
 
         return bytes;
     }
