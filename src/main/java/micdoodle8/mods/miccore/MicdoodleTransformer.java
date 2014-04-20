@@ -57,6 +57,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_FORGE_HOOKS_CLIENT = "forgeHooks";
     private static final String KEY_CLASS_CUSTOM_PLAYER_MP = "customPlayerMP";
     private static final String KEY_CLASS_CUSTOM_PLAYER_SP = "customPlayerSP";
+    private static final String KEY_CLASS_CUSTOM_OTHER_PLAYER = "customEntityOtherPlayer";
+    private static final String KEY_CLASS_PACKET_SPAWN_PLAYER = "packetSpawnPlayer";
+    private static final String KEY_CLASS_ENTITY_OTHER_PLAYER = "entityOtherPlayer";
 
     private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 
@@ -76,10 +79,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_METHOD_CUSTOM_PLAYER_MP = "customPlayerMPConstructor";
     private static final String KEY_METHOD_CUSTOM_PLAYER_SP = "customPlayerSPConstructor";
     private static final String KEY_METHOD_ATTEMPT_LOGIN_BUKKIT = "attemptLoginMethodBukkit";
+    private static final String KEY_METHOD_HANDLE_SPAWN_PLAYER = "handleSpawnPlayerMethod";
 
     private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
     private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
-    private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxy";
+    private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
     private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
 
     private static int operationCount = 0;
@@ -126,25 +130,29 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_FORGE_HOOKS_CLIENT, new ObfuscationEntry("net/minecraftforge/client/ForgeHooksClient", "TODO"));
         this.nodemap.put(KEY_CLASS_CUSTOM_PLAYER_MP, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityPlayerMP", "TODO"));
         this.nodemap.put(KEY_CLASS_CUSTOM_PLAYER_SP, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityClientPlayerMP", "TODO"));
+        this.nodemap.put(KEY_CLASS_CUSTOM_OTHER_PLAYER, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityOtherPlayerMP", "TODO"));
+        this.nodemap.put(KEY_CLASS_PACKET_SPAWN_PLAYER, new ObfuscationEntry("net/minecraft/network/play/server/S0CPacketSpawnPlayer", "TODO"));
+        this.nodemap.put(KEY_CLASS_ENTITY_OTHER_PLAYER, new ObfuscationEntry("net/minecraft/client/entity/EntityOtherPlayerMP", "TODO"));
 
         this.nodemap.put(KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "TODO"));
 
-        this.nodemap.put(KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "(L" + getName(KEY_CLASS_GAME_PROFILE) + ";)L" + getName(KEY_CLASS_PLAYER_MP) + ";", "TODO", "TODO"));
-        this.nodemap.put(KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("respawnPlayer", "(L" + getName(KEY_CLASS_PLAYER_MP) + ";IZ)L" + getName(KEY_CLASS_PLAYER_MP) + ";", "a", "(L" + getObfName(KEY_CLASS_PLAYER_MP) + ";IZ)L" + getObfName(KEY_CLASS_PLAYER_MP) + ";"));
-        this.nodemap.put(KEY_METHOD_CREATE_CLIENT_PLAYER, new MethodObfuscationEntry("func_147493_a", "(L" + getName(KEY_CLASS_WORLD) + ";L" + getName(KEY_CLASS_STAT_FILE_WRITER) + ";)L" + getName(KEY_CLASS_PLAYER_SP) + ";", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "(L" + getNameDynamic(KEY_CLASS_GAME_PROFILE) + ";)L" + getNameDynamic(KEY_CLASS_PLAYER_MP) + ";", "TODO", "TODO"));
+        this.nodemap.put(KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("respawnPlayer", "(L" + getNameDynamic(KEY_CLASS_PLAYER_MP) + ";IZ)L" + getNameDynamic(KEY_CLASS_PLAYER_MP) + ";", "a", "(L" + getObfName(KEY_CLASS_PLAYER_MP) + ";IZ)L" + getObfName(KEY_CLASS_PLAYER_MP) + ";"));
+        this.nodemap.put(KEY_METHOD_CREATE_CLIENT_PLAYER, new MethodObfuscationEntry("func_147493_a", "(L" + getNameDynamic(KEY_CLASS_WORLD) + ";L" + getNameDynamic(KEY_CLASS_STAT_FILE_WRITER) + ";)L" + getNameDynamic(KEY_CLASS_PLAYER_SP) + ";", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_MOVE_ENTITY, new MethodObfuscationEntry("moveEntityWithHeading", "(FF)V", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_ON_UPDATE, new MethodObfuscationEntry("onUpdate", "()V", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_UPDATE_LIGHTMAP, new MethodObfuscationEntry("updateLightmap", "(F)V", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_RENDER_OVERLAYS, new MethodObfuscationEntry("renderOverlays", "(F)V", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_UPDATE_FOG_COLOR, new MethodObfuscationEntry("updateFogColor", "(F)V", "TODO", "TODOdesc"));
-        this.nodemap.put(KEY_METHOD_GET_FOG_COLOR, new MethodObfuscationEntry("getFogColor", "(F)L" + getName(KEY_CLASS_VEC3) + ";", "TODO", "TODOdesc"));
-        this.nodemap.put(KEY_METHOD_GET_SKY_COLOR, new MethodObfuscationEntry("getSkyColor", "(L" + getName(KEY_CLASS_ENTITY) + ";F)L" + getName(KEY_CLASS_VEC3) + ";", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_GET_FOG_COLOR, new MethodObfuscationEntry("getFogColor", "(F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_GET_SKY_COLOR, new MethodObfuscationEntry("getSkyColor", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_WAKE_ENTITY, new MethodObfuscationEntry("wakeEntity", "()V", "TODO", "TODOdesc"));
-        this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "(L" + getName(KEY_CLASS_MINECRAFT) + ";L" + getName(KEY_CLASS_ENTITY_LIVING) + ";)V", "TODO", "TODOdesc"));
-        this.nodemap.put(KEY_METHOD_RENDER_PARTICLES, new MethodObfuscationEntry("renderParticles", "(L" + getName(KEY_CLASS_ENTITY) + ";F)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_ENTITY_LIVING) + ";)V", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_RENDER_PARTICLES, new MethodObfuscationEntry("renderParticles", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";F)V", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_MP, new MethodObfuscationEntry("<init>", "(Lnet/minecraft/server/MinecraftServer;Lnet/minecraft/world/WorldServer;Lcom/mojang/authlib/GameProfile;Lnet/minecraft/server/management/ItemInWorldManager;)V", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_SP, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_WORLD) + ";L" + getNameDynamic(KEY_CLASS_SESSION) + ";L" + getNameDynamic(KEY_CLASS_NET_HANDLER_PLAY) + ";L" + getNameDynamic(KEY_CLASS_STAT_FILE_WRITER) + ";)V", "TODO", "TODOdesc"));
         this.nodemap.put(KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("", "", "TODO", "TODOdesc"));
+        this.nodemap.put(KEY_METHOD_HANDLE_SPAWN_PLAYER, new MethodObfuscationEntry("handleSpawnPlayer", "(L" + getNameDynamic(KEY_CLASS_PACKET_SPAWN_PLAYER) + ";)V", "TODO", "TODOdesc"));
 	}
 
 	@Override
@@ -185,6 +193,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (classPathMatches(KEY_CLASS_EFFECT_RENDERER, name))
 		{
 			bytes = this.transformEffectRenderer(name, bytes);
+		}
+		else if (classPathMatches(KEY_CLASS_NET_HANDLER_PLAY, name))
+		{
+			bytes = this.transformNetHandlerPlay(name, bytes);
 		}
 
 		if (name.contains("galacticraft"))
@@ -686,6 +698,49 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         return finishInjection(node);
 	}
+
+
+    public byte[] transformNetHandlerPlay(String name, byte[] bytes)
+    {
+		ClassNode node = startInjection(bytes);
+
+		operationCount = 2;
+
+        MethodNode handleNamedSpawnMethod = getMethod(node, KEY_METHOD_HANDLE_SPAWN_PLAYER);
+
+        if (handleNamedSpawnMethod != null)
+        {
+            for (int count = 0; count < handleNamedSpawnMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = handleNamedSpawnMethod.instructions.get(count);
+
+                if (list instanceof TypeInsnNode)
+                {
+                    final TypeInsnNode nodeAt = (TypeInsnNode) list;
+
+                    if (nodeAt.desc.contains(getNameDynamic(KEY_CLASS_ENTITY_OTHER_PLAYER)))
+                    {
+                        final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, getNameDynamic(KEY_CLASS_CUSTOM_OTHER_PLAYER));
+
+                        handleNamedSpawnMethod.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                    }
+                }
+                else if (list instanceof MethodInsnNode)
+                {
+                    final MethodInsnNode nodeAt = (MethodInsnNode) list;
+
+                    if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(getNameDynamic(KEY_CLASS_ENTITY_OTHER_PLAYER)))
+                    {
+                    	handleNamedSpawnMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, getNameDynamic(KEY_CLASS_CUSTOM_OTHER_PLAYER), "<init>", "(L" + getNameDynamic(KEY_CLASS_WORLD) + ";L" + getNameDynamic(KEY_CLASS_GAME_PROFILE) + ";)V"));
+                        injectionCount++;
+                    }
+                }
+            }
+        }
+
+        return finishInjection(node);
+    }
 
     private class ObfuscationEntry
     {
