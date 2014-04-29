@@ -150,8 +150,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_METHOD_UPDATE_FOG_COLOR, new MethodObfuscationEntry("updateFogColor", "i", "(F)V"));
         this.nodemap.put(KEY_METHOD_GET_FOG_COLOR, new MethodObfuscationEntry("getFogColor", "", "(F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
         this.nodemap.put(KEY_METHOD_GET_SKY_COLOR, new MethodObfuscationEntry("getSkyColor", "a", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
-        this.nodemap.put(KEY_METHOD_WAKE_ENTITY, new MethodObfuscationEntry("wakeEntity", "wakeEntity", "()V"));
-        this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "g", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_ENTITY_LIVING) + ";)V"));
+        this.nodemap.put(KEY_METHOD_WAKE_ENTITY, new MethodObfuscationEntry("func_146418_g", "func_146418_g", "()V"));
+        this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientBedCamera", "orientBedCamera", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_ENTITY_LIVING) + ";)V"));
         this.nodemap.put(KEY_METHOD_RENDER_PARTICLES, new MethodObfuscationEntry("renderParticles", "a", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";F)V"));
         this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_MP, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_SERVER) + ";L" + getNameDynamic(KEY_CLASS_WORLD_SERVER) + ";L" + getNameDynamic(KEY_CLASS_GAME_PROFILE) + ";L" + getNameDynamic(KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V"));
         this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_SP, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_WORLD) + ";L" + getNameDynamic(KEY_CLASS_SESSION) + ";L" + getNameDynamic(KEY_CLASS_NET_HANDLER_PLAY) + ";L" + getNameDynamic(KEY_CLASS_STAT_FILE_WRITER) + ";)V"));
