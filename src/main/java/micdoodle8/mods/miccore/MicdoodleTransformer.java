@@ -76,12 +76,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_METHOD_GET_FOG_COLOR = "getFogColorMethod";
     private static final String KEY_METHOD_GET_SKY_COLOR = "getSkyColorMethod";
     private static final String KEY_METHOD_WAKE_ENTITY = "wakeEntityMethod";
-    private static final String KEY_METHOD_ORIENT_CAMERA = "orientBedCamera";
+    private static final String KEY_METHOD_BED_ORIENT_CAMERA = "orientBedCamera";
     private static final String KEY_METHOD_RENDER_PARTICLES = "renderParticlesMethod";
     private static final String KEY_METHOD_CUSTOM_PLAYER_MP = "customPlayerMPConstructor";
     private static final String KEY_METHOD_CUSTOM_PLAYER_SP = "customPlayerSPConstructor";
     private static final String KEY_METHOD_ATTEMPT_LOGIN_BUKKIT = "attemptLoginMethodBukkit";
     private static final String KEY_METHOD_HANDLE_SPAWN_PLAYER = "handleSpawnPlayerMethod";
+    private static final String KEY_METHOD_ORIENT_CAMERA = "orientCamera";
 
     private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
     private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
@@ -151,12 +152,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_METHOD_GET_FOG_COLOR, new MethodObfuscationEntry("getFogColor", "", "(F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
         this.nodemap.put(KEY_METHOD_GET_SKY_COLOR, new MethodObfuscationEntry("getSkyColor", "a", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
         this.nodemap.put(KEY_METHOD_WAKE_ENTITY, new MethodObfuscationEntry("func_146418_g", "func_146418_g", "()V"));
-        this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientBedCamera", "orientBedCamera", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_ENTITY_LIVING) + ";)V"));
+        this.nodemap.put(KEY_METHOD_BED_ORIENT_CAMERA, new MethodObfuscationEntry("orientBedCamera", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_ENTITY_LIVING) + ";)V"));
         this.nodemap.put(KEY_METHOD_RENDER_PARTICLES, new MethodObfuscationEntry("renderParticles", "a", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";F)V"));
         this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_MP, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_SERVER) + ";L" + getNameDynamic(KEY_CLASS_WORLD_SERVER) + ";L" + getNameDynamic(KEY_CLASS_GAME_PROFILE) + ";L" + getNameDynamic(KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V"));
         this.nodemap.put(KEY_METHOD_CUSTOM_PLAYER_SP, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_WORLD) + ";L" + getNameDynamic(KEY_CLASS_SESSION) + ";L" + getNameDynamic(KEY_CLASS_NET_HANDLER_PLAY) + ";L" + getNameDynamic(KEY_CLASS_STAT_FILE_WRITER) + ";)V"));
         this.nodemap.put(KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("", "", ""));
         this.nodemap.put(KEY_METHOD_HANDLE_SPAWN_PLAYER, new MethodObfuscationEntry("handleSpawnPlayer", "a", "(L" + getNameDynamic(KEY_CLASS_PACKET_SPAWN_PLAYER) + ";)V"));
+        this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "g", "(F)V"));
 	}
 
 	@Override
@@ -440,6 +442,12 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         MethodNode updateLightMapMethod = getMethod(node, KEY_METHOD_UPDATE_LIGHTMAP);
         MethodNode updateFogColorMethod = getMethod(node, KEY_METHOD_UPDATE_FOG_COLOR);
+        MethodNode orientCameraMethod = getMethod(node, KEY_METHOD_ORIENT_CAMERA);
+        
+        if (orientCameraMethod != null)
+        {
+        	
+        }
 
         if (updateLightMapMethod != null)
         {
@@ -543,7 +551,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		operationCount = 1;
 
-        MethodNode method = getMethod(node, KEY_METHOD_ORIENT_CAMERA);
+        MethodNode method = getMethod(node, KEY_METHOD_BED_ORIENT_CAMERA);
 
         if (method != null)
         {
