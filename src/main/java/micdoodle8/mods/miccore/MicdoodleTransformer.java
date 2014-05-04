@@ -438,7 +438,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
         ClassNode node = startInjection(bytes);
 
-		operationCount = 3;
+		operationCount = 4;
 
         MethodNode updateLightMapMethod = getMethod(node, KEY_METHOD_UPDATE_LIGHTMAP);
         MethodNode updateFogColorMethod = getMethod(node, KEY_METHOD_UPDATE_FOG_COLOR);
@@ -446,7 +446,20 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         
         if (orientCameraMethod != null)
         {
-        	
+            for (int count = 0; count < orientCameraMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = orientCameraMethod.instructions.get(count);
+                
+                if (list.getOpcode() == Opcodes.RETURN)
+                {
+                    final InsnList nodesToAdd = new InsnList();
+                    nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
+                    nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "orientCamera", "(F)V"));
+                    orientCameraMethod.instructions.insertBefore(list, nodesToAdd);
+                    injectionCount++;
+                    break;
+                }
+            }
         }
 
         if (updateLightMapMethod != null)
