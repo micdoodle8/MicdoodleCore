@@ -15,6 +15,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.IincInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.IntInsnNode;
@@ -45,6 +46,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_ENTITY_LIVING = "entityLivingClass";
     private static final String KEY_CLASS_ENTITY_ITEM = "entityItemClass";
     private static final String KEY_CLASS_ENTITY_RENDERER = "entityRendererClass";
+    private static final String KEY_CLASS_WORLD_RENDERER = "worldRendererClass";
+    private static final String KEY_CLASS_RENDER_GLOBAL = "renderGlobalClass";
     private static final String KEY_CLASS_CONTAINER_PLAYER = "containerPlayer";
     private static final String KEY_CLASS_MINECRAFT = "minecraft";
     private static final String KEY_CLASS_SESSION = "session";
@@ -83,7 +86,12 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_METHOD_ATTEMPT_LOGIN_BUKKIT = "attemptLoginMethodBukkit";
     private static final String KEY_METHOD_HANDLE_SPAWN_PLAYER = "handleSpawnPlayerMethod";
     private static final String KEY_METHOD_ORIENT_CAMERA = "orientCamera";
-
+    //private static final String KEY_METHOD_PRERENDER_BLOCKS = "preRenderBlocksMethod"; //WorldRenderer.preRenderBlocks(int)
+    private static final String KEY_METHOD_SETUP_GL = "setupGLTranslationMethod"; //WorldRenderer.setupGLTranslation()
+    private static final String KEY_METHOD_SET_POSITION = "setPositionMethod"; //WorldRenderer.setPosition()
+    private static final String KEY_METHOD_LOAD_RENDERERS = "loadRenderersMethod"; //RenderGlobal.loadRenderers()
+    private static final String KEY_METHOD_RENDERGLOBAL_INIT = "renderGlobalInitMethod"; //RenderGlobal.RenderGlobal()
+    
     private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
     private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
     private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
@@ -121,6 +129,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_ENTITY_LIVING, new ObfuscationEntry("net/minecraft/entity/EntityLivingBase", "rh"));
         this.nodemap.put(KEY_CLASS_ENTITY_ITEM, new ObfuscationEntry("net/minecraft/entity/item/EntityItem", "vw"));
         this.nodemap.put(KEY_CLASS_ENTITY_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/EntityRenderer", "bll"));
+        this.nodemap.put(KEY_CLASS_WORLD_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/WorldRenderer", "blg"));
+        this.nodemap.put(KEY_CLASS_RENDER_GLOBAL, new ObfuscationEntry("net/minecraft/client/renderer/RenderGlobal", "bls"));
         this.nodemap.put(KEY_CLASS_CONTAINER_PLAYER, new ObfuscationEntry("net/minecraft/inventory/ContainerPlayer", "zb"));
         this.nodemap.put(KEY_CLASS_MINECRAFT, new ObfuscationEntry("net/minecraft/client/Minecraft", "azd"));
         this.nodemap.put(KEY_CLASS_SESSION, new ObfuscationEntry("net/minecraft/util/Session", "baf"));
@@ -149,7 +159,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_METHOD_UPDATE_LIGHTMAP, new MethodObfuscationEntry("updateLightmap", "h", "(F)V"));
         this.nodemap.put(KEY_METHOD_RENDER_OVERLAYS, new MethodObfuscationEntry("renderOverlays", "b", "(F)V"));
         this.nodemap.put(KEY_METHOD_UPDATE_FOG_COLOR, new MethodObfuscationEntry("updateFogColor", "i", "(F)V"));
-        this.nodemap.put(KEY_METHOD_GET_FOG_COLOR, new MethodObfuscationEntry("getFogColor", "", "(F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
+        this.nodemap.put(KEY_METHOD_GET_FOG_COLOR, new MethodObfuscationEntry("getFogColor", "f", "(F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
         this.nodemap.put(KEY_METHOD_GET_SKY_COLOR, new MethodObfuscationEntry("getSkyColor", "a", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";F)L" + getNameDynamic(KEY_CLASS_VEC3) + ";"));
         this.nodemap.put(KEY_METHOD_WAKE_ENTITY, new MethodObfuscationEntry("func_146418_g", "func_146418_g", "()V"));
         this.nodemap.put(KEY_METHOD_BED_ORIENT_CAMERA, new MethodObfuscationEntry("orientBedCamera", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";L" + getNameDynamic(KEY_CLASS_ENTITY_LIVING) + ";)V"));
@@ -159,6 +169,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("", "", ""));
         this.nodemap.put(KEY_METHOD_HANDLE_SPAWN_PLAYER, new MethodObfuscationEntry("handleSpawnPlayer", "a", "(L" + getNameDynamic(KEY_CLASS_PACKET_SPAWN_PLAYER) + ";)V"));
         this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "g", "(F)V"));
+        this.nodemap.put(KEY_METHOD_SETUP_GL, new MethodObfuscationEntry("setupGLTranslation", "f", "()V"));  //func_78905_g
+        //this.nodemap.put(KEY_METHOD_PRERENDER_BLOCKS, new MethodObfuscationEntry("preRenderBlocks", "b", "(I)V"));  //func_147890_b
+        this.nodemap.put(KEY_METHOD_SET_POSITION, new MethodObfuscationEntry("setPosition", "a", "(III)V"));  //func_78913_a
+        this.nodemap.put(KEY_METHOD_LOAD_RENDERERS, new MethodObfuscationEntry("loadRenderers", "a", "()V"));  //func_72712_a
+        this.nodemap.put(KEY_METHOD_RENDERGLOBAL_INIT, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";)V"));
 	}
 
 	@Override
@@ -203,6 +218,14 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (classPathMatches(KEY_CLASS_NET_HANDLER_PLAY, name))
 		{
 			bytes = this.transformNetHandlerPlay(name, bytes);
+		}
+		else if (classPathMatches(KEY_CLASS_WORLD_RENDERER, name))
+		{
+			bytes = this.transformWorldRenderer(name, bytes);
+		}
+		else if (classPathMatches(KEY_CLASS_RENDER_GLOBAL, name))
+		{
+			bytes = this.transformRenderGlobal(name, bytes);
 		}
 
 		if (name.contains("galacticraft"))
@@ -439,6 +462,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         ClassNode node = startInjection(bytes);
 
 		operationCount = 4;
+		if (optifinePresent) operationCount--;
 
         MethodNode updateLightMapMethod = getMethod(node, KEY_METHOD_UPDATE_LIGHTMAP);
         MethodNode updateFogColorMethod = getMethod(node, KEY_METHOD_UPDATE_FOG_COLOR);
@@ -446,20 +470,12 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         
         if (orientCameraMethod != null)
         {
-            for (int count = 0; count < orientCameraMethod.instructions.size(); count++)
-            {
-                final AbstractInsnNode list = orientCameraMethod.instructions.get(count);
-                
-                if (list.getOpcode() == Opcodes.RETURN)
-                {
-                    final InsnList nodesToAdd = new InsnList();
-                    nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
-                    nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "orientCamera", "(F)V"));
-                    orientCameraMethod.instructions.insertBefore(list, nodesToAdd);
-                    injectionCount++;
-                    break;
-                }
-            }
+            final InsnList nodesToAdd = new InsnList();
+
+            nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
+            nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "orientCamera", "(F)V"));
+        	orientCameraMethod.instructions.insertBefore(orientCameraMethod.instructions.get(orientCameraMethod.instructions.size() - 3), nodesToAdd);
+            injectionCount++;
         }
 
         if (updateLightMapMethod != null)
@@ -761,6 +777,116 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         injectionCount++;
                     }
                 }
+            }
+        }
+
+        return finishInjection(node);
+    }
+
+    public byte[] transformWorldRenderer(String name, byte[] bytes)
+    {
+		ClassNode node = startInjection(bytes);
+
+		operationCount = 2;
+
+		MethodNode setPositionMethod = getMethod(node, KEY_METHOD_SET_POSITION);
+
+		//Insert at start of setPosition() a call to ClientProxyCore.setPosition() followed by return;
+        if (setPositionMethod != null)
+        {
+            InsnList toAdd = new InsnList();
+            toAdd.add(new VarInsnNode(Opcodes.ILOAD, 1));
+            toAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
+            toAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
+            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "setPosition", "(IIIL" + getNameDynamic(KEY_CLASS_WORLD_RENDERER) + ";)V"));
+            toAdd.add(new InsnNode(Opcodes.RETURN));
+        	setPositionMethod.instructions.insertBefore(setPositionMethod.instructions.get(0), toAdd);
+            injectionCount++;
+        }
+
+        //Replace the GL11.glTranslatef() instruction with a call to ClientProxyCore.setupGLTranslation();
+        MethodNode setupGLMethod = getMethod(node, KEY_METHOD_SETUP_GL);
+		if (setupGLMethod != null)
+        {
+            for (int count = 0; count < setupGLMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode nodeTest = setupGLMethod.instructions.get(count);
+
+                if (nodeTest instanceof MethodInsnNode && ((MethodInsnNode) nodeTest).name.equals("glTranslatef"))
+                {
+		            final VarInsnNode insertNode = new VarInsnNode(Opcodes.ALOAD, 0);
+                	final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "setupGLTranslation", "(FFFL" + getNameDynamic(KEY_CLASS_WORLD_RENDERER) + ";)V");
+			
+		            setupGLMethod.instructions.insertBefore(nodeTest, insertNode);
+		            setupGLMethod.instructions.set(nodeTest, overwriteNode);
+		            injectionCount++;
+		            break;
+                }
+            }
+        }
+
+        return finishInjection(node);
+    }
+
+    public byte[] transformRenderGlobal(String name, byte[] bytes)
+    {
+		ClassNode node = startInjection(bytes);
+
+		operationCount = 2;
+
+		MethodNode initMethod = getMethod(node, KEY_METHOD_RENDERGLOBAL_INIT);
+
+		//Looking for   iconst_3   imul
+		//Replace the 3 with a 4
+        if (initMethod != null)
+        {
+            for (int count = 0; count < initMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode nodeTest = initMethod.instructions.get(count);
+                final AbstractInsnNode nodeTestb = initMethod.instructions.get(count+1);
+                
+                if (nodeTest instanceof InsnNode && nodeTestb instanceof InsnNode)
+                {         
+                    if (nodeTest.getOpcode()==Opcodes.ICONST_3 && nodeTestb.getOpcode()==Opcodes.IMUL)
+                    {
+                        final InsnNode overwriteNode = new InsnNode(Opcodes.ICONST_4);
+
+                        initMethod.instructions.set(nodeTest, overwriteNode);
+                        injectionCount++;
+                        break;
+                    }
+                }
+
+                
+            }
+        }
+		
+		MethodNode loadMethod = getMethod(node, KEY_METHOD_LOAD_RENDERERS);
+
+		//Looking for   iinc 2 3  - this is j += 3; at line 418
+		//Change this to iinc 2 4  - this makes space for one additional glRenderList per WorldRenderer 
+        if (loadMethod != null)
+        {
+            for (int count = 0; count < loadMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode nodeTest = loadMethod.instructions.get(count);
+
+                if (nodeTest instanceof IincInsnNode)
+                {
+                    final IincInsnNode nodeAt = (IincInsnNode) nodeTest;
+
+                    if (nodeAt.var == 2 && nodeAt.incr == 3)
+                    {
+                        final IincInsnNode overwriteNode = new IincInsnNode(2, 4);
+
+                        loadMethod.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                        break;
+                    }
+                }
+
+                
             }
         }
 
