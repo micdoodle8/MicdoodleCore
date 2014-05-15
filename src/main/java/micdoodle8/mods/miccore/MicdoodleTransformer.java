@@ -65,6 +65,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_ENTITY_OTHER_PLAYER = "entityOtherPlayer";
     private static final String KEY_CLASS_SERVER = "minecraftServer";
     private static final String KEY_CLASS_WORLD_SERVER = "worldServer";
+    private static final String KEY_CLASS_WORLD_CLIENT = "worldClient";
 
     private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 
@@ -148,6 +149,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_ENTITY_OTHER_PLAYER, new ObfuscationEntry("net/minecraft/client/entity/EntityOtherPlayerMP", "bld"));
         this.nodemap.put(KEY_CLASS_SERVER, new ObfuscationEntry("net/minecraft/server/MinecraftServer"));
         this.nodemap.put(KEY_CLASS_WORLD_SERVER, new ObfuscationEntry("net/minecraft/world/WorldServer", "mj"));
+        this.nodemap.put(KEY_CLASS_WORLD_CLIENT, new ObfuscationEntry("net/minecraft/client/multiplayer/WorldClient", "bjd"));
 
         this.nodemap.put(KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 
@@ -461,7 +463,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
         ClassNode node = startInjection(bytes);
 
-		operationCount = 4;
+		operationCount = 5;
 		if (optifinePresent) operationCount--;
 
         MethodNode updateLightMapMethod = getMethod(node, KEY_METHOD_UPDATE_LIGHTMAP);
@@ -480,9 +482,26 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         if (updateLightMapMethod != null)
         {
+        	boolean worldBrightnessInjection = false;
+        	
             for (int count = 0; count < updateLightMapMethod.instructions.size(); count++)
             {
                 final AbstractInsnNode list = updateLightMapMethod.instructions.get(count);
+                
+                if (list instanceof MethodInsnNode)
+                {
+                	MethodInsnNode nodeAt = (MethodInsnNode) list;
+                	
+                	if (!worldBrightnessInjection && nodeAt.owner.equals(getNameDynamic(KEY_CLASS_WORLD_CLIENT)))
+                	{                        
+                        updateLightMapMethod.instructions.remove(updateLightMapMethod.instructions.get(count - 1));
+                        updateLightMapMethod.instructions.remove(updateLightMapMethod.instructions.get(count - 1));                        
+                        updateLightMapMethod.instructions.insertBefore(updateLightMapMethod.instructions.get(count - 1), new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getWorldBrightness", "(L" + getNameDynamic(KEY_CLASS_WORLD_CLIENT) + ";)F"));
+                        injectionCount++;
+                        worldBrightnessInjection = true;
+                        continue;
+                	}
+                }
 
                 if (list instanceof IntInsnNode)
                 {
