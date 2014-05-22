@@ -156,7 +156,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_ENTITY_OTHER_PLAYER, new ObfuscationEntry("net/minecraft/client/entity/EntityOtherPlayerMP", "bld"));
         this.nodemap.put(KEY_CLASS_SERVER, new ObfuscationEntry("net/minecraft/server/MinecraftServer"));
         this.nodemap.put(KEY_CLASS_WORLD_SERVER, new ObfuscationEntry("net/minecraft/world/WorldServer", "mj"));
-        this.nodemap.put(KEY_CLASS_WORLD_CLIENT, new ObfuscationEntry("net/minecraft/client/multiplayer/WorldClient", "bjd"));
+        this.nodemap.put(KEY_CLASS_WORLD_CLIENT, new ObfuscationEntry("net/minecraft/client/multiplayer/WorldClient", "biz"));
         
         this.nodemap.put(KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
         this.nodemap.put(KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -503,6 +503,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 {
                 	MethodInsnNode nodeAt = (MethodInsnNode) list;
 
+                	//Original code:  float f1 = worldclient.getSunBrightness(1.0F) * 0.95F + 0.05F;
                 	if (!worldBrightnessInjection && nodeAt.owner.equals(getNameDynamic(KEY_CLASS_WORLD_CLIENT)))
                 	{                        
                 		updateLightMapMethod.instructions.remove(updateLightMapMethod.instructions.get(count - 1));
