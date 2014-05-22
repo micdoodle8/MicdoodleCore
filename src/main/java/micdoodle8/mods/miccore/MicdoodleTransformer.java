@@ -488,6 +488,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "orientCamera", "(F)V"));
         	orientCameraMethod.instructions.insertBefore(orientCameraMethod.instructions.get(orientCameraMethod.instructions.size() - 3), nodesToAdd);
             injectionCount++;
+            System.out.println("bll.OrientCamera done");
         }
 
         if (updateLightMapMethod != null)
@@ -509,6 +510,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 		updateLightMapMethod.instructions.insertBefore(updateLightMapMethod.instructions.get(count - 1), new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_WORLD_UTIL, "getWorldBrightness", "(L" + getNameDynamic(KEY_CLASS_WORLD_CLIENT) + ";)F"));
                 		injectionCount++;
                 		worldBrightnessInjection = true;
+                        System.out.println("bll.updateLightMap - worldBrightness done");
                 		continue;
                 	}
                 }
@@ -541,6 +543,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         updateLightMapMethod.instructions.insertBefore(nodeAt, nodesToAdd);
                         injectionCount++;
+                        System.out.println("bll.updateLightMap - getColors done");
                         break;
                     }
                 }
@@ -567,6 +570,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         updateFogColorMethod.instructions.insertBefore(updateFogColorMethod.instructions.get(count + 2), toAdd);
                         injectionCount++;
+                        System.out.println("bll.updateFogColor - getFogColor (no Optifine) done");
                     }
                     else if (methodMatches(KEY_METHOD_GET_SKY_COLOR, nodeAt))
                     {
@@ -578,6 +582,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         updateFogColorMethod.instructions.insertBefore(updateFogColorMethod.instructions.get(count + 2), toAdd);
                         injectionCount++;
+                        System.out.println("bll.updateFogColor - getSkyColor done");
                     }
                 }
             }
@@ -817,6 +822,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		ClassNode node = startInjection(bytes);
 
 		operationCount = 4;
+		if (optifinePresent) operationCount = 2;
 
 		MethodNode setPositionMethod = getMethod(node, KEY_METHOD_SET_POSITION);
 
@@ -858,43 +864,35 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "setPositionList", "(L" + getNameDynamic(KEY_CLASS_WORLD_RENDERER) + ";I)V"));
 		        	setPositionMethod.instructions.insertBefore(nodeTest, toAdd);
 		            injectionCount++;
+                    System.out.println("blg.setPosition - done");
 		            break;
                 }
             }
         }
 
-        //Replace the GL11.glTranslatef() instruction with a call to ClientProxyCore.setupGLTranslation();
-        //NEW: Insert at start of method:  GL11.glCallList(rend.glRenderList + 3);
+        //Insert at start of method:  GL11.glCallList(rend.glRenderList + 3);
         MethodNode setupGLMethod = getMethod(node, KEY_METHOD_SETUP_GL);
 		if (setupGLMethod != null)
         {
-            for (int count = 0; count < setupGLMethod.instructions.size(); count++)
-            {
-                final AbstractInsnNode nodeTest = setupGLMethod.instructions.get(count);
-
-                if (nodeTest instanceof MethodInsnNode && ((MethodInsnNode) nodeTest).name.equals("glTranslatef"))
-                {
-		        	InsnList toAdd = new InsnList();
-		        	//Insert  GL11.glCallList(rend.glRenderList + 3);   before GL11.glTranslatef();
-		    		//  aload_0
-		    		//  getfield blg/z I
-		    		//  iconst_3
-		    		//  iadd
-		    		//  invokestatic org/lwjgl/opengl/GL11/glCallList(I)V
-		            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		            toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, getNameDynamic(KEY_CLASS_WORLD_RENDERER), getNameDynamic(KEY_FIELD_WORLDRENDERER_GLRENDERLIST), "I"));
-		            toAdd.add(new InsnNode(Opcodes.ICONST_3));
-		            toAdd.add(new InsnNode(Opcodes.IADD));
-		            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glCallList", "(I)V"));
-		        	setPositionMethod.instructions.insertBefore(nodeTest, toAdd);
-		        	injectionCount++;
-		            break;
-                }
-            }
+        	InsnList toAdd = new InsnList();
+        	//Insert  GL11.glCallList(rend.glRenderList + 3);   before GL11.glTranslatef();
+    		//  aload_0
+    		//  getfield blg/z I
+    		//  iconst_3
+    		//  iadd
+    		//  invokestatic org/lwjgl/opengl/GL11/glCallList(I)V
+            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, getNameDynamic(KEY_CLASS_WORLD_RENDERER), getNameDynamic(KEY_FIELD_WORLDRENDERER_GLRENDERLIST), "I"));
+            toAdd.add(new InsnNode(Opcodes.ICONST_3));
+            toAdd.add(new InsnNode(Opcodes.IADD));
+            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glCallList", "(I)V"));
+        	setupGLMethod.instructions.insertBefore(setupGLMethod.instructions.get(0), toAdd);
+        	injectionCount++;
+            System.out.println("blg.setupGLMethod - done");
         }
 
 		MethodNode updateRMethod = getMethod(node, KEY_METHOD_WORLDRENDERER_UPDATERENDERER);
-		if (updateRMethod != null)
+		if (updateRMethod != null && !optifinePresent)
         {
             for (int count = 0; count < updateRMethod.instructions.size(); count++)
             {
@@ -916,6 +914,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 		
                         updateRMethod.instructions.insert(nodeTest, setLastY);
                 		injectionCount++;
+                        System.out.println("blg.updateRenderer - first done");
                 	}
                 }
                 
@@ -930,6 +929,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                     updateRMethod.instructions.insert(nodeTest, callScaleBlock);
             		injectionCount++;
+                    System.out.println("blg.updateRenderer - second done");
             		break;
                 }
             }
@@ -963,11 +963,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         initMethod.instructions.set(nodeTest, overwriteNode);
                         injectionCount++;
+                        System.out.println("bls.init - done");
                         break;
                     }
                 }
-
-                
             }
         }
 		
@@ -985,17 +984,26 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 {
                     final IincInsnNode nodeAt = (IincInsnNode) nodeTest;
 
-                    if (nodeAt.var == 2 && nodeAt.incr == 3)
+                    if (nodeAt.var == 2 && nodeAt.incr == 3 && !optifinePresent)
                     {
                         final IincInsnNode overwriteNode = new IincInsnNode(2, 4);
 
                         loadMethod.instructions.set(nodeAt, overwriteNode);
                         injectionCount++;
+                        System.out.println("bls.loadRenderers (no Optifine) done");
+                        break;
+                    }
+                    //Optifine 1.7.2 special - same code, different variable id for j
+                    if (nodeAt.var == 6 && nodeAt.incr == 3 && optifinePresent)
+                    {
+                        final IincInsnNode overwriteNode = new IincInsnNode(6, 4);
+
+                        loadMethod.instructions.set(nodeAt, overwriteNode);
+                        injectionCount++;
+                        System.out.println("bls.loadRenderers (Optifine present) done");
                         break;
                     }
                 }
-
-                
             }
         }
 
@@ -1012,6 +1020,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             MethodInsnNode toAdd2 = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
         	renderMethod.instructions.insertBefore(renderMethod.instructions.get(renderMethod.instructions.size() - 3), toAdd2);
             injectionCount++;
+            
+            System.out.println("bls.sortAndRender - both done");
         }
 
         return finishInjection(node);
