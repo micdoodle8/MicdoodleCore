@@ -51,6 +51,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_ENTITY_RENDERER = "entityRendererClass";
     private static final String KEY_CLASS_WORLD_RENDERER = "worldRendererClass";
     private static final String KEY_CLASS_RENDER_GLOBAL = "renderGlobalClass";
+    private static final String KEY_CLASS_RENDER_MANAGER = "renderManagerClass";
     private static final String KEY_CLASS_CONTAINER_PLAYER = "containerPlayer";
     private static final String KEY_CLASS_MINECRAFT = "minecraft";
     private static final String KEY_CLASS_SESSION = "session";
@@ -91,6 +92,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_METHOD_ATTEMPT_LOGIN_BUKKIT = "attemptLoginMethodBukkit";
     private static final String KEY_METHOD_HANDLE_SPAWN_PLAYER = "handleSpawnPlayerMethod";
     private static final String KEY_METHOD_ORIENT_CAMERA = "orientCamera";
+    private static final String KEY_METHOD_RENDERMANAGER = "renderManagerMethod";
     private static final String KEY_METHOD_PRERENDER_BLOCKS = "preRenderBlocksMethod"; //WorldRenderer.preRenderBlocks(int)
     private static final String KEY_METHOD_SETUP_GL = "setupGLTranslationMethod"; //WorldRenderer.setupGLTranslation()
     private static final String KEY_METHOD_SET_POSITION = "setPositionMethod"; //WorldRenderer.setPosition()
@@ -139,6 +141,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_ENTITY_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/EntityRenderer", "bll"));
         this.nodemap.put(KEY_CLASS_WORLD_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/WorldRenderer", "blg"));
         this.nodemap.put(KEY_CLASS_RENDER_GLOBAL, new ObfuscationEntry("net/minecraft/client/renderer/RenderGlobal", "bls"));
+        this.nodemap.put(KEY_CLASS_RENDER_MANAGER, new ObfuscationEntry("net/minecraft/client/renderer/RenderManager", "bnf"));
         this.nodemap.put(KEY_CLASS_CONTAINER_PLAYER, new ObfuscationEntry("net/minecraft/inventory/ContainerPlayer", "zb"));
         this.nodemap.put(KEY_CLASS_MINECRAFT, new ObfuscationEntry("net/minecraft/client/Minecraft", "azd"));
         this.nodemap.put(KEY_CLASS_SESSION, new ObfuscationEntry("net/minecraft/util/Session", "baf"));
@@ -179,6 +182,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("", "", ""));
         this.nodemap.put(KEY_METHOD_HANDLE_SPAWN_PLAYER, new MethodObfuscationEntry("handleSpawnPlayer", "a", "(L" + getNameDynamic(KEY_CLASS_PACKET_SPAWN_PLAYER) + ";)V"));
         this.nodemap.put(KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "g", "(F)V"));
+        this.nodemap.put(KEY_METHOD_RENDERMANAGER, new MethodObfuscationEntry("func_147939_a", "a", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";DDDFFZ)Z"));
         this.nodemap.put(KEY_METHOD_SETUP_GL, new MethodObfuscationEntry("setupGLTranslation", "f", "()V"));  //func_78905_g
         this.nodemap.put(KEY_METHOD_PRERENDER_BLOCKS, new MethodObfuscationEntry("preRenderBlocks", "b", "(I)V"));  //func_147890_b
         this.nodemap.put(KEY_METHOD_SET_POSITION, new MethodObfuscationEntry("setPosition", "a", "(III)V"));  //func_78913_a
@@ -238,6 +242,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (classPathMatches(KEY_CLASS_RENDER_GLOBAL, name))
 		{
 			bytes = this.transformRenderGlobal(name, bytes);
+		}
+		else if (classPathMatches(KEY_CLASS_RENDER_MANAGER, name))
+		{
+			bytes = this.transformRenderManager(name, bytes);
 		}
 
 		if (name.contains("galacticraft"))
@@ -1023,6 +1031,48 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             injectionCount++;
             
             System.out.println("bls.sortAndRender - both done");
+        }
+
+        return finishInjection(node);
+    }
+
+    public byte[] transformRenderManager(String name, byte[] bytes)
+    {
+		ClassNode node = startInjection(bytes);
+
+		operationCount = 1;
+
+		MethodNode method = getMethod(node, KEY_METHOD_RENDERMANAGER);
+
+		//Looking for   render.doRender(p_147939_1_, p_147939_2_, p_147939_4_, p_147939_6_, p_147939_8_, p_147939_9_);
+		//that's:  aload 11, aload_1 etc
+        if (method != null)
+        {
+        	int count = 0;
+            while(count < method.instructions.size())
+            {
+                final AbstractInsnNode nodeTest = method.instructions.get(count);
+                final AbstractInsnNode nodeTestb = method.instructions.get(count+1);
+                
+                if (nodeTest instanceof VarInsnNode && nodeTestb instanceof VarInsnNode)
+                {         
+                    if (nodeTest.getOpcode()==Opcodes.ALOAD && nodeTestb.getOpcode()==Opcodes.ALOAD && ((VarInsnNode)nodeTest).var == 11 && ((VarInsnNode)nodeTestb).var == 1)
+                    {
+                        InsnList toAdd = new InsnList();
+                        //aload_1  dload_2  dload 4  dload 6
+                        toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 2));
+                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 4));
+                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 6));
+                        toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustRenderPos", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";DDD)V"));
+
+                        method.instructions.insertBefore(nodeTest, toAdd);
+                        injectionCount++;
+                        break;
+                    }
+                }
+                count++;
+            }
         }
 
         return finishInjection(node);
