@@ -1040,7 +1040,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     {
 		ClassNode node = startInjection(bytes);
 
-		operationCount = 1;
+		operationCount = 2;
 
 		MethodNode method = getMethod(node, KEY_METHOD_RENDERMANAGER);
 
@@ -1072,6 +1072,25 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                     }
                 }
                 count++;
+            }
+            
+         //Looking for: getstatic bnf/p Z
+            for (int i=count; i < method.instructions.size(); i++)
+            {
+                final AbstractInsnNode nodeTest = method.instructions.get(i);
+                
+                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode()==Opcodes.GETSTATIC)
+                {         
+                   	FieldInsnNode f = ((FieldInsnNode)nodeTest); 
+                    if (f.owner.equals(getNameDynamic(KEY_CLASS_RENDER_MANAGER)) && f.desc.equals("Z")) //&& f.name.equals("p")
+                    {
+                        MethodInsnNode toAdd = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
+                        method.instructions.insertBefore(nodeTest, toAdd);
+                        injectionCount++;
+                        System.out.println("bnf - done2/2");
+                        break;
+                    }
+                }
             }
         }
 
