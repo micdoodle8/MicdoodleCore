@@ -7,10 +7,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
-import org.lwjgl.opengl.GL11;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -141,7 +139,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_ENTITY_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/EntityRenderer", "bll"));
         this.nodemap.put(KEY_CLASS_WORLD_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/WorldRenderer", "blg"));
         this.nodemap.put(KEY_CLASS_RENDER_GLOBAL, new ObfuscationEntry("net/minecraft/client/renderer/RenderGlobal", "bls"));
-        this.nodemap.put(KEY_CLASS_RENDER_MANAGER, new ObfuscationEntry("net/minecraft/client/renderer/RenderManager", "bnf"));
+        this.nodemap.put(KEY_CLASS_RENDER_MANAGER, new ObfuscationEntry("net/minecraft/client/renderer/entity/RenderManager", "bnf"));
         this.nodemap.put(KEY_CLASS_CONTAINER_PLAYER, new ObfuscationEntry("net/minecraft/inventory/ContainerPlayer", "zb"));
         this.nodemap.put(KEY_CLASS_MINECRAFT, new ObfuscationEntry("net/minecraft/client/Minecraft", "azd"));
         this.nodemap.put(KEY_CLASS_SESSION, new ObfuscationEntry("net/minecraft/util/Session", "baf"));
