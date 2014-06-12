@@ -949,7 +949,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     {
 		ClassNode node = startInjection(bytes);
 
-		operationCount = 4;
+		operationCount = 5;
 
 		MethodNode initMethod = getMethod(node, KEY_METHOD_RENDERGLOBAL_INIT);
 
@@ -1029,6 +1029,67 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             injectionCount++;
             
             System.out.println("bls.sortAndRender - both done");
+            
+            int pos1 = 0;  //dstore 15
+            int pos2 = 0;  //putfield bls/k I
+            int pos3 = 0;  //invokespecial bls/c(III)V
+
+            String fieldPrevChunkSortZ = this.deobfuscated ? "prevChunkSortZ" : "k";
+            String methodMarkRenderersForNewPosition = this.deobfuscated ? "markRenderersForNewPosition" : "c";
+            
+            for (int count = 0; count < renderMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode nodeTest = renderMethod.instructions.get(count);
+
+                if (nodeTest instanceof VarInsnNode && nodeTest.getOpcode() == Opcodes.DSTORE && ((VarInsnNode)nodeTest).var == 15)
+                {
+                	pos1 = count;
+                	continue;
+                }
+
+                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode() == Opcodes.PUTFIELD && ((FieldInsnNode)nodeTest).name.equals(fieldPrevChunkSortZ) && ((FieldInsnNode)nodeTest).desc.equals("I"))
+                {
+                	pos2 = count;
+                	continue;
+                }
+
+                if (nodeTest instanceof MethodInsnNode && nodeTest.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode)nodeTest).name.equals(methodMarkRenderersForNewPosition) && ((MethodInsnNode)nodeTest).desc.equals("(III)V"))
+                {
+                	pos3 = count;
+                	continue;
+                }              
+            }
+
+            //Change the order: moving the following line to before the if() statement at line 728
+            //this.markRenderersForNewPosition(MathHelper.floor_double(par1EntityLivingBase.posX), MathHelper.floor_double(par1EntityLivingBase.posY), MathHelper.floor_double(par1EntityLivingBase.posZ));
+            if (pos1>0 && pos2>0 && pos3>0)
+            {
+	        	AbstractInsnNode[] instructionArray = renderMethod.instructions.toArray();
+	        	renderMethod.instructions.clear();
+	        	int count = 0;
+	        	while (count <= pos1)
+	        	{
+	        		renderMethod.instructions.add(instructionArray[count++]);
+	        	}
+	        	count = pos2+1;
+	        	while (count <= pos3)
+	        	{
+	        		renderMethod.instructions.add(instructionArray[count++]);
+	        	}
+	        	count = pos1+1;
+	        	while (count <= pos2)
+	        	{
+	        		renderMethod.instructions.add(instructionArray[count++]);
+	        	}
+	        	count = pos3+1;
+	        	while (count < instructionArray.length)
+	        	{
+	        		renderMethod.instructions.add(instructionArray[count++]);
+	        	}
+	            injectionCount++;
+            }
+            else
+            	System.out.println("[GC] Warning: Unable to modify bytecode for bls.markRenderersForNewPosition");
         }
 
         return finishInjection(node);
