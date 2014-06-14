@@ -1030,10 +1030,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             
             System.out.println("bls.sortAndRender - both done");
             
-            int pos1 = 0;  //dstore 15
+            int pos1 = 0;  //putfield bls/ac I
             int pos2 = 0;  //putfield bls/k I
             int pos3 = 0;  //invokespecial bls/c(III)V
 
+            String fieldRenderersSkippingRenderPass = this.deobfuscated ? "renderersSkippingRenderPass" : "ac"; 
             String fieldPrevChunkSortZ = this.deobfuscated ? "prevChunkSortZ" : "k";
             String methodMarkRenderersForNewPosition = this.deobfuscated ? "markRenderersForNewPosition" : "c";
             
@@ -1041,7 +1042,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             {
                 final AbstractInsnNode nodeTest = renderMethod.instructions.get(count);
 
-                if (nodeTest instanceof VarInsnNode && nodeTest.getOpcode() == Opcodes.DSTORE && ((VarInsnNode)nodeTest).var == 15)
+                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode() == Opcodes.PUTFIELD && ((FieldInsnNode)nodeTest).name.equals(fieldRenderersSkippingRenderPass) && ((FieldInsnNode)nodeTest).desc.equals("I"))
                 {
                 	pos1 = count;
                 	continue;
