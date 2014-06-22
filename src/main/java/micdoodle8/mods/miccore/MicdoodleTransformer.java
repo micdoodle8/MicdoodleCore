@@ -50,6 +50,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_WORLD_RENDERER = "worldRendererClass";
     private static final String KEY_CLASS_RENDER_GLOBAL = "renderGlobalClass";
     private static final String KEY_CLASS_RENDER_MANAGER = "renderManagerClass";
+    private static final String KEY_CLASS_TESSELLATOR = "tessellatorClass";
+    private static final String KEY_CLASS_TILEENTITY_RENDERER = "tileEntityRendererClass";
     private static final String KEY_CLASS_CONTAINER_PLAYER = "containerPlayer";
     private static final String KEY_CLASS_MINECRAFT = "minecraft";
     private static final String KEY_CLASS_SESSION = "session";
@@ -57,6 +59,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_ITEM_RENDERER = "itemRendererClass";
     private static final String KEY_CLASS_VEC3 = "vecClass";
     private static final String KEY_CLASS_ENTITY = "entityClass";
+    private static final String KEY_CLASS_TILEENTITY = "tileEntityClass";
     private static final String KEY_CLASS_GUI_SLEEP = "guiSleepClass";
     private static final String KEY_CLASS_EFFECT_RENDERER = "effectRendererClass";
     private static final String KEY_CLASS_FORGE_HOOKS_CLIENT = "forgeHooks";
@@ -98,6 +101,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_METHOD_LOAD_RENDERERS = "loadRenderersMethod"; //RenderGlobal.loadRenderers()
     private static final String KEY_METHOD_RENDERGLOBAL_INIT = "renderGlobalInitMethod"; //RenderGlobal.RenderGlobal()
     private static final String KEY_METHOD_RENDERGLOBAL_SORTANDRENDER = "sortAndRenderMethod"; //RenderGlobal.sortAndRender()
+    private static final String KEY_METHOD_TESSELLATOR_ADDVERTEX = "addVertexMethod"; //Tessellator.addVertex()
+    private static final String KEY_METHOD_TILERENDERER_RENDERTILEAT = "renderTileAtMethod"; //TileEntityRendererDispatcher.renderTileEntityAt()
     
     private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
     private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
@@ -139,7 +144,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_ENTITY_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/EntityRenderer", "bll"));
         this.nodemap.put(KEY_CLASS_WORLD_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/WorldRenderer", "blg"));
         this.nodemap.put(KEY_CLASS_RENDER_GLOBAL, new ObfuscationEntry("net/minecraft/client/renderer/RenderGlobal", "bls"));
+        this.nodemap.put(KEY_CLASS_TESSELLATOR, new ObfuscationEntry("net/minecraft/client/renderer/Tessellator", "blz"));
         this.nodemap.put(KEY_CLASS_RENDER_MANAGER, new ObfuscationEntry("net/minecraft/client/renderer/entity/RenderManager", "bnf"));
+        this.nodemap.put(KEY_CLASS_TILEENTITY_RENDERER, new ObfuscationEntry("net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher", "bmc"));
         this.nodemap.put(KEY_CLASS_CONTAINER_PLAYER, new ObfuscationEntry("net/minecraft/inventory/ContainerPlayer", "zb"));
         this.nodemap.put(KEY_CLASS_MINECRAFT, new ObfuscationEntry("net/minecraft/client/Minecraft", "azd"));
         this.nodemap.put(KEY_CLASS_SESSION, new ObfuscationEntry("net/minecraft/util/Session", "baf"));
@@ -158,6 +165,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_CLASS_SERVER, new ObfuscationEntry("net/minecraft/server/MinecraftServer"));
         this.nodemap.put(KEY_CLASS_WORLD_SERVER, new ObfuscationEntry("net/minecraft/world/WorldServer", "mj"));
         this.nodemap.put(KEY_CLASS_WORLD_CLIENT, new ObfuscationEntry("net/minecraft/client/multiplayer/WorldClient", "biz"));
+        this.nodemap.put(KEY_CLASS_TILEENTITY, new ObfuscationEntry("net/minecraft/tileentity/TileEntity", "and"));
         
         this.nodemap.put(KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
         this.nodemap.put(KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -188,6 +196,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.nodemap.put(KEY_METHOD_LOAD_RENDERERS, new MethodObfuscationEntry("loadRenderers", "a", "()V"));  //func_72712_a
         this.nodemap.put(KEY_METHOD_RENDERGLOBAL_INIT, new MethodObfuscationEntry("<init>", "(L" + getNameDynamic(KEY_CLASS_MINECRAFT) + ";)V"));
         this.nodemap.put(KEY_METHOD_RENDERGLOBAL_SORTANDRENDER, new MethodObfuscationEntry("sortAndRender", "a", "(L" + getNameDynamic(KEY_CLASS_ENTITY_LIVING) + ";ID)I"));  //func_72719_a
+        this.nodemap.put(KEY_METHOD_TESSELLATOR_ADDVERTEX, new MethodObfuscationEntry("addVertex", "a", "(DDD)V"));  //blz/a (DDD)V net/minecraft/client/renderer/Tessellator/func_78377_a (DDD)V
+        this.nodemap.put(KEY_METHOD_TILERENDERER_RENDERTILEAT, new MethodObfuscationEntry("renderTileEntityAt", "a", "(L" + getNameDynamic(KEY_CLASS_TILEENTITY) + ";DDDF)V"));  //bmc/a (Land;DDDF)V net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher/func_147549_a (Lnet/minecraft/tileentity/TileEntity;DDDF)V
 	}
 
 	@Override
@@ -244,6 +254,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (classPathMatches(KEY_CLASS_RENDER_MANAGER, name))
 		{
 			bytes = this.transformRenderManager(name, bytes);
+		}
+		else if (classPathMatches(KEY_CLASS_TILEENTITY_RENDERER, name))
+		{
+			bytes = this.transformTileEntityRenderer(name, bytes);
 		}
 
 		if (name.contains("galacticraft"))
@@ -828,8 +842,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     {
 		ClassNode node = startInjection(bytes);
 
-		operationCount = 4;
-		if (optifinePresent) operationCount = 2;
+		operationCount = 2;
+		//if (optifinePresent) operationCount = 2;
 
 		MethodNode setPositionMethod = getMethod(node, KEY_METHOD_SET_POSITION);
 
@@ -838,24 +852,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             for (int count = 0; count < setPositionMethod.instructions.size(); count++)
             {
                 final AbstractInsnNode nodeTest = setPositionMethod.instructions.get(count);
-
-                /*if (nodeTest instanceof MethodInsnNode && ((MethodInsnNode) nodeTest).name.equals("glNewList"))
-                {   	
-		        	InsnList toAdd = new InsnList();
-		        	//Insert  GL11.glCallList(rend.glRenderList + 3);   after GL11.glNewList();
-		    		//  aload_0
-		    		//  getfield blg/z I
-		    		//  iconst_3
-		    		//  iadd
-		    		//  invokestatic org/lwjgl/opengl/GL11/glCallList(I)V
-		            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		            toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, getNameDynamic(KEY_CLASS_WORLD_RENDERER), getNameDynamic(KEY_FIELD_WORLDRENDERER_GLRENDERLIST), "I"));
-		            toAdd.add(new InsnNode(Opcodes.ICONST_3));
-		            toAdd.add(new InsnNode(Opcodes.IADD));
-		            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glCallList", "(I)V"));
-		        	setPositionMethod.instructions.insert(nodeTest, toAdd);
-		        	injectionCount++;
-                }*/
 
                 if (nodeTest instanceof InsnNode && nodeTest.getOpcode() == Opcodes.RETURN)
                 {
@@ -898,7 +894,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             System.out.println("blg.setupGLMethod - done");
         }
 
-		MethodNode updateRMethod = getMethod(node, KEY_METHOD_WORLDRENDERER_UPDATERENDERER);
+/*		MethodNode updateRMethod = getMethod(node, KEY_METHOD_WORLDRENDERER_UPDATERENDERER);
 		if (updateRMethod != null && !optifinePresent)
         {
             for (int count = 0; count < updateRMethod.instructions.size(); count++)
@@ -941,7 +937,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 }
             }
         }
-		
+		*/
         return finishInjection(node);
     }
 
@@ -1157,6 +1153,96 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         return finishInjection(node);
     }
 
+    public byte[] transformTileEntityRenderer(String name, byte[] bytes)
+    {
+		ClassNode node = startInjection(bytes);
+
+		operationCount = 2;
+
+		MethodNode renderMethod = getMethod(node, KEY_METHOD_TILERENDERER_RENDERTILEAT);
+
+        if (renderMethod != null)
+        {
+            InsnList toAdd = new InsnList();
+            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 2));
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 4));
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 6));
+            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustTileRenderPos", "(L" + getNameDynamic(KEY_CLASS_TILEENTITY) + ";DDD)V"));
+            renderMethod.instructions.insert(toAdd);
+            injectionCount++;
+            
+            MethodInsnNode toAdd2 = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
+        	renderMethod.instructions.insertBefore(renderMethod.instructions.get(renderMethod.instructions.size() - 1), toAdd2);
+            injectionCount++;           
+        }
+
+        return finishInjection(node);
+    }
+
+/*    public byte[] transformTessellator(String name, byte[] bytes)
+    {
+		ClassNode node = startInjection(bytes);
+
+		operationCount = 1;
+
+		MethodNode vMethod = getMethod(node, KEY_METHOD_TESSELLATOR_ADDVERTEX);
+
+		
+		/*
+		 * public void addVertex(double x, double y, double z)
+		 * {
+		 * 		double var7 = 1 + ((y % 16) + offsetY) / globalRadius;
+		 * 		x += ((x % 16 - 8) * var7 ) + 8;
+		 * 		z += ((z % 16 - 8) * var7 ) + 8;
+		 *		...
+		 * }
+		 **
+        if (vMethod != null)
+        {
+            InsnList toAdd = new InsnList();
+            toAdd.add(new InsnNode(Opcodes.DCONST_1));		//dconst_1
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 3));	//dload_3
+            toAdd.add(new LdcInsnNode(16.0D));				//ldc2_w 16.0
+            toAdd.add(new InsnNode(Opcodes.DREM));			//drem
+            toAdd.add(new FieldInsnNode(Opcodes.GETSTATIC, CLASS_CLIENT_PROXY_MAIN, "offsetY", "D"));	//getstatic micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore/offsetY D
+            toAdd.add(new InsnNode(Opcodes.DADD));	//dadd
+            toAdd.add(new FieldInsnNode(Opcodes.GETSTATIC, CLASS_CLIENT_PROXY_MAIN, "globalRadius", "F"));	//getstatic micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore/globalRadius F
+            toAdd.add(new InsnNode(Opcodes.F2D));			//f2d
+            toAdd.add(new InsnNode(Opcodes.DDIV));			//ddiv
+            toAdd.add(new InsnNode(Opcodes.DADD));			//dadd
+            toAdd.add(new VarInsnNode(Opcodes.DSTORE, 7));	//dstore 7
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 1));	//dload_1
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 1));	//dload_1
+            toAdd.add(new LdcInsnNode(16.0D));				//ldc2_w 16.0
+            toAdd.add(new InsnNode(Opcodes.DREM));			//drem
+            toAdd.add(new LdcInsnNode(8.0D));				//ldc2_w 8.0
+            toAdd.add(new InsnNode(Opcodes.DSUB));			//dsub
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 7));	//dload 7
+            toAdd.add(new InsnNode(Opcodes.DMUL));			//dmul
+            toAdd.add(new LdcInsnNode(8.0D));				//ldc2_w 8.0
+            toAdd.add(new InsnNode(Opcodes.DADD));			//dadd
+            toAdd.add(new InsnNode(Opcodes.DADD));			//dadd
+            toAdd.add(new VarInsnNode(Opcodes.DSTORE, 1));	//dstore_1
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 5));	//dload 5
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 5));	//dload 5
+            toAdd.add(new LdcInsnNode(16.0D));				//ldc2_w 16.0
+            toAdd.add(new InsnNode(Opcodes.DREM));			//drem           
+            toAdd.add(new LdcInsnNode(8.0D));				//ldc2_w 8.0
+            toAdd.add(new InsnNode(Opcodes.DSUB));			//dsub
+            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 7));	//dload 7
+            toAdd.add(new InsnNode(Opcodes.DMUL));			//dmul
+            toAdd.add(new LdcInsnNode(8.0D));				//ldc2_w 8.0
+            toAdd.add(new InsnNode(Opcodes.DADD));			//dadd
+            toAdd.add(new InsnNode(Opcodes.DADD));			//dadd
+            toAdd.add(new VarInsnNode(Opcodes.DSTORE, 5));	//dstore 5
+            vMethod.instructions.insert(toAdd);
+            injectionCount++;
+        }
+
+        return finishInjection(node);
+    }
+*/
     private class ObfuscationEntry
     {
         public String name;
