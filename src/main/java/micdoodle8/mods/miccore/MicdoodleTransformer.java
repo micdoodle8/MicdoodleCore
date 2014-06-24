@@ -33,7 +33,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	HashMap<String, ObfuscationEntry> nodemap = new HashMap<String, ObfuscationEntry>();
 	private boolean deobfuscated = true;
 	private boolean optifinePresent;
-
+	private Boolean enableSmallMoons = null;
 
     private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
     private static final String KEY_CLASS_WORLD = "worldClass";
@@ -109,6 +109,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
     private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
     private static final String CLASS_GL11 = "org/lwjgl/opengl/GL11";
+    private static final String CLASS_CONFIG_MANAGER = "micdoodle8/mods/galacticraft/core/util/ConfigManagerCore";
     
     private static int operationCount = 0;
     private static int injectionCount = 0;
@@ -841,253 +842,261 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     public byte[] transformWorldRenderer(String name, byte[] bytes)
     {
 		ClassNode node = startInjection(bytes);
+		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
 
-		operationCount = 2;
+		operationCount = smallMoonsEnabled ? 2 : 0;
 		//if (optifinePresent) operationCount = 2;
 
-		MethodNode setPositionMethod = getMethod(node, KEY_METHOD_SET_POSITION);
+		if (smallMoonsEnabled)
+		{
+			MethodNode setPositionMethod = getMethod(node, KEY_METHOD_SET_POSITION);
 
-        if (setPositionMethod != null)
-        {
-            for (int count = 0; count < setPositionMethod.instructions.size(); count++)
-            {
-                final AbstractInsnNode nodeTest = setPositionMethod.instructions.get(count);
+	        if (setPositionMethod != null)
+	        {
+	            for (int count = 0; count < setPositionMethod.instructions.size(); count++)
+	            {
+	                final AbstractInsnNode nodeTest = setPositionMethod.instructions.get(count);
 
-                if (nodeTest instanceof InsnNode && nodeTest.getOpcode() == Opcodes.RETURN)
-                {
-                	//Insert at end: a call to ClientProxyCore.setPositionList(this, this.glRenderList)
-		    		//  aload_0
-		    		//  aload_0
-		    		//  getfield blg/z I
-		    		//  invokestatic ClientProxyCore.setPositionList()
-		        	InsnList toAdd = new InsnList();
-		            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		            toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, getNameDynamic(KEY_CLASS_WORLD_RENDERER), getNameDynamic(KEY_FIELD_WORLDRENDERER_GLRENDERLIST), "I"));
-		            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "setPositionList", "(L" + getNameDynamic(KEY_CLASS_WORLD_RENDERER) + ";I)V"));
-		        	setPositionMethod.instructions.insertBefore(nodeTest, toAdd);
-		            injectionCount++;
-                    System.out.println("blg.setPosition - done");
-		            break;
-                }
-            }
-        }
+	                if (nodeTest instanceof InsnNode && nodeTest.getOpcode() == Opcodes.RETURN)
+	                {
+	                	//Insert at end: a call to ClientProxyCore.setPositionList(this, this.glRenderList)
+			    		//  aload_0
+			    		//  aload_0
+			    		//  getfield blg/z I
+			    		//  invokestatic ClientProxyCore.setPositionList()
+			        	InsnList toAdd = new InsnList();
+			            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+			            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+			            toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, getNameDynamic(KEY_CLASS_WORLD_RENDERER), getNameDynamic(KEY_FIELD_WORLDRENDERER_GLRENDERLIST), "I"));
+			            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "setPositionList", "(L" + getNameDynamic(KEY_CLASS_WORLD_RENDERER) + ";I)V"));
+			        	setPositionMethod.instructions.insertBefore(nodeTest, toAdd);
+			            injectionCount++;
+	                    System.out.println("blg.setPosition - done");
+			            break;
+	                }
+	            }
+	        }
 
-        //Insert at start of method:  GL11.glCallList(rend.glRenderList + 3);
-        MethodNode setupGLMethod = getMethod(node, KEY_METHOD_SETUP_GL);
-		if (setupGLMethod != null)
-        {
-        	InsnList toAdd = new InsnList();
-        	//Insert  GL11.glCallList(rend.glRenderList + 3);   before GL11.glTranslatef();
-    		//  aload_0
-    		//  getfield blg/z I
-    		//  iconst_3
-    		//  iadd
-    		//  invokestatic org/lwjgl/opengl/GL11/glCallList(I)V
-            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, getNameDynamic(KEY_CLASS_WORLD_RENDERER), getNameDynamic(KEY_FIELD_WORLDRENDERER_GLRENDERLIST), "I"));
-            toAdd.add(new InsnNode(Opcodes.ICONST_3));
-            toAdd.add(new InsnNode(Opcodes.IADD));
-            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glCallList", "(I)V"));
-        	setupGLMethod.instructions.insertBefore(setupGLMethod.instructions.get(0), toAdd);
-        	injectionCount++;
-            System.out.println("blg.setupGLMethod - done");
-        }
+	        //Insert at start of method:  GL11.glCallList(rend.glRenderList + 3);
+	        MethodNode setupGLMethod = getMethod(node, KEY_METHOD_SETUP_GL);
+			if (setupGLMethod != null)
+	        {
+	        	InsnList toAdd = new InsnList();
+	        	//Insert  GL11.glCallList(rend.glRenderList + 3);   before GL11.glTranslatef();
+	    		//  aload_0
+	    		//  getfield blg/z I
+	    		//  iconst_3
+	    		//  iadd
+	    		//  invokestatic org/lwjgl/opengl/GL11/glCallList(I)V
+	            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+	            toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, getNameDynamic(KEY_CLASS_WORLD_RENDERER), getNameDynamic(KEY_FIELD_WORLDRENDERER_GLRENDERLIST), "I"));
+	            toAdd.add(new InsnNode(Opcodes.ICONST_3));
+	            toAdd.add(new InsnNode(Opcodes.IADD));
+	            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glCallList", "(I)V"));
+	        	setupGLMethod.instructions.insertBefore(setupGLMethod.instructions.get(0), toAdd);
+	        	injectionCount++;
+	            System.out.println("blg.setupGLMethod - done");
+	        }
 
-/*		MethodNode updateRMethod = getMethod(node, KEY_METHOD_WORLDRENDERER_UPDATERENDERER);
-		if (updateRMethod != null && !optifinePresent)
-        {
-            for (int count = 0; count < updateRMethod.instructions.size(); count++)
-            {
-                final AbstractInsnNode nodeTest = updateRMethod.instructions.get(count);
+	/*		MethodNode updateRMethod = getMethod(node, KEY_METHOD_WORLDRENDERER_UPDATERENDERER);
+			if (updateRMethod != null && !optifinePresent)
+	        {
+	            for (int count = 0; count < updateRMethod.instructions.size(); count++)
+	            {
+	                final AbstractInsnNode nodeTest = updateRMethod.instructions.get(count);
 
-                //Looking for:  invokespecial blg/b(I)V
-                //This corresponds to:  this.preRenderBlocks(k2);   (line 183 in the source code)
-                if (nodeTest instanceof MethodInsnNode && nodeTest.getOpcode() == Opcodes.INVOKESPECIAL)
-                {
-                	MethodInsnNode methodTest = (MethodInsnNode) nodeTest;
-                
-                	if (methodTest.owner.equals(getNameDynamic(KEY_CLASS_WORLD_RENDERER)) && methodTest.desc.equals("(I)V") && methodTest.name.equals(getNameDynamic(KEY_METHOD_PRERENDER_BLOCKS)))
-                	{
-                		InsnList setLastY = new InsnList();
-                		
-                		//reset ClientProxyCore.lastY
-                		setLastY.add(new LdcInsnNode(-1));
-                		setLastY.add(new FieldInsnNode(Opcodes.PUTSTATIC, CLASS_CLIENT_PROXY_MAIN, "lastY", "I"));
-                		
-                        updateRMethod.instructions.insert(nodeTest, setLastY);
-                		injectionCount++;
-                        System.out.println("blg.updateRenderer - first done");
-                	}
-                }
-                
-                //Looking for istore 25
-                //This corresponds to: int k3 = block.getRenderBlockPass();  (line 196 in the source code)
-                if (nodeTest instanceof VarInsnNode && nodeTest.getOpcode() == Opcodes.ISTORE && ((VarInsnNode)nodeTest).var == 25)
-                {
-            		//insert a call to scaleBlock(l2)   //l2 is the block's y value
-            		InsnList callScaleBlock = new InsnList();
-            		callScaleBlock.add(new VarInsnNode(Opcodes.ILOAD, 21));
-            		callScaleBlock.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "scaleBlock", "(I)V"));
+	                //Looking for:  invokespecial blg/b(I)V
+	                //This corresponds to:  this.preRenderBlocks(k2);   (line 183 in the source code)
+	                if (nodeTest instanceof MethodInsnNode && nodeTest.getOpcode() == Opcodes.INVOKESPECIAL)
+	                {
+	                	MethodInsnNode methodTest = (MethodInsnNode) nodeTest;
+	                
+	                	if (methodTest.owner.equals(getNameDynamic(KEY_CLASS_WORLD_RENDERER)) && methodTest.desc.equals("(I)V") && methodTest.name.equals(getNameDynamic(KEY_METHOD_PRERENDER_BLOCKS)))
+	                	{
+	                		InsnList setLastY = new InsnList();
+	                		
+	                		//reset ClientProxyCore.lastY
+	                		setLastY.add(new LdcInsnNode(-1));
+	                		setLastY.add(new FieldInsnNode(Opcodes.PUTSTATIC, CLASS_CLIENT_PROXY_MAIN, "lastY", "I"));
+	                		
+	                        updateRMethod.instructions.insert(nodeTest, setLastY);
+	                		injectionCount++;
+	                        System.out.println("blg.updateRenderer - first done");
+	                	}
+	                }
+	                
+	                //Looking for istore 25
+	                //This corresponds to: int k3 = block.getRenderBlockPass();  (line 196 in the source code)
+	                if (nodeTest instanceof VarInsnNode && nodeTest.getOpcode() == Opcodes.ISTORE && ((VarInsnNode)nodeTest).var == 25)
+	                {
+	            		//insert a call to scaleBlock(l2)   //l2 is the block's y value
+	            		InsnList callScaleBlock = new InsnList();
+	            		callScaleBlock.add(new VarInsnNode(Opcodes.ILOAD, 21));
+	            		callScaleBlock.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "scaleBlock", "(I)V"));
 
-                    updateRMethod.instructions.insert(nodeTest, callScaleBlock);
-            		injectionCount++;
-                    System.out.println("blg.updateRenderer - second done");
-            		break;
-                }
-            }
-        }
-		*/
+	                    updateRMethod.instructions.insert(nodeTest, callScaleBlock);
+	            		injectionCount++;
+	                    System.out.println("blg.updateRenderer - second done");
+	            		break;
+	                }
+	            }
+	        }
+			*/
+		}
         return finishInjection(node);
     }
 
     public byte[] transformRenderGlobal(String name, byte[] bytes)
     {
 		ClassNode node = startInjection(bytes);
+		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
 
-		operationCount = 5;
+		operationCount = smallMoonsEnabled ? 5 : 0;
 
-		MethodNode initMethod = getMethod(node, KEY_METHOD_RENDERGLOBAL_INIT);
-
-		//Looking for   iconst_3   imul
-		//Replace the 3 with a 4
-        if (initMethod != null)
-        {
-            for (int count = 0; count < initMethod.instructions.size(); count++)
-            {
-                final AbstractInsnNode nodeTest = initMethod.instructions.get(count);
-                final AbstractInsnNode nodeTestb = initMethod.instructions.get(count+1);
-                
-                if (nodeTest instanceof InsnNode && nodeTestb instanceof InsnNode)
-                {         
-                    if (nodeTest.getOpcode()==Opcodes.ICONST_3 && nodeTestb.getOpcode()==Opcodes.IMUL)
-                    {
-                        final InsnNode overwriteNode = new InsnNode(Opcodes.ICONST_4);
-
-                        initMethod.instructions.set(nodeTest, overwriteNode);
-                        injectionCount++;
-                        System.out.println("bls.init - done");
-                        break;
-                    }
-                }
-            }
-        }
-		
-		MethodNode loadMethod = getMethod(node, KEY_METHOD_LOAD_RENDERERS);
-
-		//Looking for   iinc 2 3  - this is j += 3; at line 418
-		//Change this to iinc 2 4  - this makes space for one additional glRenderList per WorldRenderer 
-        if (loadMethod != null)
-        {
-            for (int count = 0; count < loadMethod.instructions.size(); count++)
-            {
-                final AbstractInsnNode nodeTest = loadMethod.instructions.get(count);
-
-                if (nodeTest instanceof IincInsnNode)
-                {
-                    final IincInsnNode nodeAt = (IincInsnNode) nodeTest;
-
-                    if (nodeAt.var == 2 && nodeAt.incr == 3 && !optifinePresent)
-                    {
-                        final IincInsnNode overwriteNode = new IincInsnNode(2, 4);
-
-                        loadMethod.instructions.set(nodeAt, overwriteNode);
-                        injectionCount++;
-                        System.out.println("bls.loadRenderers (no Optifine) done");
-                        break;
-                    }
-                    //Optifine 1.7.2 special - same code, different variable id for j
-                    if (nodeAt.var == 6 && nodeAt.incr == 3 && optifinePresent)
-                    {
-                        final IincInsnNode overwriteNode = new IincInsnNode(6, 4);
-
-                        loadMethod.instructions.set(nodeAt, overwriteNode);
-                        injectionCount++;
-                        System.out.println("bls.loadRenderers (Optifine present) done");
-                        break;
-                    }
-                }
-            }
-        }
-
-		MethodNode renderMethod = getMethod(node, KEY_METHOD_RENDERGLOBAL_SORTANDRENDER);
-
-		//Insertions at start and a GL11.glPopMatrix() at end
-        if (renderMethod != null)
-        {
-            InsnList toAdd = new InsnList();
-            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustRenderCamera", "()V"));
-        	renderMethod.instructions.insertBefore(renderMethod.instructions.get(0), toAdd);
-            injectionCount++;
-
-            MethodInsnNode toAdd2 = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
-        	renderMethod.instructions.insertBefore(renderMethod.instructions.get(renderMethod.instructions.size() - 3), toAdd2);
-            injectionCount++;
-            
-            System.out.println("bls.sortAndRender - both done");
-            
-            int pos1 = 0;  //putfield bls/ac I
-            int pos2 = 0;  //putfield bls/k I
-            int pos3 = 0;  //invokespecial bls/c(III)V
-
-            String fieldRenderersSkippingRenderPass = this.deobfuscated ? "renderersSkippingRenderPass" : "ac"; 
-            String fieldPrevChunkSortZ = this.deobfuscated ? "prevChunkSortZ" : "k";
-            String methodMarkRenderersForNewPosition = this.deobfuscated ? "markRenderersForNewPosition" : "c";
-            
-            for (int count = 0; count < renderMethod.instructions.size(); count++)
-            {
-                final AbstractInsnNode nodeTest = renderMethod.instructions.get(count);
-
-                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode() == Opcodes.PUTFIELD && ((FieldInsnNode)nodeTest).name.equals(fieldRenderersSkippingRenderPass) && ((FieldInsnNode)nodeTest).desc.equals("I"))
-                {
-                	pos1 = count;
-                	continue;
-                }
-
-                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode() == Opcodes.PUTFIELD && ((FieldInsnNode)nodeTest).name.equals(fieldPrevChunkSortZ) && ((FieldInsnNode)nodeTest).desc.equals("I"))
-                {
-                	pos2 = count;
-                	continue;
-                }
-
-                if (nodeTest instanceof MethodInsnNode && nodeTest.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode)nodeTest).name.equals(methodMarkRenderersForNewPosition) && ((MethodInsnNode)nodeTest).desc.equals("(III)V"))
-                {
-                	pos3 = count;
-                	continue;
-                }              
-            }
-
-            //Change the order: moving the following line to before the if() statement at line 728
-            //this.markRenderersForNewPosition(MathHelper.floor_double(par1EntityLivingBase.posX), MathHelper.floor_double(par1EntityLivingBase.posY), MathHelper.floor_double(par1EntityLivingBase.posZ));
-            if (pos1>0 && pos2>0 && pos3>0)
-            {
-	        	AbstractInsnNode[] instructionArray = renderMethod.instructions.toArray();
-	        	renderMethod.instructions.clear();
-	        	int count = 0;
-	        	while (count <= pos1)
-	        	{
-	        		renderMethod.instructions.add(instructionArray[count++]);
-	        	}
-	        	count = pos2+1;
-	        	while (count <= pos3)
-	        	{
-	        		renderMethod.instructions.add(instructionArray[count++]);
-	        	}
-	        	count = pos1+1;
-	        	while (count <= pos2)
-	        	{
-	        		renderMethod.instructions.add(instructionArray[count++]);
-	        	}
-	        	count = pos3+1;
-	        	while (count < instructionArray.length)
-	        	{
-	        		renderMethod.instructions.add(instructionArray[count++]);
-	        	}
+		if (smallMoonsEnabled)
+		{
+			MethodNode initMethod = getMethod(node, KEY_METHOD_RENDERGLOBAL_INIT);
+	
+			//Looking for   iconst_3   imul
+			//Replace the 3 with a 4
+	        if (initMethod != null)
+	        {
+	            for (int count = 0; count < initMethod.instructions.size(); count++)
+	            {
+	                final AbstractInsnNode nodeTest = initMethod.instructions.get(count);
+	                final AbstractInsnNode nodeTestb = initMethod.instructions.get(count+1);
+	                
+	                if (nodeTest instanceof InsnNode && nodeTestb instanceof InsnNode)
+	                {         
+	                    if (nodeTest.getOpcode()==Opcodes.ICONST_3 && nodeTestb.getOpcode()==Opcodes.IMUL)
+	                    {
+	                        final InsnNode overwriteNode = new InsnNode(Opcodes.ICONST_4);
+	
+	                        initMethod.instructions.set(nodeTest, overwriteNode);
+	                        injectionCount++;
+	                        System.out.println("bls.init - done");
+	                        break;
+	                    }
+	                }
+	            }
+	        }
+			
+			MethodNode loadMethod = getMethod(node, KEY_METHOD_LOAD_RENDERERS);
+	
+			//Looking for   iinc 2 3  - this is j += 3; at line 418
+			//Change this to iinc 2 4  - this makes space for one additional glRenderList per WorldRenderer 
+	        if (loadMethod != null)
+	        {
+	            for (int count = 0; count < loadMethod.instructions.size(); count++)
+	            {
+	                final AbstractInsnNode nodeTest = loadMethod.instructions.get(count);
+	
+	                if (nodeTest instanceof IincInsnNode)
+	                {
+	                    final IincInsnNode nodeAt = (IincInsnNode) nodeTest;
+	
+	                    if (nodeAt.var == 2 && nodeAt.incr == 3 && !optifinePresent)
+	                    {
+	                        final IincInsnNode overwriteNode = new IincInsnNode(2, 4);
+	
+	                        loadMethod.instructions.set(nodeAt, overwriteNode);
+	                        injectionCount++;
+	                        System.out.println("bls.loadRenderers (no Optifine) done");
+	                        break;
+	                    }
+	                    //Optifine 1.7.2 special - same code, different variable id for j
+	                    if (nodeAt.var == 6 && nodeAt.incr == 3 && optifinePresent)
+	                    {
+	                        final IincInsnNode overwriteNode = new IincInsnNode(6, 4);
+	
+	                        loadMethod.instructions.set(nodeAt, overwriteNode);
+	                        injectionCount++;
+	                        System.out.println("bls.loadRenderers (Optifine present) done");
+	                        break;
+	                    }
+	                }
+	            }
+	        }
+	
+			MethodNode renderMethod = getMethod(node, KEY_METHOD_RENDERGLOBAL_SORTANDRENDER);
+	
+			//Insertions at start and a GL11.glPopMatrix() at end
+	        if (renderMethod != null)
+	        {
+	            InsnList toAdd = new InsnList();
+	            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustRenderCamera", "()V"));
+	        	renderMethod.instructions.insertBefore(renderMethod.instructions.get(0), toAdd);
 	            injectionCount++;
-            }
-            else
-            	System.out.println("[GC] Warning: Unable to modify bytecode for bls.markRenderersForNewPosition");
-        }
+	
+	            MethodInsnNode toAdd2 = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
+	        	renderMethod.instructions.insertBefore(renderMethod.instructions.get(renderMethod.instructions.size() - 3), toAdd2);
+	            injectionCount++;
+	            
+	            System.out.println("bls.sortAndRender - both done");
+	            
+	            int pos1 = 0;  //putfield bls/ac I
+	            int pos2 = 0;  //putfield bls/k I
+	            int pos3 = 0;  //invokespecial bls/c(III)V
+	
+	            String fieldRenderersSkippingRenderPass = this.deobfuscated ? "renderersSkippingRenderPass" : "ac"; 
+	            String fieldPrevChunkSortZ = this.deobfuscated ? "prevChunkSortZ" : "k";
+	            String methodMarkRenderersForNewPosition = this.deobfuscated ? "markRenderersForNewPosition" : "c";
+	            
+	            for (int count = 0; count < renderMethod.instructions.size(); count++)
+	            {
+	                final AbstractInsnNode nodeTest = renderMethod.instructions.get(count);
+	
+	                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode() == Opcodes.PUTFIELD && ((FieldInsnNode)nodeTest).name.equals(fieldRenderersSkippingRenderPass) && ((FieldInsnNode)nodeTest).desc.equals("I"))
+	                {
+	                	pos1 = count;
+	                	continue;
+	                }
+	
+	                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode() == Opcodes.PUTFIELD && ((FieldInsnNode)nodeTest).name.equals(fieldPrevChunkSortZ) && ((FieldInsnNode)nodeTest).desc.equals("I"))
+	                {
+	                	pos2 = count;
+	                	continue;
+	                }
+	
+	                if (nodeTest instanceof MethodInsnNode && nodeTest.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode)nodeTest).name.equals(methodMarkRenderersForNewPosition) && ((MethodInsnNode)nodeTest).desc.equals("(III)V"))
+	                {
+	                	pos3 = count;
+	                	continue;
+	                }              
+	            }
+	
+	            //Change the order: moving the following line to before the if() statement at line 728
+	            //this.markRenderersForNewPosition(MathHelper.floor_double(par1EntityLivingBase.posX), MathHelper.floor_double(par1EntityLivingBase.posY), MathHelper.floor_double(par1EntityLivingBase.posZ));
+	            if (pos1>0 && pos2>0 && pos3>0)
+	            {
+		        	AbstractInsnNode[] instructionArray = renderMethod.instructions.toArray();
+		        	renderMethod.instructions.clear();
+		        	int count = 0;
+		        	while (count <= pos1)
+		        	{
+		        		renderMethod.instructions.add(instructionArray[count++]);
+		        	}
+		        	count = pos2+1;
+		        	while (count <= pos3)
+		        	{
+		        		renderMethod.instructions.add(instructionArray[count++]);
+		        	}
+		        	count = pos1+1;
+		        	while (count <= pos2)
+		        	{
+		        		renderMethod.instructions.add(instructionArray[count++]);
+		        	}
+		        	count = pos3+1;
+		        	while (count < instructionArray.length)
+		        	{
+		        		renderMethod.instructions.add(instructionArray[count++]);
+		        	}
+		            injectionCount++;
+	            }
+	            else
+	            	System.out.println("[GC] Warning: Unable to modify bytecode for bls.markRenderersForNewPosition");
+	        }
+		}
 
         return finishInjection(node);
     }
@@ -1095,60 +1104,64 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     public byte[] transformRenderManager(String name, byte[] bytes)
     {
 		ClassNode node = startInjection(bytes);
+		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
 
-		operationCount = 2;
+		operationCount = smallMoonsEnabled ? 2 : 0;
 
-		MethodNode method = getMethod(node, KEY_METHOD_RENDERMANAGER);
+		if (smallMoonsEnabled)
+		{
+			MethodNode method = getMethod(node, KEY_METHOD_RENDERMANAGER);
 
-		//Looking for   render.doRender(p_147939_1_, p_147939_2_, p_147939_4_, p_147939_6_, p_147939_8_, p_147939_9_);
-		//that's:  aload 11, aload_1 etc
-        if (method != null)
-        {
-        	int count = 0;
-            while(count < method.instructions.size())
-            {
-                final AbstractInsnNode nodeTest = method.instructions.get(count);
-                final AbstractInsnNode nodeTestb = method.instructions.get(count+1);
-                
-                if (nodeTest instanceof VarInsnNode && nodeTestb instanceof VarInsnNode)
-                {         
-                    if (nodeTest.getOpcode()==Opcodes.ALOAD && nodeTestb.getOpcode()==Opcodes.ALOAD && ((VarInsnNode)nodeTest).var == 11 && ((VarInsnNode)nodeTestb).var == 1)
-                    {
-                        InsnList toAdd = new InsnList();
-                        //aload_1  dload_2  dload 4  dload 6
-                        toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
-                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 2));
-                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 4));
-                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 6));
-                        toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustRenderPos", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";DDD)V"));
+			//Looking for   render.doRender(p_147939_1_, p_147939_2_, p_147939_4_, p_147939_6_, p_147939_8_, p_147939_9_);
+			//that's:  aload 11, aload_1 etc
+	        if (method != null)
+	        {
+	        	int count = 0;
+	            while(count < method.instructions.size())
+	            {
+	                final AbstractInsnNode nodeTest = method.instructions.get(count);
+	                final AbstractInsnNode nodeTestb = method.instructions.get(count+1);
+	                
+	                if (nodeTest instanceof VarInsnNode && nodeTestb instanceof VarInsnNode)
+	                {         
+	                    if (nodeTest.getOpcode()==Opcodes.ALOAD && nodeTestb.getOpcode()==Opcodes.ALOAD && ((VarInsnNode)nodeTest).var == 11 && ((VarInsnNode)nodeTestb).var == 1)
+	                    {
+	                        InsnList toAdd = new InsnList();
+	                        //aload_1  dload_2  dload 4  dload 6
+	                        toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+	                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 2));
+	                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 4));
+	                        toAdd.add(new VarInsnNode(Opcodes.DLOAD, 6));
+	                        toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustRenderPos", "(L" + getNameDynamic(KEY_CLASS_ENTITY) + ";DDD)V"));
 
-                        method.instructions.insertBefore(nodeTest, toAdd);
-                        injectionCount++;
-                        break;
-                    }
-                }
-                count++;
-            }
-            
-         //Looking for: getstatic bnf/p Z
-            for (int i=count; i < method.instructions.size(); i++)
-            {
-                final AbstractInsnNode nodeTest = method.instructions.get(i);
-                
-                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode()==Opcodes.GETSTATIC)
-                {         
-                   	FieldInsnNode f = ((FieldInsnNode)nodeTest); 
-                    if (f.owner.equals(getNameDynamic(KEY_CLASS_RENDER_MANAGER)) && f.desc.equals("Z")) //&& f.name.equals("p")
-                    {
-                        MethodInsnNode toAdd = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
-                        method.instructions.insertBefore(nodeTest, toAdd);
-                        injectionCount++;
-                        System.out.println("bnf - done2/2");
-                        break;
-                    }
-                }
-            }
-        }
+	                        method.instructions.insertBefore(nodeTest, toAdd);
+	                        injectionCount++;
+	                        break;
+	                    }
+	                }
+	                count++;
+	            }
+	            
+	         //Looking for: getstatic bnf/p Z
+	            for (int i=count; i < method.instructions.size(); i++)
+	            {
+	                final AbstractInsnNode nodeTest = method.instructions.get(i);
+	                
+	                if (nodeTest instanceof FieldInsnNode && nodeTest.getOpcode()==Opcodes.GETSTATIC)
+	                {         
+	                   	FieldInsnNode f = ((FieldInsnNode)nodeTest); 
+	                    if (f.owner.equals(getNameDynamic(KEY_CLASS_RENDER_MANAGER)) && f.desc.equals("Z")) //&& f.name.equals("p")
+	                    {
+	                        MethodInsnNode toAdd = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
+	                        method.instructions.insertBefore(nodeTest, toAdd);
+	                        injectionCount++;
+	                        System.out.println("bnf - done2/2");
+	                        break;
+	                    }
+	                }
+	            }
+	        }
+		}
 
         return finishInjection(node);
     }
@@ -1156,26 +1169,30 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     public byte[] transformTileEntityRenderer(String name, byte[] bytes)
     {
 		ClassNode node = startInjection(bytes);
+		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
 
-		operationCount = 2;
+		operationCount = smallMoonsEnabled ? 2 : 0;
 
-		MethodNode renderMethod = getMethod(node, KEY_METHOD_TILERENDERER_RENDERTILEAT);
+		if (smallMoonsEnabled)
+		{
+			MethodNode renderMethod = getMethod(node, KEY_METHOD_TILERENDERER_RENDERTILEAT);
 
-        if (renderMethod != null)
-        {
-            InsnList toAdd = new InsnList();
-            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
-            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 2));
-            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 4));
-            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 6));
-            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustTileRenderPos", "(L" + getNameDynamic(KEY_CLASS_TILEENTITY) + ";DDD)V"));
-            renderMethod.instructions.insert(toAdd);
-            injectionCount++;
-            
-            MethodInsnNode toAdd2 = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
-        	renderMethod.instructions.insertBefore(renderMethod.instructions.get(renderMethod.instructions.size() - 1), toAdd2);
-            injectionCount++;           
-        }
+	        if (renderMethod != null)
+	        {
+	            InsnList toAdd = new InsnList();
+	            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+	            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 2));
+	            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 4));
+	            toAdd.add(new VarInsnNode(Opcodes.DLOAD, 6));
+	            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_CLIENT_PROXY_MAIN, "adjustTileRenderPos", "(L" + getNameDynamic(KEY_CLASS_TILEENTITY) + ";DDD)V"));
+	            renderMethod.instructions.insert(toAdd);
+	            injectionCount++;
+	            
+	            MethodInsnNode toAdd2 = new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_GL11, "glPopMatrix", "()V");
+	        	renderMethod.instructions.insertBefore(renderMethod.instructions.get(renderMethod.instructions.size() - 1), toAdd2);
+	            injectionCount++;           
+	        }
+		}
 
         return finishInjection(node);
     }
@@ -1286,14 +1303,17 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
     private void printResultsAndReset(String nodeName)
     {
-        if (injectionCount >= operationCount)
-        {
-            printLog("Galacticraft successfully injected bytecode into: " + nodeName + " (" + injectionCount + " / " + operationCount + ")");
-        }
-        else
-        {
-            System.err.println("Galacticraft successfully injected bytecode into: " + nodeName + " (" + injectionCount + " / " + operationCount + ")");
-        }
+    	if (operationCount > 0)
+    	{
+            if (injectionCount >= operationCount)
+            {
+                printLog("Galacticraft successfully injected bytecode into: " + nodeName + " (" + injectionCount + " / " + operationCount + ")");
+            }
+            else
+            {
+                System.err.println("Galacticraft successfully injected bytecode into: " + nodeName + " (" + injectionCount + " / " + operationCount + ")");
+            }
+    	}
     }
 
     private MethodNode getMethod(ClassNode node, String keyName)
@@ -1395,5 +1415,31 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         }
 
         return writer.toByteArray();
+    }
+    
+    private boolean getSmallMoonsEnabled()
+    {
+    	if (this.enableSmallMoons == null)
+    	{
+    		try
+    		{
+        		Class<?> configClass = Class.forName(CLASS_CONFIG_MANAGER.replace("/", "."));
+        		String fieldName = "enableSmallMoons";
+        		Boolean b = configClass.getDeclaredField(fieldName).getBoolean(null);
+        		if (b == null)
+        		{
+        			System.err.println("Galacticraft: Failed to get field from Core Config Manager: " + fieldName);
+        			b = true;
+        		}
+        		this.enableSmallMoons = b;
+    		}
+    		catch (Exception e)
+    		{
+    			System.err.println("Galacticraft: Failed to get extract field value from Core Config Manager");
+    			e.printStackTrace();
+    		}
+    	}
+    	
+    	return this.enableSmallMoons;
     }
 }
