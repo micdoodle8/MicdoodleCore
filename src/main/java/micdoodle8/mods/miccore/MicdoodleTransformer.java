@@ -1193,10 +1193,22 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				renderMethod.instructions.insert(toAdd);
 				MicdoodleTransformer.injectionCount++;
 
+                AbstractInsnNode returnNode = renderMethod.instructions.get(renderMethod.instructions.size() - 1);
+                for (int i = 0; i < renderMethod.instructions.size(); i++)
+                {
+                    AbstractInsnNode insnAt = renderMethod.instructions.get(i);
+                   if (insnAt.getOpcode() == Opcodes.RETURN)
+                   {
+                       returnNode = insnAt;
+                       break;
+                   }
+                }
+
 				MethodInsnNode toAdd2 = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_GL11, "glPopMatrix", "()V");
-				renderMethod.instructions.insertBefore(renderMethod.instructions.get(renderMethod.instructions.size() - 1), toAdd2);
+				renderMethod.instructions.insertBefore(returnNode, toAdd2);
 				MicdoodleTransformer.injectionCount++;
 			}
+
 		}
 
 		return this.finishInjection(node);
