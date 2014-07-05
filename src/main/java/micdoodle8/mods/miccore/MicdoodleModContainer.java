@@ -23,7 +23,7 @@ public class MicdoodleModContainer extends DummyModContainer
 		meta.name = "Micdoodle8 Core";
 		meta.updateUrl = "http://www.micdoodle8.com/";
 		meta.description = "Provides core features of Micdoodle8's mods";
-		meta.authorList = Arrays.asList("micdoodle8");
+		meta.authorList = Arrays.asList("micdoodle8, radfast");
 		meta.url = "http://www.micdoodle8.com/";
 	}
 
@@ -38,7 +38,7 @@ public class MicdoodleModContainer extends DummyModContainer
 	public List<ArtifactVersion> getDependencies()
 	{
 		LinkedList<ArtifactVersion> deps = new LinkedList<ArtifactVersion>();
-		deps.add(VersionParser.parseVersionReference("required-after:Forge@[8.9.0.762,)"));
+		deps.add(VersionParser.parseVersionReference("required-after:Forge@[10.12.1.1060,)"));
 		return deps;
 	}
 

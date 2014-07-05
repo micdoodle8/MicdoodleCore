@@ -196,68 +196,68 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER, name))
 		{
-			bytes = this.transformConfigManager(name, bytes);
+			bytes = this.transformConfigManager(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER, name))
 		{
-			bytes = this.transformPlayerController(name, bytes);
+			bytes = this.transformPlayerController(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING, name))
 		{
-			bytes = this.transformEntityLiving(name, bytes);
+			bytes = this.transformEntityLiving(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM, name))
 		{
-			bytes = this.transformEntityItem(name, bytes);
+			bytes = this.transformEntityItem(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER, name))
 		{
-			bytes = this.transformEntityRenderer(name, bytes);
+			bytes = this.transformEntityRenderer(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER, name))
 		{
-			bytes = this.transformItemRenderer(name, bytes);
+			bytes = this.transformItemRenderer(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP, name))
 		{
-			bytes = this.transformGuiSleep(name, bytes);
+			bytes = this.transformGuiSleep(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT, name))
 		{
-			bytes = this.transformForgeHooks(name, bytes);
+			bytes = this.transformForgeHooks(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER, name))
 		{
-			bytes = this.transformEffectRenderer(name, bytes);
+			bytes = this.transformEffectRenderer(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY, name))
 		{
-			bytes = this.transformNetHandlerPlay(name, bytes);
+			bytes = this.transformNetHandlerPlay(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER, name))
 		{
-			bytes = this.transformWorldRenderer(name, bytes);
+			bytes = this.transformWorldRenderer(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL, name))
 		{
-			bytes = this.transformRenderGlobal(name, bytes);
+			bytes = this.transformRenderGlobal(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER, name))
 		{
-			bytes = this.transformRenderManager(name, bytes);
+			bytes = this.transformRenderManager(bytes);
 		}
 		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER, name))
 		{
-			bytes = this.transformTileEntityRenderer(name, bytes);
+			bytes = this.transformTileEntityRenderer(bytes);
 		}
         else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_MINECRAFT, name))
         {
-            bytes = this.transformMinecraftClass(name, bytes);
+            bytes = this.transformMinecraftClass(bytes);
         }
 
 		if (name.contains("galacticraft"))
 		{
-			bytes = this.transformCustomAnnotations(name, bytes);
+			bytes = this.transformCustomAnnotations(bytes);
 		}
 
 		return bytes;
@@ -266,7 +266,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	/**
 	 * replaces EntityPlayerMP initialization with custom ones
 	 */
-	public byte[] transformConfigManager(String name, byte[] bytes)
+	public byte[] transformConfigManager(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -374,7 +374,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformPlayerController(String name, byte[] bytes)
+	public byte[] transformPlayerController(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -416,7 +416,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformEntityLiving(String name, byte[] bytes)
+	public byte[] transformEntityLiving(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -434,7 +434,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				{
 					final LdcInsnNode nodeAt = (LdcInsnNode) list;
 
-					if (nodeAt.cst.equals(Double.valueOf(0.08D)))
+					if (nodeAt.cst.equals(0.08D))
 					{
 						final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
 						final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "getGravityForEntity", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";)D");
@@ -450,7 +450,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformEntityItem(String name, byte[] bytes)
+	public byte[] transformEntityItem(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -484,7 +484,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformEntityRenderer(String name, byte[] bytes)
+	public byte[] transformEntityRenderer(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -610,7 +610,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformGuiSleep(String name, byte[] bytes)
+	public byte[] transformGuiSleep(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -627,7 +627,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformForgeHooks(String name, byte[] bytes)
+	public byte[] transformForgeHooks(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -645,7 +645,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	}
 
 	@SuppressWarnings("unchecked")
-	public byte[] transformCustomAnnotations(String name, byte[] bytes)
+	public byte[] transformCustomAnnotations(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -662,12 +662,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			methodLabel:
 			if (methodnode.visibleAnnotations != null && methodnode.visibleAnnotations.size() > 0)
 			{
-				final Iterator<AnnotationNode> annotations = methodnode.visibleAnnotations.iterator();
-
-				while (annotations.hasNext())
+				for (AnnotationNode annotation : methodnode.visibleAnnotations)
 				{
-					AnnotationNode annotation = annotations.next();
-
 					if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_RUNTIME_INTERFACE + ";"))
 					{
 						List<String> desiredInterfaces = new ArrayList<String>();
@@ -742,7 +738,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node, false);
 	}
 
-	public byte[] transformEffectRenderer(String name, byte[] bytes)
+	public byte[] transformEffectRenderer(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -762,7 +758,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformItemRenderer(String name, byte[] bytes)
+	public byte[] transformItemRenderer(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -772,7 +768,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		if (renderOverlaysMethod != null)
 		{
-			instructionLoop:
 			for (int count = 0; count < renderOverlaysMethod.instructions.size(); count++)
 			{
 				final AbstractInsnNode glEnable = renderOverlaysMethod.instructions.get(count);
@@ -786,7 +781,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 					renderOverlaysMethod.instructions.insertBefore(glEnable, toAdd);
 					MicdoodleTransformer.injectionCount++;
-					break instructionLoop;
+					break;
 				}
 			}
 		}
@@ -794,7 +789,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformNetHandlerPlay(String name, byte[] bytes)
+	public byte[] transformNetHandlerPlay(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -836,7 +831,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformWorldRenderer(String name, byte[] bytes)
+	public byte[] transformWorldRenderer(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
@@ -907,21 +902,21 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			                if (nodeTest instanceof MethodInsnNode && nodeTest.getOpcode() == Opcodes.INVOKESPECIAL)
 			                {
 			                	MethodInsnNode methodTest = (MethodInsnNode) nodeTest;
-			                
+
 			                	if (methodTest.owner.equals(getNameDynamic(KEY_CLASS_WORLD_RENDERER)) && methodTest.desc.equals("(I)V") && methodTest.name.equals(getNameDynamic(KEY_METHOD_PRERENDER_BLOCKS)))
 			                	{
 			                		InsnList setLastY = new InsnList();
-			                		
+
 			                		//reset ClientProxyCore.lastY
 			                		setLastY.add(new LdcInsnNode(-1));
 			                		setLastY.add(new FieldInsnNode(Opcodes.PUTSTATIC, CLASS_CLIENT_PROXY_MAIN, "lastY", "I"));
-			                		
+
 			                        updateRMethod.instructions.insert(nodeTest, setLastY);
 			                		injectionCount++;
 			                        System.out.println("blg.updateRenderer - first done");
 			                	}
 			                }
-			                
+
 			                //Looking for istore 25
 			                //This corresponds to: int k3 = block.getRenderBlockPass();  (line 196 in the source code)
 			                if (nodeTest instanceof VarInsnNode && nodeTest.getOpcode() == Opcodes.ISTORE && ((VarInsnNode)nodeTest).var == 25)
@@ -943,7 +938,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformRenderGlobal(String name, byte[] bytes)
+	public byte[] transformRenderGlobal(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
@@ -981,7 +976,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			MethodNode loadMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_LOAD_RENDERERS);
 
 			//Looking for   iinc 2 3  - this is j += 3; at line 418
-			//Change this to iinc 2 4  - this makes space for one additional glRenderList per WorldRenderer 
+			//Change this to iinc 2 4  - this makes space for one additional glRenderList per WorldRenderer
 			if (loadMethod != null)
 			{
 				for (int count = 0; count < loadMethod.instructions.size(); count++)
@@ -1058,7 +1053,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					if (nodeTest instanceof MethodInsnNode && nodeTest.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) nodeTest).name.equals(methodMarkRenderersForNewPosition) && ((MethodInsnNode) nodeTest).desc.equals("(III)V"))
 					{
 						pos3 = count;
-						continue;
 					}
 				}
 
@@ -1100,7 +1094,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformRenderManager(String name, byte[] bytes)
+	public byte[] transformRenderManager(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
@@ -1165,7 +1159,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformTileEntityRenderer(String name, byte[] bytes)
+	public byte[] transformTileEntityRenderer(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
@@ -1208,7 +1202,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-    public byte[] transformMinecraftClass(String name, byte[] bytes)
+    public byte[] transformMinecraftClass(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
 
@@ -1239,7 +1233,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         return this.finishInjection(node);
     }
 
-	/*    public byte[] transformTessellator(String name, byte[] bytes)
+	/*    public byte[] transformTessellator(byte[] bytes)
 	    {
 			ClassNode node = startInjection(bytes);
 
@@ -1360,12 +1354,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 	private MethodNode getMethod(ClassNode node, String keyName)
 	{
-		Iterator<MethodNode> methods = node.methods.iterator();
-
-		while (methods.hasNext())
+		for (MethodNode methodNode : node.methods)
 		{
-			MethodNode methodNode = methods.next();
-
 			if (this.methodMatches(keyName, methodNode))
 			{
 				return methodNode;
@@ -1401,11 +1391,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			if (this.deobfuscated)
 			{
-				return this.nodemap.get(keyName).name;
+				return this.getName(keyName);
 			}
 			else
 			{
-				return this.nodemap.get(keyName).obfuscatedName;
+				return this.getObfName(keyName);
 			}
 		}
 		catch (NullPointerException e)
@@ -1467,13 +1457,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				Class<?> configClass = Class.forName(MicdoodleTransformer.CLASS_CONFIG_MANAGER.replace("/", "."));
 				String fieldName = "enableSmallMoons";
-				Boolean b = configClass.getDeclaredField(fieldName).getBoolean(null);
-				if (b == null)
-				{
-					System.err.println("Galacticraft: Failed to get field from Core Config Manager: " + fieldName);
-					b = true;
-				}
-				this.enableSmallMoons = b;
+				this.enableSmallMoons = configClass.getDeclaredField(fieldName).getBoolean(null);
 			}
 			catch (Exception e)
 			{

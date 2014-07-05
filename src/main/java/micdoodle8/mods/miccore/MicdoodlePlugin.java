@@ -24,7 +24,6 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 @TransformerExclusions(value = { "micdoodle8.mods.miccore" })
 public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 {
-	private static String transformerMain = "micdoodle8.mods.miccore.MicdoodleTransformer";
 	public static boolean hasRegistered = false;
 	public static final String mcVersion = "[1.7.2]";
 	public static File mcDir;
@@ -69,7 +68,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 	public String[] getASMTransformerClass()
 	{
 		MicdoodlePlugin.versionCheck(MicdoodlePlugin.mcVersion, "MicdoodleCore");
-		final String[] asmStrings = new String[] { MicdoodlePlugin.transformerMain };
+		final String[] asmStrings = new String[] { "micdoodle8.mods.miccore.MicdoodleTransformer" };
 
 		if (!MicdoodlePlugin.hasRegistered)
 		{
