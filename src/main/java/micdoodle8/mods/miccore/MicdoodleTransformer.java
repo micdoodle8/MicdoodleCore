@@ -1,32 +1,18 @@
 package micdoodle8.mods.miccore;
 
+import cpw.mods.fml.common.Loader;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.*;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-import net.minecraft.launchwrapper.LaunchClassLoader;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.IincInsnNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.IntInsnNode;
-import org.objectweb.asm.tree.LdcInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.TypeInsnNode;
-import org.objectweb.asm.tree.VarInsnNode;
-
-import cpw.mods.fml.common.Loader;
 
 public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassTransformer
 {
@@ -71,6 +57,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_CLASS_SERVER = "minecraftServer";
 	private static final String KEY_CLASS_WORLD_SERVER = "worldServer";
 	private static final String KEY_CLASS_WORLD_CLIENT = "worldClient";
+    private static final String KEY_CLASS_MUSIC_TICKER = "musicTicker";
 
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
@@ -103,6 +90,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_RENDERGLOBAL_SORTANDRENDER = "sortAndRenderMethod"; //RenderGlobal.sortAndRender()
 	private static final String KEY_METHOD_TESSELLATOR_ADDVERTEX = "addVertexMethod"; //Tessellator.addVertex()
 	private static final String KEY_METHOD_TILERENDERER_RENDERTILEAT = "renderTileAtMethod"; //TileEntityRendererDispatcher.renderTileEntityAt()
+	private static final String KEY_METHOD_START_GAME = "startGame";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
@@ -167,6 +155,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER, new ObfuscationEntry("net/minecraft/world/WorldServer", "mj"));
 		this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD_CLIENT, new ObfuscationEntry("net/minecraft/client/multiplayer/WorldClient", "biz"));
 		this.nodemap.put(MicdoodleTransformer.KEY_CLASS_TILEENTITY, new ObfuscationEntry("net/minecraft/tileentity/TileEntity", "and"));
+		this.nodemap.put(MicdoodleTransformer.KEY_CLASS_MUSIC_TICKER, new ObfuscationEntry("net/minecraft/client/audio/MusicTicker", "bst"));
 
 		this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 		this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -199,6 +188,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDERGLOBAL_SORTANDRENDER, new MethodObfuscationEntry("sortAndRender", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";ID)I")); //func_72719_a
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TESSELLATOR_ADDVERTEX, new MethodObfuscationEntry("addVertex", "a", "(DDD)V")); //blz/a (DDD)V net/minecraft/client/renderer/Tessellator/func_78377_a (DDD)V
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TILERENDERER_RENDERTILEAT, new MethodObfuscationEntry("renderTileEntityAt", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_TILEENTITY) + ";DDDF)V")); //bmc/a (Land;DDDF)V net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher/func_147549_a (Lnet/minecraft/tileentity/TileEntity;DDDF)V
+		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_START_GAME, new MethodObfuscationEntry("startGame", "Z", "()V"));
 	}
 
 	@Override
@@ -260,6 +250,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			bytes = this.transformTileEntityRenderer(name, bytes);
 		}
+        else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_MINECRAFT, name))
+        {
+            bytes = this.transformMinecraftClass(name, bytes);
+        }
 
 		if (name.contains("galacticraft"))
 		{
@@ -1213,6 +1207,37 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		return this.finishInjection(node);
 	}
+
+    public byte[] transformMinecraftClass(String name, byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+
+        MicdoodleTransformer.operationCount = 2;
+
+        MethodNode init = this.getMethod(node, KEY_METHOD_START_GAME);
+
+        if (init != null)
+        {
+            for (int i = 0; i < init.instructions.size(); i++)
+            {
+                AbstractInsnNode insnAt = init.instructions.get(i);
+
+                if (insnAt instanceof TypeInsnNode && insnAt.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insnAt).desc.equals(this.getName(KEY_CLASS_MUSIC_TICKER)))
+                {
+                    ((TypeInsnNode) insnAt).desc = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
+                    MicdoodleTransformer.injectionCount++;
+                }
+
+                if (insnAt instanceof MethodInsnNode && insnAt.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) insnAt).owner.equals(this.getName(KEY_CLASS_MUSIC_TICKER)))
+                {
+                    ((MethodInsnNode) insnAt).owner = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
+                    MicdoodleTransformer.injectionCount++;
+                }
+            }
+        }
+
+        return this.finishInjection(node);
+    }
 
 	/*    public byte[] transformTessellator(String name, byte[] bytes)
 	    {
