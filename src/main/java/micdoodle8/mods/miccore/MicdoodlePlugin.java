@@ -1,18 +1,7 @@
 package micdoodle8.mods.miccore;
 
-import java.awt.Desktop;
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.JEditorPane;
-import javax.swing.JOptionPane;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-
-import net.minecraftforge.common.MinecraftForge;
+import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.LoaderException;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
@@ -20,6 +9,18 @@ import cpw.mods.fml.relauncher.FMLInjectionData;
 import cpw.mods.fml.relauncher.IFMLCallHook;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
+import net.minecraftforge.common.MinecraftForge;
+
+import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 @TransformerExclusions(value = { "micdoodle8.mods.miccore" })
 public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
@@ -27,6 +28,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 	public static boolean hasRegistered = false;
 	public static final String mcVersion = "[1.7.2]";
 	public static File mcDir;
+    public static File canonicalConfigDir;
 
 	public static void versionCheck(String reqVersion, String mod)
 	{
@@ -116,6 +118,34 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 		if (data.containsKey("mcLocation"))
 		{
 			MicdoodlePlugin.mcDir = (File) data.get("mcLocation");
+            File configDir = new File(mcDir, "config");
+            String canonicalConfigPath;
+
+            try
+            {
+                canonicalConfigPath = configDir.getCanonicalPath();
+                canonicalConfigDir = configDir.getCanonicalFile();
+            }
+            catch (IOException ioe)
+            {
+                throw new LoaderException(ioe);
+            }
+
+            if (!canonicalConfigDir.exists())
+            {
+                FMLLog.fine("No config directory found, creating one: %s", canonicalConfigPath);
+                boolean dirMade = canonicalConfigDir.mkdir();
+
+                if (!dirMade)
+                {
+                    FMLLog.severe("Unable to create the config directory %s", canonicalConfigPath);
+                    throw new LoaderException();
+                }
+
+                FMLLog.info("Config directory created successfully");
+            }
+
+            ConfigManagerMicCore.init();
 		}
 
 		System.out.println("[Micdoodle8Core]: " + "Patching game...");

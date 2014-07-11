@@ -19,7 +19,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	HashMap<String, ObfuscationEntry> nodemap = new HashMap<String, ObfuscationEntry>();
 	private boolean deobfuscated = true;
 	private boolean optifinePresent;
-	private Boolean enableSmallMoons = null;
 
 	private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
 	private static final String KEY_CLASS_WORLD = "worldClass";
@@ -1451,22 +1450,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 	private boolean getSmallMoonsEnabled()
 	{
-		if (this.enableSmallMoons == null)
-		{
-			try
-			{
-				Class<?> configClass = Class.forName(MicdoodleTransformer.CLASS_CONFIG_MANAGER.replace("/", "."));
-				String fieldName = "enableSmallMoons";
-				this.enableSmallMoons = configClass.getDeclaredField(fieldName).getBoolean(null);
-			}
-			catch (Exception e)
-			{
-				System.err.println("Galacticraft: Failed to get extract field value from Core Config Manager");
-				e.printStackTrace();
-                this.enableSmallMoons = true;
-			}
-		}
-
-		return this.enableSmallMoons;
+		return ConfigManagerMicCore.enableSmallMoons;
 	}
 }
