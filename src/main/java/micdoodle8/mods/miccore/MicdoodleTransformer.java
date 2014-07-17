@@ -341,11 +341,14 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			}
 		}
 
+        System.out.println("Bukkit0");
 		if (attemptLoginMethod != null)
 		{
+            System.out.println("Bukkit1");
 			for (int count = 0; count < attemptLoginMethod.instructions.size(); count++)
 			{
 				final AbstractInsnNode list = attemptLoginMethod.instructions.get(count);
+                System.out.println("Bukkit2" + list);
 
 				if (list instanceof TypeInsnNode)
 				{
@@ -353,6 +356,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 					if (nodeAt.getOpcode() == Opcodes.NEW && nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
 					{
+                        System.out.println("Bukkit3");
 						final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
 
 						attemptLoginMethod.instructions.set(nodeAt, overwriteNode);
@@ -365,6 +369,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 					if (nodeAt.getOpcode() == Opcodes.INVOKESPECIAL && nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
 					{
+                        System.out.println("Bukkit4");
 						attemptLoginMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), "(Lnet/minecraft/server/MinecraftServer;L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";Ljava/lang/String;L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V"));
 
 						MicdoodleTransformer.injectionCount++;
