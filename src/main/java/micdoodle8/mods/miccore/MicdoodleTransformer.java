@@ -57,6 +57,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_CLASS_WORLD_SERVER = "worldServer";
 	private static final String KEY_CLASS_WORLD_CLIENT = "worldClient";
     private static final String KEY_CLASS_MUSIC_TICKER = "musicTicker";
+    private static final String KEY_NET_HANDLER_LOGIN_SERVER = "netHandlerLoginServer";
 
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
@@ -90,6 +91,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_TESSELLATOR_ADDVERTEX = "addVertexMethod"; //Tessellator.addVertex()
 	private static final String KEY_METHOD_TILERENDERER_RENDERTILEAT = "renderTileAtMethod"; //TileEntityRendererDispatcher.renderTileEntityAt()
 	private static final String KEY_METHOD_START_GAME = "startGame";
+    private static final String KEY_METHOD_ATTEMPT_LOGIN = "attemptLogin";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
@@ -155,6 +157,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD_CLIENT, new ObfuscationEntry("net/minecraft/client/multiplayer/WorldClient", "biz"));
 		this.nodemap.put(MicdoodleTransformer.KEY_CLASS_TILEENTITY, new ObfuscationEntry("net/minecraft/tileentity/TileEntity", "and"));
 		this.nodemap.put(MicdoodleTransformer.KEY_CLASS_MUSIC_TICKER, new ObfuscationEntry("net/minecraft/client/audio/MusicTicker", "bst"));
+        this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "nd"));
 
 		this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 		this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -174,7 +177,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_PARTICLES, new MethodObfuscationEntry("renderParticles", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";F)V"));
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP, new MethodObfuscationEntry("<init>", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V"));
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP, new MethodObfuscationEntry("<init>", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_MINECRAFT) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SESSION) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER) + ";)V"));
-		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("", "", ""));
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_HANDLE_SPAWN_PLAYER, new MethodObfuscationEntry("handleSpawnPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PACKET_SPAWN_PLAYER) + ";)V"));
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "g", "(F)V"));
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDERMANAGER, new MethodObfuscationEntry("func_147939_a", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";DDDFFZ)Z"));
@@ -188,6 +190,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TESSELLATOR_ADDVERTEX, new MethodObfuscationEntry("addVertex", "a", "(DDD)V")); //blz/a (DDD)V net/minecraft/client/renderer/Tessellator/func_78377_a (DDD)V
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TILERENDERER_RENDERTILEAT, new MethodObfuscationEntry("renderTileEntityAt", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_TILEENTITY) + ";DDDF)V")); //bmc/a (Land;DDDF)V net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher/func_147549_a (Lnet/minecraft/tileentity/TileEntity;DDDF)V
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_START_GAME, new MethodObfuscationEntry("startGame", "Z", "()V"));
+        this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
 	}
 
 	@Override
