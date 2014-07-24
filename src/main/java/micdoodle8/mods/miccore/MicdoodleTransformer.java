@@ -1454,6 +1454,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 	private boolean getSmallMoonsEnabled()
 	{
-		return ConfigManagerMicCore.enableSmallMoons;
+        return false;
+//		return ConfigManagerMicCore.enableSmallMoons;
 	}
 }
