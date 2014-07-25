@@ -1,6 +1,5 @@
 package micdoodle8.mods.miccore;
 
-import ch.epfl.lamp.compiler.msil.emit.OpCode;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -1222,23 +1221,14 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             {
                 AbstractInsnNode insnAt = init.instructions.get(i);
 
-                FMLLog.info("" + insnAt + " " + insnAt.getOpcode() + ":" + Opcodes.NEW + ":" + Opcodes.INVOKESPECIAL);
-
-                if (insnAt instanceof TypeInsnNode)
-                    FMLLog.info("   A " + ((TypeInsnNode) insnAt).desc);
-                if (insnAt instanceof TypeInsnNode && insnAt.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insnAt).desc.equals(this.getName(KEY_CLASS_MUSIC_TICKER)))
+                if (insnAt instanceof TypeInsnNode && insnAt.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insnAt).desc.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
                 {
-                    FMLLog.info("       DONE A");
                     ((TypeInsnNode) insnAt).desc = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
                     MicdoodleTransformer.injectionCount++;
                 }
 
-                if (insnAt instanceof MethodInsnNode)
-                    FMLLog.info("   B " + ((MethodInsnNode) insnAt).owner);
-
-                if (insnAt instanceof MethodInsnNode && insnAt.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) insnAt).owner.equals(this.getName(KEY_CLASS_MUSIC_TICKER)))
+                if (insnAt instanceof MethodInsnNode && insnAt.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) insnAt).owner.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
                 {
-                    FMLLog.info("       DONE B");
                     ((MethodInsnNode) insnAt).owner = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
                     MicdoodleTransformer.injectionCount++;
                 }
