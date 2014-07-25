@@ -1,5 +1,7 @@
 package micdoodle8.mods.miccore;
 
+import ch.epfl.lamp.compiler.msil.emit.OpCode;
+import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.objectweb.asm.ClassReader;
@@ -91,7 +93,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_TESSELLATOR_ADDVERTEX = "addVertexMethod"; //Tessellator.addVertex()
 	private static final String KEY_METHOD_TILERENDERER_RENDERTILEAT = "renderTileAtMethod"; //TileEntityRendererDispatcher.renderTileEntityAt()
 	private static final String KEY_METHOD_START_GAME = "startGame";
-    private static final String KEY_METHOD_ATTEMPT_LOGIN = "attemptLogin";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
@@ -1213,20 +1214,31 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         MethodNode init = this.getMethod(node, KEY_METHOD_START_GAME);
 
+        FMLLog.info("Found method " + init);
+
         if (init != null)
         {
             for (int i = 0; i < init.instructions.size(); i++)
             {
                 AbstractInsnNode insnAt = init.instructions.get(i);
 
+                FMLLog.info("" + insnAt + " " + insnAt.getOpcode() + ":" + Opcodes.NEW + ":" + Opcodes.INVOKESPECIAL);
+
+                if (insnAt instanceof TypeInsnNode)
+                    FMLLog.info("   A " + ((TypeInsnNode) insnAt).desc);
                 if (insnAt instanceof TypeInsnNode && insnAt.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insnAt).desc.equals(this.getName(KEY_CLASS_MUSIC_TICKER)))
                 {
+                    FMLLog.info("       DONE A");
                     ((TypeInsnNode) insnAt).desc = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
                     MicdoodleTransformer.injectionCount++;
                 }
 
+                if (insnAt instanceof MethodInsnNode)
+                    FMLLog.info("   B " + ((MethodInsnNode) insnAt).owner);
+
                 if (insnAt instanceof MethodInsnNode && insnAt.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) insnAt).owner.equals(this.getName(KEY_CLASS_MUSIC_TICKER)))
                 {
+                    FMLLog.info("       DONE B");
                     ((MethodInsnNode) insnAt).owner = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
                     MicdoodleTransformer.injectionCount++;
                 }
