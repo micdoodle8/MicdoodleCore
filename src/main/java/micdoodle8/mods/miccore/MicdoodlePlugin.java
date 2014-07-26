@@ -131,7 +131,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
             {
                 final URLClassLoader loader = new LaunchClassLoader(((URLClassLoader) this.getClass().getClassLoader()).getURLs());
                 URL classResource = loader.findResource(String.valueOf("net.minecraft.world.World").replace('.', '/').concat(".class"));
-                obfuscated = classResource != null;
+                obfuscated = classResource == null;
             }
             catch (final Exception e)
             {
