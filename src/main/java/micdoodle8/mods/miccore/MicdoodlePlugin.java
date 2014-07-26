@@ -160,6 +160,12 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                                 micCoreVersion = micVersion.split("\\.");
                             }
+                            else if (split0.length == 3)
+                            {
+                                String micVersion = split0[2].replace(".jar", "").replace(".zip", "");
+
+                                micCoreVersion = micVersion.split("\\.");
+                            }
                         }
 
                         if (file.getName().contains("GalacticraftCore"))
@@ -171,6 +177,12 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                             if (split0.length == 4)
                             {
                                 String micVersion = split0[3].replace(".jar", "").replace(".zip", "");
+
+                                gcVersion = micVersion.split("\\.");
+                            }
+                            else if (split0.length == 3)
+                            {
+                                String micVersion = split0[2].replace(".jar", "").replace(".zip", "");
 
                                 gcVersion = micVersion.split("\\.");
                             }
