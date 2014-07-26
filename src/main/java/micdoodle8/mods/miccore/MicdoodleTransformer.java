@@ -1210,31 +1210,29 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     {
         ClassNode node = this.startInjection(bytes);
 
-        MicdoodleTransformer.operationCount = 2;
-
-        MethodNode init = this.getMethod(node, KEY_METHOD_START_GAME);
-
-        FMLLog.info("Found method " + init);
-
-        if (init != null)
-        {
-            for (int i = 0; i < init.instructions.size(); i++)
-            {
-                AbstractInsnNode insnAt = init.instructions.get(i);
-
-                if (insnAt instanceof TypeInsnNode && insnAt.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insnAt).desc.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
-                {
-                    ((TypeInsnNode) insnAt).desc = CLASS_MUSIC_TICKER_GC;
-                    MicdoodleTransformer.injectionCount++;
-                }
-
-                if (insnAt instanceof MethodInsnNode && insnAt.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) insnAt).owner.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
-                {
-                    ((MethodInsnNode) insnAt).owner = CLASS_MUSIC_TICKER_GC;
-                    MicdoodleTransformer.injectionCount++;
-                }
-            }
-        }
+//        MicdoodleTransformer.operationCount = 2;
+//
+//        MethodNode init = this.getMethod(node, KEY_METHOD_START_GAME);
+//
+//        if (init != null)
+//        {
+//            for (int i = 0; i < init.instructions.size(); i++)
+//            {
+//                AbstractInsnNode insnAt = init.instructions.get(i);
+//
+//                if (insnAt instanceof TypeInsnNode && insnAt.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insnAt).desc.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
+//                {
+//                    ((TypeInsnNode) insnAt).desc = CLASS_MUSIC_TICKER_GC;
+//                    MicdoodleTransformer.injectionCount++;
+//                }
+//
+//                if (insnAt instanceof MethodInsnNode && insnAt.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) insnAt).owner.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
+//                {
+//                    ((MethodInsnNode) insnAt).owner = CLASS_MUSIC_TICKER_GC;
+//                    MicdoodleTransformer.injectionCount++;
+//                }
+//            }
+//        } TODO
 
         return this.finishInjection(node);
     }
