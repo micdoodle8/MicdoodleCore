@@ -130,7 +130,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
             {
                 Class.forName("net.minecraft.world.World");
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
                 obfuscated = true;
             }
