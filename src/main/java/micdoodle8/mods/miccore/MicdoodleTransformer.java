@@ -96,6 +96,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
 	private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
+	private static final String CLASS_MUSIC_TICKER_GC = "micdoodle8/mods/galacticraft/core/client/sounds/MusicTickerGC";
 	private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
 	private static final String CLASS_GL11 = "org/lwjgl/opengl/GL11";
 	private static final String CLASS_CONFIG_MANAGER = "micdoodle8/mods/galacticraft/core/util/ConfigManagerCore";
@@ -1223,13 +1224,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                 if (insnAt instanceof TypeInsnNode && insnAt.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insnAt).desc.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
                 {
-                    ((TypeInsnNode) insnAt).desc = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
+                    ((TypeInsnNode) insnAt).desc = CLASS_MUSIC_TICKER_GC;
                     MicdoodleTransformer.injectionCount++;
                 }
 
                 if (insnAt instanceof MethodInsnNode && insnAt.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) insnAt).owner.equals(this.getNameDynamic(KEY_CLASS_MUSIC_TICKER)))
                 {
-                    ((MethodInsnNode) insnAt).owner = CLASS_CLIENT_PROXY_MAIN + "$MusicTickerGC";
+                    ((MethodInsnNode) insnAt).owner = CLASS_MUSIC_TICKER_GC;
                     MicdoodleTransformer.injectionCount++;
                 }
             }
