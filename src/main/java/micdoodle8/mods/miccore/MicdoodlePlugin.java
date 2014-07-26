@@ -1,8 +1,10 @@
 package micdoodle8.mods.miccore;
 
 import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.LoaderException;
 import cpw.mods.fml.common.eventhandler.Event;
+import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
 import cpw.mods.fml.relauncher.FMLInjectionData;
@@ -119,7 +121,92 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 		{
 			MicdoodlePlugin.mcDir = (File) data.get("mcLocation");
             File configDir = new File(mcDir, "config");
+            File modsDir = new File(mcDir, "mods");
             String canonicalConfigPath;
+
+            boolean obfuscated = false;
+
+            try
+            {
+                Class.forName("net.minecraft.world.World");
+            }
+            catch (Exception e)
+            {
+                obfuscated = true;
+            }
+
+            if (obfuscated)
+            {
+                File[] fileList = modsDir.listFiles();
+
+                String[] micCoreVersion = null;
+                String[] gcVersion = null;
+                if (fileList != null)
+                {
+                    for (File file : fileList)
+                    {
+                        if (file.getName().contains("MicdoodleCore"))
+                        {
+                            String fileName = file.getName();
+
+                            String[] split0 = fileName.split("\\-");
+
+                            if (split0.length == 4)
+                            {
+                                String micVersion = split0[3].replace(".jar", "").replace(".zip", "");
+
+                                micCoreVersion = micVersion.split("\\.");
+                            }
+                        }
+
+                        if (file.getName().contains("GalacticraftCore"))
+                        {
+                            String fileName = file.getName();
+
+                            String[] split0 = fileName.split("\\-");
+
+                            if (split0.length == 4)
+                            {
+                                String micVersion = split0[3].replace(".jar", "").replace(".zip", "");
+
+                                gcVersion = micVersion.split("\\.");
+                            }
+                        }
+                    }
+                }
+
+                if (micCoreVersion == null || gcVersion == null)
+                {
+                    throw new RuntimeException("BAD GALACTICRAFT/MICDOODLECORE SETUP " + micCoreVersion + " " + gcVersion);
+                }
+                else
+                {
+                    if (micCoreVersion.length != gcVersion.length)
+                    {
+                        throw new RuntimeException("BAD GALACTICRAFT/MICDOODLECORE SETUP");
+                    }
+                    else
+                    {
+                        for (int i = 0; i < micCoreVersion.length; i++)
+                        {
+                            if (!micCoreVersion[i].equals(gcVersion[i]))
+                            {
+                                int micCoreVersionI = Integer.parseInt(micCoreVersion[i]);
+                                int gcVersionI = Integer.parseInt(gcVersion[i]);
+
+                                if (micCoreVersionI < gcVersionI)
+                                {
+                                    throw new RuntimeException("MicdoodleCore Update Required");
+                                }
+                                else
+                                {
+                                    throw new RuntimeException("Galacticraft Update Required");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             try
             {
