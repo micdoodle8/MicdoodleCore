@@ -138,7 +138,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                 e.printStackTrace();
             }
 
-            if (obfuscated)
+//            if (obfuscated)
             {
                 File[] fileList = modsDir.listFiles();
 
@@ -202,6 +202,12 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                     }
                     else
                     {
+                        for (int i = 0; i < (micCoreVersion.length & gcVersion.length); i++)
+                        {
+                            micCoreVersion[i] = trimInvalidIntegers(micCoreVersion[i]);
+                            gcVersion[i] = trimInvalidIntegers(gcVersion[i]);
+                        }
+
                         for (int i = 0; i < micCoreVersion.length; i++)
                         {
                             if (!micCoreVersion[i].equals(gcVersion[i]))
@@ -252,6 +258,24 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
 		System.out.println("[Micdoodle8Core]: " + "Patching game...");
 	}
+
+    private String trimInvalidIntegers(String toTrim)
+    {
+        String newString = "";
+        for (int j = 0; j < toTrim.length(); j++)
+        {
+            String c = toTrim.substring(j, j + 1);
+            if ("0123456789".contains(c))
+            {
+                newString = newString.concat(c);
+            }
+            else
+            {
+                break;
+            }
+        }
+        return newString;
+    }
 
 	@Override
 	public Void call() throws Exception
