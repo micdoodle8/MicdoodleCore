@@ -138,7 +138,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                 e.printStackTrace();
             }
 
-//            if (obfuscated)
+            if (obfuscated)
             {
                 File[] fileList = modsDir.listFiles();
 
