@@ -92,6 +92,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_TESSELLATOR_ADDVERTEX = "addVertexMethod"; //Tessellator.addVertex()
 	private static final String KEY_METHOD_TILERENDERER_RENDERTILEAT = "renderTileAtMethod"; //TileEntityRendererDispatcher.renderTileEntityAt()
 	private static final String KEY_METHOD_START_GAME = "startGame";
+	private static final String KEY_METHOD_CAN_RENDER_FIRE = "canRenderOnFire";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
@@ -191,6 +192,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TESSELLATOR_ADDVERTEX, new MethodObfuscationEntry("addVertex", "a", "(DDD)V")); //blz/a (DDD)V net/minecraft/client/renderer/Tessellator/func_78377_a (DDD)V
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TILERENDERER_RENDERTILEAT, new MethodObfuscationEntry("renderTileEntityAt", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_TILEENTITY) + ";DDDF)V")); //bmc/a (Land;DDDF)V net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher/func_147549_a (Lnet/minecraft/tileentity/TileEntity;DDDF)V
 		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_START_GAME, new MethodObfuscationEntry("startGame", "Z", "()V"));
+		this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CAN_RENDER_FIRE, new MethodObfuscationEntry("canRenderOnFire", "aA", "()Z"));
         this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
 	}
 
@@ -256,6 +258,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_MINECRAFT, name))
         {
             bytes = this.transformMinecraftClass(bytes);
+        }
+        else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY, name))
+        {
+            bytes = this.transformEntityClass(bytes);
         }
 
 		if (name.contains("galacticraft"))
@@ -1205,6 +1211,33 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		return this.finishInjection(node);
 	}
+
+    public byte[] transformEntityClass(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+
+        MicdoodleTransformer.operationCount = 1;
+
+        MethodNode method = this.getMethod(node, KEY_METHOD_CAN_RENDER_FIRE);
+
+        if (method != null)
+        {
+            for (int i = 0; i < method.instructions.size(); i++)
+            {
+                AbstractInsnNode nodeAt = method.instructions.get(i);
+
+                if (nodeAt instanceof MethodInsnNode && nodeAt.getOpcode() == Opcodes.INVOKEVIRTUAL)
+                {
+                    MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "shouldRenderFire", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";)Z");
+
+                    method.instructions.set(nodeAt, overwriteNode);
+                    MicdoodleTransformer.injectionCount++;
+                }
+            }
+        }
+
+        return this.finishInjection(node);
+    }
 
     public byte[] transformMinecraftClass(byte[] bytes)
     {
