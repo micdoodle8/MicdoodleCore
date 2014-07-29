@@ -32,6 +32,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 	public static final String mcVersion = "[1.7.2]";
 	public static File mcDir;
     public static File canonicalConfigDir;
+    private static boolean checkedVersions = false;
 
 	public static void versionCheck(String reqVersion, String mod)
 	{
@@ -125,103 +126,111 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
             File modsDir = new File(mcDir, "mods");
             String canonicalConfigPath;
 
-            boolean obfuscated = false;
-
-            try
+            if (!checkedVersions)
             {
-                final URLClassLoader loader = new LaunchClassLoader(((URLClassLoader) this.getClass().getClassLoader()).getURLs());
-                URL classResource = loader.findResource(String.valueOf("net.minecraft.world.World").replace('.', '/').concat(".class"));
-                obfuscated = classResource == null;
-            }
-            catch (final Exception e)
-            {
-                e.printStackTrace();
-            }
+                checkedVersions = true;
+                boolean obfuscated = false;
 
-            if (obfuscated)
-            {
-                File[] fileList = modsDir.listFiles();
-
-                String[] micCoreVersion = null;
-                String[] gcVersion = null;
-                if (fileList != null)
+                try
                 {
-                    for (File file : fileList)
+                    final URLClassLoader loader = new LaunchClassLoader(((URLClassLoader) this.getClass().getClassLoader()).getURLs());
+                    URL classResource = loader.findResource(String.valueOf("net.minecraft.world.World").replace('.', '/').concat(".class"));
+                    obfuscated = classResource == null;
+                }
+                catch (final Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                if (obfuscated)
+                {
+                    File[] fileList = modsDir.listFiles();
+
+                    String[] micCoreVersion = null;
+                    String[] gcVersion = null;
+                    if (fileList != null)
                     {
-                        if (file.getName().contains("MicdoodleCore"))
+                        for (File file : fileList)
                         {
-                            String fileName = file.getName();
-
-                            String[] split0 = fileName.split("\\-");
-
-                            if (split0.length == 4)
+                            if (file.getName().contains("MicdoodleCore"))
                             {
-                                String micVersion = split0[3].replace(".jar", "").replace(".zip", "");
+                                String fileName = file.getName();
 
-                                micCoreVersion = micVersion.split("\\.");
+                                String[] split0 = fileName.split("\\-");
+
+                                if (split0.length == 4)
+                                {
+                                    String micVersion = split0[3].replace(".jar", "").replace(".zip", "");
+
+                                    micCoreVersion = micVersion.split("\\.");
+                                }
+                                else if (split0.length == 3)
+                                {
+                                    String micVersion = split0[2].replace(".jar", "").replace(".zip", "");
+
+                                    micCoreVersion = micVersion.split("\\.");
+                                }
                             }
-                            else if (split0.length == 3)
+
+                            if (file.getName().contains("GalacticraftCore"))
                             {
-                                String micVersion = split0[2].replace(".jar", "").replace(".zip", "");
+                                String fileName = file.getName();
 
-                                micCoreVersion = micVersion.split("\\.");
-                            }
-                        }
+                                String[] split0 = fileName.split("\\-");
 
-                        if (file.getName().contains("GalacticraftCore"))
-                        {
-                            String fileName = file.getName();
+                                if (split0.length == 4)
+                                {
+                                    String micVersion = split0[3].replace(".jar", "").replace(".zip", "");
 
-                            String[] split0 = fileName.split("\\-");
+                                    gcVersion = micVersion.split("\\.");
+                                }
+                                else if (split0.length == 3)
+                                {
+                                    String micVersion = split0[2].replace(".jar", "").replace(".zip", "");
 
-                            if (split0.length == 4)
-                            {
-                                String micVersion = split0[3].replace(".jar", "").replace(".zip", "");
-
-                                gcVersion = micVersion.split("\\.");
-                            }
-                            else if (split0.length == 3)
-                            {
-                                String micVersion = split0[2].replace(".jar", "").replace(".zip", "");
-
-                                gcVersion = micVersion.split("\\.");
+                                    gcVersion = micVersion.split("\\.");
+                                }
                             }
                         }
                     }
-                }
 
-                if (micCoreVersion == null || gcVersion == null)
-                {
-                    throw new RuntimeException("BAD GALACTICRAFT/MICDOODLECORE SETUP " + micCoreVersion + " " + gcVersion);
-                }
-                else
-                {
-                    if (micCoreVersion.length != gcVersion.length)
+                    if (micCoreVersion == null)
                     {
-                        throw new RuntimeException("BAD GALACTICRAFT/MICDOODLECORE SETUP");
+                        this.showErrorDialog(new Object[]{"Install", "Ignore"}, "Failed to find MicdoodleCore file in mods folder!");
+                    }
+                    else if (gcVersion == null)
+                    {
+                        this.showErrorDialog(new Object[]{"Install", "Ignore"}, "Failed to find Galacticraft file in mods folder!");
                     }
                     else
                     {
-                        for (int i = 0; i < (micCoreVersion.length & gcVersion.length); i++)
+                        if (micCoreVersion.length != gcVersion.length)
                         {
-                            micCoreVersion[i] = trimInvalidIntegers(micCoreVersion[i]);
-                            gcVersion[i] = trimInvalidIntegers(gcVersion[i]);
+                            this.showErrorDialog(new Object[]{"Reinstall", "Ignore"}, "Failed to match Galacticraft version to MicdoodleCore version!");
                         }
-
-                        for (int i = 0; i < micCoreVersion.length; i++)
+                        else
                         {
-                            if (!micCoreVersion[i].equals(gcVersion[i]))
+                            for (int i = 0; i < (micCoreVersion.length & gcVersion.length); i++)
                             {
-                                int micCoreVersionI = Integer.parseInt(micCoreVersion[i]);
-                                int gcVersionI = Integer.parseInt(gcVersion[i]);
+                                micCoreVersion[i] = trimInvalidIntegers(micCoreVersion[i]);
+                                gcVersion[i] = trimInvalidIntegers(gcVersion[i]);
+                            }
 
-                                if (micCoreVersionI < gcVersionI)
+                            for (int i = 0; i < micCoreVersion.length; i++)
+                            {
+                                if (!micCoreVersion[i].equals(gcVersion[i]))
                                 {
-                                    throw new RuntimeException("MicdoodleCore Update Required");
-                                }
-                                else
-                                {
-                                    throw new RuntimeException("Galacticraft Update Required");
+                                    int micCoreVersionI = Integer.parseInt(micCoreVersion[i]);
+                                    int gcVersionI = Integer.parseInt(gcVersion[i]);
+
+                                    if (micCoreVersionI < gcVersionI)
+                                    {
+                                        this.showErrorDialog(new Object[]{"Update", "Ignore"}, "MicdoodleCore Update Required!", "Galacticraft and MicdoodleCore should always be at the same version", "Severe issues can be caused from not updating");
+                                    }
+                                    else
+                                    {
+                                        this.showErrorDialog(new Object[]{"Update", "Ignore"}, "Galacticraft Update Required!", "Galacticraft and MicdoodleCore should always be at the same version", "Severe issues can be caused from not updating");
+                                    }
                                 }
                             }
                         }
@@ -258,6 +267,60 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
 		System.out.println("[Micdoodle8Core]: " + "Patching game...");
 	}
+
+    private void showErrorDialog(Object[] options, String... messages)
+    {
+        String err = "<html>";
+        for (String s : messages)
+        {
+            System.err.print(s);
+            err = err.concat(s + "<br />");
+        }
+        err = err.concat("</html>");
+
+        final JEditorPane ep = new JEditorPane("text/html", err);
+
+        ep.setEditable(false);
+        ep.setOpaque(false);
+        ep.addHyperlinkListener(new HyperlinkListener()
+        {
+            @Override
+            public void hyperlinkUpdate(HyperlinkEvent event)
+            {
+                try
+                {
+                    if (event.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
+                    {
+                        Desktop.getDesktop().browse(event.getURL().toURI());
+                    }
+                }
+                catch (final Exception e)
+                {
+                }
+            }
+        });
+
+        int ret = JOptionPane.showOptionDialog(null, ep, "Fatal error", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+        System.err.println(ret);
+
+        switch (ret)
+        {
+            case 0:
+                try
+                {
+                    Desktop.getDesktop().browse(new URL("http://micdoodle8.com/mods/galacticraft/downloads").toURI());
+                }
+                catch (final Exception e)
+                {
+                }
+                System.exit(0);
+                break;
+            case 1:
+                break;
+            case JOptionPane.CLOSED_OPTION:
+                break;
+        }
+    }
 
     private String trimInvalidIntegers(String toTrim)
     {
