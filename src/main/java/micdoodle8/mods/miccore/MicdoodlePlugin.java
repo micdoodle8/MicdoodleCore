@@ -11,6 +11,7 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraftforge.common.MinecraftForge;
+import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -22,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -144,7 +146,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                 if (obfuscated)
                 {
-                    File[] fileList = modsDir.listFiles();
+                    Collection<File> fileList = FileUtils.listFiles(modsDir, new String[] {"jar", "zip"}, true);
 
                     String[] micCoreVersion = null;
                     String[] gcVersion = null;
