@@ -29,7 +29,7 @@ import java.util.Map;
 public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 {
 	public static boolean hasRegistered = false;
-	public static final String mcVersion = "[1.7.2]";
+	public static final String mcVersion = "[1.7.2],[1.7.10]";
 	public static File mcDir;
     public static File canonicalConfigDir;
     private static boolean checkedVersions = false;
@@ -387,6 +387,6 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 	@Override
 	public String getAccessTransformerClass()
 	{
-		return "micdoodle8.mods.miccore.MicdoodleAccessTransformer";
+        return "micdoodle8.mods.miccore.MicdoodleAccessTransformer";
 	}
 }
