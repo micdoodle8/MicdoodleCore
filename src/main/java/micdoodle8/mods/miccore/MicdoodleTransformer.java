@@ -98,6 +98,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_CAN_RENDER_FIRE = "canRenderOnFire";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
+	private static final String CLASS_VERSION_SPECIFIC = "micdoodle8/mods/miccore/Annotations$VersionSpecific";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
 	private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
 	private static final String CLASS_MUSIC_TICKER_GC = "micdoodle8/mods/galacticraft/core/client/sounds/MusicTickerGC";
@@ -752,6 +753,33 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				for (AnnotationNode annotation : methodnode.visibleAnnotations)
 				{
+                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_VERSION_SPECIFIC + ";"))
+                    {
+                        String[] toMatch = null;
+
+                        for (int i = 0; i < annotation.values.size(); i++)
+                        {
+                            Object value = annotation.values.get(i);
+
+                            if (value.equals("version"))
+                            {
+                                toMatch = (String[])annotation.values.get(i + 1);
+                            }
+                        }
+
+                        if (toMatch != null && toMatch.length > 0)
+                        {
+                            for (String toMatch0 : toMatch)
+                            {
+                                if (!mcVersionMatches(toMatch0))
+                                {
+                                    methods.remove();
+                                    break methodLabel;
+                                }
+                            }
+                        }
+                    }
+
 					if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_RUNTIME_INTERFACE + ";"))
 					{
 						List<String> desiredInterfaces = new ArrayList<String>();

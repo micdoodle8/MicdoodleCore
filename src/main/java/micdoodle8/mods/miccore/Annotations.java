@@ -26,4 +26,11 @@ public interface Annotations
 	{
 		Side targetSide();
 	}
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface VersionSpecific
+    {
+        String[] versions();
+    }
 }
