@@ -9,6 +9,7 @@ import cpw.mods.fml.relauncher.FMLInjectionData;
 import cpw.mods.fml.relauncher.IFMLCallHook;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.io.FileUtils;
@@ -135,9 +136,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                 try
                 {
-                    final URLClassLoader loader = new LaunchClassLoader(((URLClassLoader) this.getClass().getClassLoader()).getURLs());
-                    URL classResource = loader.findResource(String.valueOf("net.minecraft.world.World").replace('.', '/').concat(".class"));
-                    obfuscated = classResource == null;
+                    obfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") == null;
                 }
                 catch (final Exception e)
                 {

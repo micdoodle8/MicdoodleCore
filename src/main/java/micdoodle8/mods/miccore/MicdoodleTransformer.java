@@ -4,6 +4,7 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
 import cpw.mods.fml.relauncher.FMLInjectionData;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -113,12 +114,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         this.mcVersion = new DefaultArtifactVersion((String) FMLInjectionData.data()[4]);
 
         try {
-            final URLClassLoader loader = new LaunchClassLoader(((URLClassLoader) this.getClass().getClassLoader()).getURLs());
-            URL classResource = loader.findResource(String.valueOf("net.minecraft.world.World").replace('.', '/').concat(".class"));
-            this.deobfuscated = classResource != null;
-
-            classResource = loader.findResource(String.valueOf("CustomColorizer").replace('.', '/').concat(".class"));
-            this.optifinePresent = classResource != null;
+            deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
+            optifinePresent = Launch.classLoader.getClassBytes("CustomColorizer") != null;
         } catch (final Exception e) {
             e.printStackTrace();
         }
