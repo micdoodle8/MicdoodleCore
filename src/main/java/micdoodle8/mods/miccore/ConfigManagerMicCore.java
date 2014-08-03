@@ -12,7 +12,9 @@ public class ConfigManagerMicCore
     static Configuration configuration;
 
     public static boolean enableSmallMoons;
+    public static boolean enableDebug;
 
+    
     public static void init()
     {
         if (!ConfigManagerMicCore.loaded)
@@ -29,6 +31,7 @@ public class ConfigManagerMicCore
         try
         {
             ConfigManagerMicCore.enableSmallMoons = ConfigManagerMicCore.configuration.get(Configuration.CATEGORY_GENERAL, "Enable Small Moons", true, "This will cause some dimensions to appear round, disable if render transformations cause a conflict.").getBoolean(true);
+            ConfigManagerMicCore.enableDebug = ConfigManagerMicCore.configuration.get(Configuration.CATEGORY_GENERAL, "Enable Debug messages", false, "Enable debug messages during Galacticraft bytecode injection at startup.").getBoolean(false);
         }
         catch (final Exception e)
         {
