@@ -12,17 +12,20 @@ import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraftforge.common.MinecraftForge;
+
 import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -127,6 +130,8 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 			MicdoodlePlugin.mcDir = (File) data.get("mcLocation");
             File configDir = new File(mcDir, "config");
             File modsDir = new File(mcDir, "mods");
+        	String minecraftVersion = (String) FMLInjectionData.data()[4];
+        	File subDir = new File(modsDir, minecraftVersion);
             String canonicalConfigPath;
 
             if (!checkedVersions)
@@ -145,17 +150,19 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                 if (obfuscated)
                 {
-                    Collection<File> fileList = FileUtils.listFiles(modsDir, new String[] {"jar", "zip"}, true);
+                	Collection<File> fileList = FileUtils.listFiles(modsDir, new String[] {"jar", "zip"}, false);
 
                     String[] micCoreVersion = null;
                     String[] gcVersion = null;
                     if (fileList != null)
                     {
-                        for (File file : fileList)
+                    	fileList.addAll(FileUtils.listFiles(subDir, new String[] {"jar", "zip"}, false));
+
+                    	for (File file : fileList)
                         {
-                            if (file.getName().contains("MicdoodleCore"))
+                            if (file.getName().toLowerCase().contains("micdoodlecore"))
                             {
-                                String fileName = file.getName();
+                                String fileName = file.getName().toLowerCase();
 
                                 String[] split0 = fileName.split("\\-");
 
@@ -173,9 +180,9 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                                 }
                             }
 
-                            if (file.getName().contains("GalacticraftCore"))
+                            if (file.getName().toLowerCase().contains("galacticraftcore"))
                             {
-                                String fileName = file.getName();
+                                String fileName = file.getName().toLowerCase();
 
                                 String[] split0 = fileName.split("\\-");
 
@@ -197,7 +204,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                     if (micCoreVersion == null)
                     {
-                        this.showErrorDialog(new Object[]{"Install", "Ignore"}, "Failed to find MicdoodleCore file in mods folder!");
+                        FMLLog.info("Failed to find MicdoodleCore file in mods folder, skipping GC version check.");
                     }
                     else if (gcVersion == null)
                     {
