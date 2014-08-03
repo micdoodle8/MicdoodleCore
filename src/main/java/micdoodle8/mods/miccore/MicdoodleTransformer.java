@@ -99,6 +99,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_CAN_RENDER_FIRE = "canRenderOnFire";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
+	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
 	private static final String CLASS_VERSION_SPECIFIC = "micdoodle8/mods/miccore/Annotations$VersionSpecific";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
 	private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
@@ -119,7 +120,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             e.printStackTrace();
         }
 
-        if (this.mcVersionMatches("1.7.2"))
+        if (this.mcVersionMatches("[1.7.2]"))
         {
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_MP, new ObfuscationEntry("net/minecraft/entity/player/EntityPlayerMP", "mm"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD, new ObfuscationEntry("net/minecraft/world/World", "afn"));
@@ -194,7 +195,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CAN_RENDER_FIRE, new MethodObfuscationEntry("canRenderOnFire", "aA", "()Z"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
         }
-        else if (this.mcVersionMatches("1.7.10"))
+        else if (this.mcVersionMatches("[1.7.10]"))
         {
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_MP, new ObfuscationEntry("net/minecraft/entity/player/EntityPlayerMP", "mw"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD, new ObfuscationEntry("net/minecraft/world/World", "ahb"));
@@ -751,27 +752,54 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				{
                     if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_VERSION_SPECIFIC + ";"))
                     {
-                        String[] toMatch = null;
+                        String toMatch = null;
 
-                        for (int i = 0; i < annotation.values.size(); i++)
+                        for (int i = 0; i < annotation.values.size(); i+=2)
                         {
-                            Object value = annotation.values.get(i);
-
-                            if (value.equals("version"))
+                            if ("version".equals(annotation.values.get(i)))
                             {
-                                toMatch = (String[])annotation.values.get(i + 1);
+                                toMatch = String.valueOf(annotation.values.get(i + 1));
                             }
                         }
 
-                        if (toMatch != null && toMatch.length > 0)
+                        if (toMatch != null)
                         {
-                            for (String toMatch0 : toMatch)
+                            boolean doRemove = true;
+                            this.printLog("Trying to match:"+toMatch);
+                            if (mcVersionMatches(toMatch))
                             {
-                                if (!mcVersionMatches(toMatch0))
-                                {
-                                    methods.remove();
-                                    break methodLabel;
-                                }
+                            	doRemove = false;
+                            }
+
+                            if (doRemove)
+                            {
+	                            methods.remove();
+	                            break methodLabel;
+                            }
+                        }
+                    }
+
+                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_ALT_FORVERSION + ";"))
+                    {
+                        String toMatch = null;
+
+                        for (int i = 0; i < annotation.values.size(); i+=2)
+                        {
+                            if ("version".equals(annotation.values.get(i)))
+                            {
+                                toMatch = String.valueOf(annotation.values.get(i + 1));
+                            }
+                        }
+
+                        if (toMatch != null)
+                        {
+                            if (mcVersionMatches(toMatch))
+                            {
+                            	String existing = new String(methodnode.name);
+                            	existing = existing.substring(0, existing.length() - 1);
+                            	if (ConfigManagerMicCore.enableDebug) this.printLog("Renaming method "+existing+" for version "+toMatch);
+                            	methodnode.name = new String(existing);
+                            	break;
                             }
                         }
                     }
@@ -781,7 +809,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 						List<String> desiredInterfaces = new ArrayList<String>();
 						String modID = "";
 
-						for (int i = 0; i < annotation.values.size(); i++)
+						for (int i = 0; i < annotation.values.size(); i+=2)
 						{
 							Object value = annotation.values.get(i);
 
@@ -1594,8 +1622,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //		return ConfigManagerMicCore.enableSmallMoons;
 	}
 
-    private boolean mcVersionMatches(String mcVersion)
+    private boolean mcVersionMatches(String testVersion)
     {
-        return VersionParser.parseRange("[" + mcVersion + "]").containsVersion(this.mcVersion);
+        return VersionParser.parseRange(testVersion).containsVersion(this.mcVersion);
     }
 }
