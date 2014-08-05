@@ -765,7 +765,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         if (toMatch != null)
                         {
                             boolean doRemove = true;
-                            this.printLog("Trying to match:"+toMatch);
                             if (mcVersionMatches(toMatch))
                             {
                             	doRemove = false;
