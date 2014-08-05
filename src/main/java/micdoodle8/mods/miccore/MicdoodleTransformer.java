@@ -5,14 +5,11 @@ import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
 import cpw.mods.fml.relauncher.FMLInjectionData;
 import net.minecraft.launchwrapper.Launch;
-import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -275,77 +272,160 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes)
 	{
-		if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER, name))
-		{
-			bytes = this.transformConfigManager(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER, name))
-		{
-			bytes = this.transformPlayerController(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING, name))
-		{
-			bytes = this.transformEntityLiving(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM, name))
-		{
-			bytes = this.transformEntityItem(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER, name))
-		{
-			bytes = this.transformEntityRenderer(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER, name))
-		{
-			bytes = this.transformItemRenderer(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP, name))
-		{
-			bytes = this.transformGuiSleep(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT, name))
-		{
-			bytes = this.transformForgeHooks(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER, name))
-		{
-			bytes = this.transformEffectRenderer(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY, name))
-		{
-			bytes = this.transformNetHandlerPlay(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER, name))
-		{
-			bytes = this.transformWorldRenderer(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL, name))
-		{
-			bytes = this.transformRenderGlobal(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER, name))
-		{
-			bytes = this.transformRenderManager(bytes);
-		}
-		else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER, name))
-		{
-			bytes = this.transformTileEntityRenderer(bytes);
-		}
-        else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_MINECRAFT, name))
-        {
-            bytes = this.transformMinecraftClass(bytes);
-        }
-        else if (this.classPathMatches(MicdoodleTransformer.KEY_CLASS_ENTITY, name))
-        {
-            bytes = this.transformEntityClass(bytes);
-        }
-
 		if (name.contains("galacticraft"))
 		{
 			bytes = this.transformCustomAnnotations(bytes);
 		}
+		else
+		{
+			String testName = name.replace('.', '/');
+			if (this.deobfuscated)
+			{
+				this.transformVanillaDeobfuscated(testName, bytes);
+			}
+			else
+			{
+				this.transformVanillaObfuscated(testName, bytes);
+			}
+		}
 
 		return bytes;
+	}
+
+	private void transformVanillaDeobfuscated(String testName, byte[] bytes)
+	{
+		if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER)))
+		{
+			bytes = this.transformConfigManager(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER)))
+		{
+			bytes = this.transformPlayerController(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING)))
+		{
+			bytes = this.transformEntityLiving(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM)))
+		{
+			bytes = this.transformEntityItem(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER)))
+		{
+			bytes = this.transformEntityRenderer(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER)))
+		{
+			bytes = this.transformItemRenderer(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP)))
+		{
+			bytes = this.transformGuiSleep(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT)))
+		{
+			bytes = this.transformForgeHooks(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER)))
+		{
+			bytes = this.transformEffectRenderer(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY)))
+		{
+			bytes = this.transformNetHandlerPlay(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER)))
+		{
+			bytes = this.transformWorldRenderer(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL)))
+		{
+			bytes = this.transformRenderGlobal(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER)))
+		{
+			bytes = this.transformRenderManager(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER)))
+		{
+			bytes = this.transformTileEntityRenderer(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_MINECRAFT)))
+		{
+			bytes = this.transformMinecraftClass(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY)))
+		{
+			bytes = this.transformEntityClass(bytes);
+		}
+	}
+
+	private void transformVanillaObfuscated(String testName, byte[] bytes)
+	{
+		if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER).obfuscatedName))
+		{
+			bytes = this.transformConfigManager(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER).obfuscatedName))
+		{
+			bytes = this.transformPlayerController(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING).obfuscatedName))
+		{
+			bytes = this.transformEntityLiving(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM).obfuscatedName))
+		{
+			bytes = this.transformEntityItem(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER).obfuscatedName))
+		{
+			bytes = this.transformEntityRenderer(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER).obfuscatedName))
+		{
+			bytes = this.transformItemRenderer(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP).obfuscatedName))
+		{
+			bytes = this.transformGuiSleep(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT).obfuscatedName))
+		{
+			bytes = this.transformForgeHooks(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER).obfuscatedName))
+		{
+			bytes = this.transformEffectRenderer(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY).obfuscatedName))
+		{
+			bytes = this.transformNetHandlerPlay(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER).obfuscatedName))
+		{
+			bytes = this.transformWorldRenderer(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL).obfuscatedName))
+		{
+			bytes = this.transformRenderGlobal(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER).obfuscatedName))
+		{
+			bytes = this.transformRenderManager(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER).obfuscatedName))
+		{
+			bytes = this.transformTileEntityRenderer(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_MINECRAFT).obfuscatedName))
+		{
+			bytes = this.transformMinecraftClass(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY).obfuscatedName))
+		{
+			bytes = this.transformEntityClass(bytes);
+		}
 	}
 
 	/**
@@ -366,7 +446,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			for (int count = 0; count < createPlayerMethod.instructions.size(); count++)
 			{
 				final AbstractInsnNode list = createPlayerMethod.instructions.get(count);
-
+				
 				if (list instanceof TypeInsnNode)
 				{
 					final TypeInsnNode nodeAt = (TypeInsnNode) list;
@@ -840,7 +920,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 									}
 									catch (ClassNotFoundException e)
 									{
-										this.printLog("Galacticraft ignored missing interface \"" + inter + "\" from mod \"" + modID + "\".");
+										if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft ignored missing interface \"" + inter + "\" from mod \"" + modID + "\".");
 										continue;
 									}
 
@@ -848,7 +928,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 									if (!node.interfaces.contains(inter))
 									{
-										this.printLog("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
+										if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
 										node.interfaces.add(inter);
 										MicdoodleTransformer.injectionCount++;
 									}
@@ -871,7 +951,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		if (MicdoodleTransformer.injectionCount > 0)
 		{
-			this.printLog("Galacticraft successfully injected bytecode into: " + node.name + " (" + MicdoodleTransformer.injectionCount + ")");
+			if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft successfully injected bytecode into: " + node.name + " (" + MicdoodleTransformer.injectionCount + ")");
 		}
 
 		return this.finishInjection(node, false);
