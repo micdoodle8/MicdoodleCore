@@ -10,7 +10,6 @@ import cpw.mods.fml.relauncher.IFMLCallHook;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import net.minecraft.launchwrapper.Launch;
-import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraftforge.common.MinecraftForge;
 
 import org.apache.commons.io.FileUtils;
@@ -24,8 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -156,7 +153,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                     String[] gcVersion = null;
                     if (fileList != null)
                     {
-                    	fileList.addAll(FileUtils.listFiles(subDir, new String[] {"jar", "zip"}, false));
+                    	if (subDir.isDirectory()) fileList.addAll(FileUtils.listFiles(subDir, new String[] {"jar", "zip"}, false));
 
                     	for (File file : fileList)
                         {
