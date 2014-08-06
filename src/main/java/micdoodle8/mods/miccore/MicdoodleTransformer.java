@@ -274,158 +274,159 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		if (name.contains("galacticraft"))
 		{
-			bytes = this.transformCustomAnnotations(bytes);
+			return this.transformCustomAnnotations(bytes);
 		}
 		else
 		{
 			String testName = name.replace('.', '/');
+			if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT)))
+			{
+				return this.transformForgeHooks(bytes);
+			}
+
 			if (this.deobfuscated)
 			{
-				this.transformVanillaDeobfuscated(testName, bytes);
+				return this.transformVanillaDeobfuscated(testName, bytes);
 			}
-			else
+			else if (testName.length() <= 3)
 			{
-				this.transformVanillaObfuscated(testName, bytes);
+				return this.transformVanillaObfuscated(testName, bytes);
 			}
 		}
-
+		
 		return bytes;
 	}
 
-	private void transformVanillaDeobfuscated(String testName, byte[] bytes)
+	private byte[] transformVanillaDeobfuscated(String testName, byte[] bytes)
 	{
 		if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER)))
 		{
-			bytes = this.transformConfigManager(bytes);
+			return this.transformConfigManager(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER)))
 		{
-			bytes = this.transformPlayerController(bytes);
+			return this.transformPlayerController(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING)))
 		{
-			bytes = this.transformEntityLiving(bytes);
+			return this.transformEntityLiving(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM)))
 		{
-			bytes = this.transformEntityItem(bytes);
+			return this.transformEntityItem(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER)))
 		{
-			bytes = this.transformEntityRenderer(bytes);
+			return this.transformEntityRenderer(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER)))
 		{
-			bytes = this.transformItemRenderer(bytes);
+			return this.transformItemRenderer(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP)))
 		{
-			bytes = this.transformGuiSleep(bytes);
-		}
-		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT)))
-		{
-			bytes = this.transformForgeHooks(bytes);
+			return this.transformGuiSleep(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER)))
 		{
-			bytes = this.transformEffectRenderer(bytes);
+			return this.transformEffectRenderer(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY)))
 		{
-			bytes = this.transformNetHandlerPlay(bytes);
+			return this.transformNetHandlerPlay(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER)))
 		{
-			bytes = this.transformWorldRenderer(bytes);
+			return this.transformWorldRenderer(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL)))
 		{
-			bytes = this.transformRenderGlobal(bytes);
+			return this.transformRenderGlobal(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER)))
 		{
-			bytes = this.transformRenderManager(bytes);
+			return this.transformRenderManager(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER)))
 		{
-			bytes = this.transformTileEntityRenderer(bytes);
+			return this.transformTileEntityRenderer(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_MINECRAFT)))
 		{
-			bytes = this.transformMinecraftClass(bytes);
+			return this.transformMinecraftClass(bytes);
 		}
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY)))
 		{
-			bytes = this.transformEntityClass(bytes);
+			return this.transformEntityClass(bytes);
 		}
+		
+		return bytes;
 	}
 
-	private void transformVanillaObfuscated(String testName, byte[] bytes)
+	private byte[] transformVanillaObfuscated(String testName, byte[] bytes)
 	{
 		if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER).obfuscatedName))
 		{
-			bytes = this.transformConfigManager(bytes);
+			return this.transformConfigManager(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER).obfuscatedName))
 		{
-			bytes = this.transformPlayerController(bytes);
+			return this.transformPlayerController(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING).obfuscatedName))
 		{
-			bytes = this.transformEntityLiving(bytes);
+			return this.transformEntityLiving(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM).obfuscatedName))
 		{
-			bytes = this.transformEntityItem(bytes);
+			return this.transformEntityItem(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER).obfuscatedName))
 		{
-			bytes = this.transformEntityRenderer(bytes);
+			return this.transformEntityRenderer(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER).obfuscatedName))
 		{
-			bytes = this.transformItemRenderer(bytes);
+			return this.transformItemRenderer(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP).obfuscatedName))
 		{
-			bytes = this.transformGuiSleep(bytes);
-		}
-		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT).obfuscatedName))
-		{
-			bytes = this.transformForgeHooks(bytes);
+			return this.transformGuiSleep(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER).obfuscatedName))
 		{
-			bytes = this.transformEffectRenderer(bytes);
+			return this.transformEffectRenderer(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY).obfuscatedName))
 		{
-			bytes = this.transformNetHandlerPlay(bytes);
+			return this.transformNetHandlerPlay(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER).obfuscatedName))
 		{
-			bytes = this.transformWorldRenderer(bytes);
+			return this.transformWorldRenderer(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL).obfuscatedName))
 		{
-			bytes = this.transformRenderGlobal(bytes);
+			return this.transformRenderGlobal(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER).obfuscatedName))
 		{
-			bytes = this.transformRenderManager(bytes);
+			return this.transformRenderManager(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER).obfuscatedName))
 		{
-			bytes = this.transformTileEntityRenderer(bytes);
+			return this.transformTileEntityRenderer(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_MINECRAFT).obfuscatedName))
 		{
-			bytes = this.transformMinecraftClass(bytes);
+			return this.transformMinecraftClass(bytes);
 		}
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY).obfuscatedName))
 		{
-			bytes = this.transformEntityClass(bytes);
+			return this.transformEntityClass(bytes);
 		}
+		
+		return bytes;
 	}
 
 	/**
