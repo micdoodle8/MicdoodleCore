@@ -465,12 +465,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				{
 					final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-					if (nodeAt.getOpcode() == Opcodes.INVOKESTATIC && nodeAt.owner.equals("GameRegistry"))
+					if (nodeAt.getOpcode() == Opcodes.INVOKESTATIC && nodeAt.owner.contains("GameRegistry"))
 					{
 						final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "otherModGenerate", new String(nodeAt.desc));
 						populateMethod.instructions.set(nodeAt, overwriteNode);
 						MicdoodleTransformer.injectionCount++;
-
 					}
 				}
 			}
