@@ -20,6 +20,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	HashMap<String, ObfuscationEntry> nodemap = new HashMap<String, ObfuscationEntry>();
 	private boolean deobfuscated = true;
 	private boolean optifinePresent;
+	private boolean isServer;
     private DefaultArtifactVersion mcVersion;
 
 	private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
@@ -116,10 +117,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         try {
             deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
             optifinePresent = Launch.classLoader.getClassBytes("CustomColorizer") != null;
+            isServer = Launch.classLoader.getClassBytes(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL)) == null;
         } catch (final Exception e) {
             e.printStackTrace();
         }
-
+        
         if (this.mcVersionMatches("[1.7.2]"))
         {
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_MP, new ObfuscationEntry("net/minecraft/entity/player/EntityPlayerMP", "mm"));
@@ -1472,7 +1474,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
     public byte[] transformEntityClass(byte[] bytes)
     {
-        ClassNode node = this.startInjection(bytes);
+        if (isServer) return bytes;
+        
+    	ClassNode node = this.startInjection(bytes);
 
         MicdoodleTransformer.operationCount = 1;
 
