@@ -21,6 +21,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private boolean deobfuscated = true;
 	private boolean optifinePresent;
 	private boolean isServer;
+    private Boolean playerApiActive = null;
     private DefaultArtifactVersion mcVersion;
 
 	private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
@@ -494,107 +495,111 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		ClassNode node = this.startInjection(bytes);
 
-		MicdoodleTransformer.operationCount = 6;
+        boolean playerAPI = this.isPlayerApiActive();
+		MicdoodleTransformer.operationCount = playerAPI ? 0 : 6;
 
-		MethodNode createPlayerMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER);
-		MethodNode respawnPlayerMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER);
-		MethodNode attemptLoginMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT);
+        if (!playerAPI)
+        {
+            MethodNode createPlayerMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER);
+            MethodNode respawnPlayerMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER);
+            MethodNode attemptLoginMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT);
 
-		if (createPlayerMethod != null)
-		{
-			for (int count = 0; count < createPlayerMethod.instructions.size(); count++)
-			{
-				final AbstractInsnNode list = createPlayerMethod.instructions.get(count);
-				
-				if (list instanceof TypeInsnNode)
-				{
-					final TypeInsnNode nodeAt = (TypeInsnNode) list;
+            if (createPlayerMethod != null)
+            {
+                for (int count = 0; count < createPlayerMethod.instructions.size(); count++)
+                {
+                    final AbstractInsnNode list = createPlayerMethod.instructions.get(count);
 
-					if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
-					{
-						final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
+                    if (list instanceof TypeInsnNode)
+                    {
+                        final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-						createPlayerMethod.instructions.set(nodeAt, overwriteNode);
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-				else if (list instanceof MethodInsnNode)
-				{
-					final MethodInsnNode nodeAt = (MethodInsnNode) list;
+                        if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
+                        {
+                            final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
 
-					if (nodeAt.owner.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)) && nodeAt.getOpcode() == Opcodes.INVOKESPECIAL)
-					{
-						createPlayerMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP)));
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-			}
-		}
+                            createPlayerMethod.instructions.set(nodeAt, overwriteNode);
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                    else if (list instanceof MethodInsnNode)
+                    {
+                        final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-		if (respawnPlayerMethod != null)
-		{
-			for (int count = 0; count < respawnPlayerMethod.instructions.size(); count++)
-			{
-				final AbstractInsnNode list = respawnPlayerMethod.instructions.get(count);
+                        if (nodeAt.owner.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)) && nodeAt.getOpcode() == Opcodes.INVOKESPECIAL)
+                        {
+                            createPlayerMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP)));
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                }
+            }
 
-				if (list instanceof TypeInsnNode)
-				{
-					final TypeInsnNode nodeAt = (TypeInsnNode) list;
+            if (respawnPlayerMethod != null)
+            {
+                for (int count = 0; count < respawnPlayerMethod.instructions.size(); count++)
+                {
+                    final AbstractInsnNode list = respawnPlayerMethod.instructions.get(count);
 
-					if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
-					{
-						final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
+                    if (list instanceof TypeInsnNode)
+                    {
+                        final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-						respawnPlayerMethod.instructions.set(nodeAt, overwriteNode);
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-				else if (list instanceof MethodInsnNode)
-				{
-					final MethodInsnNode nodeAt = (MethodInsnNode) list;
+                        if (nodeAt.getOpcode() != Opcodes.CHECKCAST && nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
+                        {
+                            final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
 
-					if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
-					{
-						respawnPlayerMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP)));
+                            respawnPlayerMethod.instructions.set(nodeAt, overwriteNode);
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                    else if (list instanceof MethodInsnNode)
+                    {
+                        final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-			}
-		}
+                        if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
+                        {
+                            respawnPlayerMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP)));
 
-		if (attemptLoginMethod != null)
-		{
-			for (int count = 0; count < attemptLoginMethod.instructions.size(); count++)
-			{
-				final AbstractInsnNode list = attemptLoginMethod.instructions.get(count);
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                }
+            }
 
-				if (list instanceof TypeInsnNode)
-				{
-					final TypeInsnNode nodeAt = (TypeInsnNode) list;
+            if (attemptLoginMethod != null)
+            {
+                for (int count = 0; count < attemptLoginMethod.instructions.size(); count++)
+                {
+                    final AbstractInsnNode list = attemptLoginMethod.instructions.get(count);
 
-					if (nodeAt.getOpcode() == Opcodes.NEW && nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
-					{
-						final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
+                    if (list instanceof TypeInsnNode)
+                    {
+                        final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-						attemptLoginMethod.instructions.set(nodeAt, overwriteNode);
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-				else if (list instanceof MethodInsnNode)
-				{
-					final MethodInsnNode nodeAt = (MethodInsnNode) list;
+                        if (nodeAt.getOpcode() == Opcodes.NEW && nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
+                        {
+                            final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
 
-					if (nodeAt.getOpcode() == Opcodes.INVOKESPECIAL && nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
-					{
-                        String initDesc = "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V";
-						attemptLoginMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), initDesc));
+                            attemptLoginMethod.instructions.set(nodeAt, overwriteNode);
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                    else if (list instanceof MethodInsnNode)
+                    {
+                        final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-			}
-		}
+                        if (nodeAt.getOpcode() == Opcodes.INVOKESPECIAL && nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
+                        {
+                            String initDesc = "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V";
+                            attemptLoginMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), initDesc));
+
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                }
+            }
+        }
 
 		return this.finishInjection(node);
 	}
@@ -603,40 +608,44 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		ClassNode node = this.startInjection(bytes);
 
-		MicdoodleTransformer.operationCount = 2;
+        boolean playerAPI = this.isPlayerApiActive();
+        MicdoodleTransformer.operationCount = playerAPI ? 0 : 2;
 
-		MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_CREATE_CLIENT_PLAYER);
+        if (!playerAPI)
+        {
+            MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_CREATE_CLIENT_PLAYER);
 
-		if (method != null)
-		{
-			for (int count = 0; count < method.instructions.size(); count++)
-			{
-				final AbstractInsnNode list = method.instructions.get(count);
+            if (method != null)
+            {
+                for (int count = 0; count < method.instructions.size(); count++)
+                {
+                    final AbstractInsnNode list = method.instructions.get(count);
 
-				if (list instanceof TypeInsnNode)
-				{
-					final TypeInsnNode nodeAt = (TypeInsnNode) list;
+                    if (list instanceof TypeInsnNode)
+                    {
+                        final TypeInsnNode nodeAt = (TypeInsnNode) list;
 
-					if (nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
-					{
-						final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP));
+                        if (nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
+                        {
+                            final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP));
 
-						method.instructions.set(nodeAt, overwriteNode);
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-				else if (list instanceof MethodInsnNode)
-				{
-					final MethodInsnNode nodeAt = (MethodInsnNode) list;
+                            method.instructions.set(nodeAt, overwriteNode);
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                    else if (list instanceof MethodInsnNode)
+                    {
+                        final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-					if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
-					{
-						method.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP)));
-						MicdoodleTransformer.injectionCount++;
-					}
-				}
-			}
-		}
+                        if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
+                        {
+                            method.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP)));
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                }
+            }
+        }
 
 		return this.finishInjection(node);
 	}
@@ -1761,6 +1770,16 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         return false;
 //		return ConfigManagerMicCore.enableSmallMoons;
 	}
+
+    private boolean isPlayerApiActive()
+    {
+        if (playerApiActive == null)
+        {
+            playerApiActive = Loader.isModLoaded("PlayerAPI");
+        }
+
+        return playerApiActive;
+    }
 
     private boolean mcVersionMatches(String testVersion)
     {
