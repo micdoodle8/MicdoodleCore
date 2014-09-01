@@ -21,7 +21,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private boolean deobfuscated = true;
 	private boolean optifinePresent;
 	private boolean isServer;
-    private Boolean playerApiActive = null;
+    private boolean playerApiActive;
     private DefaultArtifactVersion mcVersion;
 
 	private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
@@ -118,6 +118,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         try {
             deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
             optifinePresent = Launch.classLoader.getClassBytes("CustomColorizer") != null;
+            playerApiActive = Launch.classLoader.getClassBytes("api.player.server.ServerPlayerBase") != null;
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -1773,11 +1774,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
     private boolean isPlayerApiActive()
     {
-        if (playerApiActive == null)
-        {
-            playerApiActive = Loader.isModLoaded("PlayerAPI");
-        }
-
         return playerApiActive;
     }
 
