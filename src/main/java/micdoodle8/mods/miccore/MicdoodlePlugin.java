@@ -37,6 +37,11 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
     public static File canonicalConfigDir;
     private static boolean checkedVersions = false;
 
+    public MicdoodlePlugin()
+    {
+        DepLoader.load();
+    }
+
 	public static void versionCheck(String reqVersion, String mod)
 	{
 		final String mcVersion = (String) FMLInjectionData.data()[4];
