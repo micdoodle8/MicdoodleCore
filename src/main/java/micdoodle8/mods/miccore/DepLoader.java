@@ -24,6 +24,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -340,9 +341,22 @@ public class DepLoader implements IFMLLoadingPlugin, IFMLCallHook
         {
             try
             {
-                Launch.classLoader.addURL(new File(v_modsDir, name).toURI().toURL());
+                URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                Class sysclass = URLClassLoader.class;
+
+                try
+                {
+                    Method method = sysclass.getDeclaredMethod("addURL", new Class[] { URL.class });
+                    method.setAccessible(true);
+                    method.invoke(sysloader, new Object[]{ new File(v_modsDir, name).toURI().toURL() });
+                }
+                catch (Throwable t)
+                {
+                    t.printStackTrace();
+                    throw new IOException("Error, could not add URL to system classloader");
+                }
             }
-            catch (MalformedURLException e)
+            catch (Exception e)
             {
                 throw new RuntimeException(e);
             }
