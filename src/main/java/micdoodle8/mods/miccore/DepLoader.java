@@ -8,6 +8,7 @@ import cpw.mods.fml.relauncher.FMLInjectionData;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.IFMLCallHook;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import sun.misc.URLClassPath;
 import sun.net.util.URLUtil;
@@ -339,7 +340,7 @@ public class DepLoader implements IFMLLoadingPlugin, IFMLCallHook
         {
             try
             {
-                ((LaunchClassLoader) DepLoader.class.getClassLoader()).addURL(new File(v_modsDir, name).toURI().toURL());
+                Launch.classLoader.addURL(new File(v_modsDir, name).toURI().toURL());
             }
             catch (MalformedURLException e)
             {
@@ -667,8 +668,7 @@ public class DepLoader implements IFMLLoadingPlugin, IFMLCallHook
                     .getClassBytes("net.minecraft.world.World") == null;
 
             String testClass = node.get("class").getAsString();
-            System.err.println("DERP  " + (DepLoader.class.getResource("/" + testClass.replace('.', '/') + ".class") != null));
-            if (DepLoader.class.getResource("/" + testClass.replace('.', '/') + ".class") != null)
+            if (Launch.classLoader.getClassBytes(testClass) != null)
             {
                 return;
             }
