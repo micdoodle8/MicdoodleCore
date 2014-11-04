@@ -5,6 +5,7 @@ import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
 import cpw.mods.fml.relauncher.FMLInjectionData;
 import net.minecraft.launchwrapper.Launch;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -63,10 +64,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_MUSIC_TICKER = "musicTicker";
     private static final String KEY_CLASS_CHUNK_PROVIDER_SERVER = "chunkProviderServer";
     private static final String KEY_NET_HANDLER_LOGIN_SERVER = "netHandlerLoginServer";
-
-    
+   
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
+	private static final String KEY_FIELD_CPS_WORLDOBJ = "cps_worldObj";
 
 	private static final String KEY_METHOD_CREATE_PLAYER = "createPlayerMethod";
 	private static final String KEY_METHOD_RESPAWN_PLAYER = "respawnPlayerMethod";
@@ -167,7 +168,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
-
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("worldObj", "i"));
+            
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("respawnPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_CLIENT_PLAYER, new MethodObfuscationEntry("func_147493_a", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP) + ";"));
@@ -244,6 +246,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("worldObj", "i"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new  MethodObfuscationEntry("createPlayerForUser", "f", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("respawnPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
@@ -469,6 +472,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		if (populateMethod != null)
 		{
+			LabelNode skipLabel = new LabelNode();
 			for (int count = 0; count < populateMethod.instructions.size(); count++)
 			{
 				final AbstractInsnNode list = populateMethod.instructions.get(count);
@@ -477,12 +481,22 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				{
 					final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-					if (nodeAt.getOpcode() == Opcodes.INVOKESTATIC && nodeAt.owner.contains("GameRegistry"))
+					if (nodeAt.getOpcode() == Opcodes.INVOKEINTERFACE && nodeAt.desc.equals(populateMethod.desc))
 					{
-						final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "otherModGenerate", new String(nodeAt.desc));
-						populateMethod.instructions.set(nodeAt, overwriteNode);
+						final InsnList nodesToAdd = new InsnList();
+
+						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";"));
+						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "otherModPreventGenerate", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)Z"));
+						nodesToAdd.add(new JumpInsnNode(Opcodes.IFNE, skipLabel)); 
+						populateMethod.instructions.insert(nodeAt, nodesToAdd);
 						MicdoodleTransformer.injectionCount++;
-					}
+					} else
+						if (nodeAt.getOpcode() == Opcodes.INVOKESTATIC && nodeAt.owner.contains("GameRegistry"))
+						{
+							populateMethod.instructions.insert(nodeAt, skipLabel);
+						}
+				
 				}
 			}
 		}
