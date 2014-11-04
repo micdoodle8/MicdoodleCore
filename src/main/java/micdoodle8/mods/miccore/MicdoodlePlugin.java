@@ -20,6 +20,7 @@ import javax.swing.event.HyperlinkListener;
 
 import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
@@ -27,6 +28,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 @TransformerExclusions(value = { "micdoodle8.mods.miccore" })
 public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
@@ -180,6 +185,8 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                                     micCoreVersion = micVersion.split("\\.");
                                 }
+                                
+                                if (!jarIntegrityCheck(file)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
                             }
 
                             if (file.getName().toLowerCase().contains("galacticraftcore"))
@@ -200,6 +207,13 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                                     gcVersion = micVersion.split("\\.");
                                 }
+
+                                if (!jarIntegrityCheck(file)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
+                            }
+
+                            if (file.getName().toLowerCase().contains("galacticraft-planets"))
+                            {
+                                if (!jarIntegrityCheck(file)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
                             }
                         }
                     }
@@ -278,6 +292,51 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 		System.out.println("[Micdoodle8Core]: " + "Patching game...");
 	}
 
+	private boolean jarIntegrityCheck(File file)
+	{
+		ZipFile zipfile = null;
+		ZipInputStream zis = null;
+		try
+		{
+			zipfile = new ZipFile(file);
+			zis = new ZipInputStream(new FileInputStream(file));
+
+			ZipEntry ze = zis.getNextEntry();
+			if(ze == null)
+				return false;
+
+			while(ze != null)
+			{
+				zipfile.getInputStream(ze);
+				ze.getCrc();
+				ze.getCompressedSize();
+				ze.getName();
+				ze = zis.getNextEntry();
+			} 
+			return true;
+		}
+			catch (ZipException e) { return false; }
+			catch (IOException e) { return false; 	}
+		finally
+		{
+			try
+			{
+				if (zipfile != null)
+				{
+					zipfile.close();
+				}
+			} catch (IOException e) { return false; }
+			
+			try
+			{
+				if (zis != null)
+				{
+					zis.close();
+				}
+			} catch (IOException e) { return false; }
+		}
+	}
+	
     private void showErrorDialog(Object[] options, String... messages)
     {
         String err = "<html>";
