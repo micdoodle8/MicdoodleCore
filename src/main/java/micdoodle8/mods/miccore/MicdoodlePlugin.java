@@ -154,7 +154,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                 {
                     e.printStackTrace();
                 }
-
+                
                 if (obfuscated)
                 {
                 	Collection<File> fileList = FileUtils.listFiles(modsDir, new String[] {"jar", "zip"}, false);
@@ -167,7 +167,12 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
                     	for (File file : fileList)
                         {
-                            if (file.getName().toLowerCase().contains("micdoodlecore"))
+                    		if (file.getName().toLowerCase().contains("dragonapi") && (file.getName().endsWith(".jar") || file.getName().endsWith(".zip")))
+                            {
+                    			this.jarIntegrityCheck(file, true);
+                            }
+                    			
+                    		if (file.getName().toLowerCase().contains("micdoodlecore"))
                             {
                                 String fileName = file.getName().toLowerCase();
 
@@ -186,7 +191,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                                     micCoreVersion = micVersion.split("\\.");
                                 }
                                 
-                                if (!jarIntegrityCheck(file)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
+                                if (!jarIntegrityCheck(file, false)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
                             }
 
                             if (file.getName().toLowerCase().contains("galacticraftcore"))
@@ -208,12 +213,12 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                                     gcVersion = micVersion.split("\\.");
                                 }
 
-                                if (!jarIntegrityCheck(file)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
+                                if (!jarIntegrityCheck(file, false)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
                             }
 
                             if (file.getName().toLowerCase().contains("galacticraft-planets"))
                             {
-                                if (!jarIntegrityCheck(file)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
+                                if (!jarIntegrityCheck(file, false)) this.showErrorDialog(new Object[]{"Re-download", "Ignore"}, "Mod file " + file.getName() + " is an incomplete download and will likely cause errors, please re-download it!");;
                             }
                         }
                     }
@@ -292,7 +297,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 		System.out.println("[Micdoodle8Core]: " + "Patching game...");
 	}
 
-	private boolean jarIntegrityCheck(File file)
+	private boolean jarIntegrityCheck(File file, boolean checkDragonAPI)
 	{
 		ZipFile zipfile = null;
 		ZipInputStream zis = null;
@@ -310,7 +315,12 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 				zipfile.getInputStream(ze);
 				ze.getCrc();
 				ze.getCompressedSize();
-				ze.getName();
+				if (checkDragonAPI && "micdoodle8/mods/galacticraft/api/".equals(ze.getName()))
+				{
+					this.showErrorDialog(new Object[]{"Quit", "Ignore"}, "DragonAPI will prevent Galacticraft from working properly!", "To fix: remove or modify DragonAPI", "More info: http://wiki.micdoodle8.com/wiki/Compatibility");
+				}
+				else
+					ze.getName();
 				ze = zis.getNextEntry();
 			} 
 			return true;
@@ -337,7 +347,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 		}
 	}
 	
-    private void showErrorDialog(Object[] options, String... messages)
+    public static void showErrorDialog(Object[] options, String... messages)
     {
         String err = "<html>";
         for (String s : messages)
@@ -377,7 +387,10 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
             case 0:
                 try
                 {
-                    Desktop.getDesktop().browse(new URL("http://micdoodle8.com/mods/galacticraft/downloads").toURI());
+                	if ("Quit".equals(options[0]))
+                		Desktop.getDesktop().browse(new URL("http://wiki.micdoodle8.com/wiki/Compatibility#DragonAPI").toURI());
+                	else
+                		Desktop.getDesktop().browse(new URL("http://micdoodle8.com/mods/galacticraft/downloads").toURI());
                 }
                 catch (final Exception e)
                 {
