@@ -989,9 +989,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 							}
 						}
 
-						if (!ignoredMods.contains(modID))
+						if (modID.isEmpty() || !ignoredMods.contains(modID))
 						{
-							boolean modFound = Loader.isModLoaded(modID);
+							boolean modFound = modID.isEmpty() || Loader.isModLoaded(modID);
 
 							if (modFound)
 							{
