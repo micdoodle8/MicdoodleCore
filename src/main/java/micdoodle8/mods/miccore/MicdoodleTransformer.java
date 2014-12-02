@@ -63,11 +63,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_CLASS_WORLD_CLIENT = "worldClient";
     private static final String KEY_CLASS_MUSIC_TICKER = "musicTicker";
     private static final String KEY_CLASS_CHUNK_PROVIDER_SERVER = "chunkProviderServer";
+	private static final String KEY_CLASS_ICHUNKPROVIDER = "IChunkProvider";
     private static final String KEY_NET_HANDLER_LOGIN_SERVER = "netHandlerLoginServer";
    
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
 	private static final String KEY_FIELD_CPS_WORLDOBJ = "cps_worldObj";
+	private static final String KEY_FIELD_CPS_CURRENT_CHUNKPROV = "CurrentChunkProvider";
 
 	private static final String KEY_METHOD_CREATE_PLAYER = "createPlayerMethod";
 	private static final String KEY_METHOD_RESPAWN_PLAYER = "respawnPlayerMethod";
@@ -164,11 +166,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_TILEENTITY, new ObfuscationEntry("net/minecraft/tileentity/TileEntity", "and"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_MUSIC_TICKER, new ObfuscationEntry("net/minecraft/client/audio/MusicTicker", "bst"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER, new ObfuscationEntry("net/minecraft/world/gen/ChunkProviderServer", "mi"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER, new ObfuscationEntry("IChunkProvider", "aog"));
             this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "nd"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("worldObj", "i"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_CURRENT_CHUNKPROV, new FieldObfuscationEntry("currentChunkProvider", "e"));
             
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("respawnPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
@@ -242,11 +246,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_TILEENTITY, new ObfuscationEntry("net/minecraft/tileentity/TileEntity", "aor"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_MUSIC_TICKER, new ObfuscationEntry("net/minecraft/client/audio/MusicTicker", "btg"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER, new ObfuscationEntry("net/minecraft/world/gen/ChunkProviderServer", "ms"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER, new ObfuscationEntry("IChunkProvider", "apu"));
             this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "nn"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("worldObj", "i"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_CURRENT_CHUNKPROV, new FieldObfuscationEntry("currentChunkProvider", "e"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new  MethodObfuscationEntry("createPlayerForUser", "f", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("respawnPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
@@ -485,9 +491,15 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					{
 						final InsnList nodesToAdd = new InsnList();
 
+						//(p_73153_2_, p_73153_3_, worldObj, currentChunkProvider, p_73153_1_)
+						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
+						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
 						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";"));
-						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "otherModPreventGenerate", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)Z"));
+						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_CURRENT_CHUNKPROV), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";"));
+						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "otherModPreventGenerate", "(IIL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";)Z"));
 						nodesToAdd.add(new JumpInsnNode(Opcodes.IFNE, skipLabel)); 
 						populateMethod.instructions.insert(nodeAt, nodesToAdd);
 						MicdoodleTransformer.injectionCount++;
