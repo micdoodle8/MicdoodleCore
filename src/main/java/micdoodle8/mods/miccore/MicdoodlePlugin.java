@@ -349,7 +349,8 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 	
     public static void showErrorDialog(Object[] options, String... messages)
     {
-        String err = "<html>";
+        try {
+    	String err = "<html>";
         for (String s : messages)
         {
             System.err.print(s);
@@ -401,6 +402,15 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
                 break;
             case JOptionPane.CLOSED_OPTION:
                 break;
+        }
+        }
+        catch (Exception e)
+        {
+        	System.out.println("ERROR: Lacking graphical display: unable to display normal error messagebox with options.");
+        	System.out.println("-----------------------------------------------------------------------------------------");
+        	System.out.println("The error would have been:");
+        	for (int i = 0; i < messages.length; i++)
+        		System.out.println("    " + messages[i]);
         }
     }
 
