@@ -1,17 +1,16 @@
 package micdoodle8.mods.miccore;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.google.common.eventbus.EventBus;
-
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.versioning.ArtifactVersion;
 import cpw.mods.fml.common.versioning.VersionParser;
 import cpw.mods.fml.common.versioning.VersionRange;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MicdoodleModContainer extends DummyModContainer
 {

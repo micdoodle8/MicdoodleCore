@@ -1,8 +1,8 @@
 package micdoodle8.mods.miccore;
 
-import java.io.IOException;
-
 import cpw.mods.fml.common.asm.transformers.AccessTransformer;
+
+import java.io.IOException;
 
 public class MicdoodleAccessTransformer extends AccessTransformer
 {
