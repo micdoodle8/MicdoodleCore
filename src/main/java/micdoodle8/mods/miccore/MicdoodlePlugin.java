@@ -477,6 +477,16 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 	@Override
 	public String getAccessTransformerClass()
 	{
+        boolean deobfuscated = true;
+
+        try {
+            deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
+        } catch (final Exception e) { }
+        
+        if (deobfuscated)
+        {
+        	return "micdoodle8.mods.miccore.MicdoodleAccessTransformerDeObf";
+        }
         return "micdoodle8.mods.miccore.MicdoodleAccessTransformer";
 	}
 }

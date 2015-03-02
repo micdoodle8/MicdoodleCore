@@ -1,0 +1,32 @@
+# Micdoodle Core Access Transformer configuration file
+# Fields
+public net.minecraft.client.gui.inventory.GuiContainer guiLeft
+public net.minecraft.client.gui.inventory.GuiContainer guiLeft
+public net.minecraft.client.gui.GuiScreen buttonList
+public net.minecraft.inventory.InventoryCrafting eventHandler
+public net.minecraft.client.renderer.entity.RenderPlayer modelBipedMain
+public net.minecraft.client.renderer.entity.RenderPlayer modelArmorChestplate
+public net.minecraft.client.renderer.entity.RenderPlayer modelArmor
+public net.minecraft.entity.player.EntityPlayer sleeping
+public net.minecraft.entity.player.EntityPlayer sleepTimer
+public net.minecraft.entity.EntityLivingBase recentlyHit
+public net.minecraft.entity.EntityLivingBase attackingPlayer
+public net.minecraft.network.EnumConnectionState field_150761_f
+public net.minecraft.network.EnumConnectionState field_150770_i
+public net.minecraft.client.renderer.EntityRenderer thirdPersonDistance
+public net.minecraft.client.renderer.EntityRenderer thirdPersonDistanceTemp
+public net.minecraft.client.renderer.WorldRenderer glRenderList
+public net.minecraft.client.audio.MusicTicker field_147679_a
+public net.minecraft.client.audio.MusicTicker field_147677_b
+public net.minecraft.client.audio.MusicTicker field_147678_c
+public net.minecraft.client.audio.MusicTicker field_147676_d
+public net.minecraft.client.gui.GuiIngame recordPlaying
+# Methods
+public net.minecraft.entity.player.EntityPlayer closeScreen()V
+public net.minecraft.entity.player.EntityPlayerMP closeScreen()V
+public net.minecraft.client.entity.EntityClientPlayerMP closeScreen()V
+public net.minecraft.client.entity.EntityPlayerSP closeScreen()V
+public net.minecraft.world.World onEntityRemoved(Lnet/minecraft/entity/Entity;)V
+public net.minecraft.client.multiplayer.WorldClient onEntityRemoved(Lnet/minecraft/entity/Entity;)V
+public net.minecraft.world.WorldServer onEntityRemoved(Lnet/minecraft/entity/Entity;)V
+public net.minecraft.entity.DataWatcher getWatchedObject(I)Lnet/minecraft/entity/DataWatcher$WatchableObject;
