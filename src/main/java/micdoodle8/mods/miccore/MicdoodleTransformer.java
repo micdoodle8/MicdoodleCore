@@ -522,13 +522,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		ClassNode node = this.startInjection(bytes);
 
         boolean playerAPI = this.isPlayerApiActive();
-		MicdoodleTransformer.operationCount = playerAPI ? 0 : 6;
+        MethodNode attemptLoginMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT);
+		MicdoodleTransformer.operationCount = playerAPI ? 0 : (attemptLoginMethod == null ? 4 : 6);
 
         if (!playerAPI)
         {
             MethodNode createPlayerMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER);
             MethodNode respawnPlayerMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER);
-            MethodNode attemptLoginMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT);
 
             if (createPlayerMethod != null)
             {
