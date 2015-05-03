@@ -65,6 +65,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_CLASS_ICHUNKPROVIDER = "IChunkProvider";
     private static final String KEY_NET_HANDLER_LOGIN_SERVER = "netHandlerLoginServer";
     private static final String KEY_CLASS_ENTITY_ARROW = "entityArrow";
+    private static final String KEY_CLASS_RENDERER_LIVING_ENTITY = "rendererLivingEntity";
    
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
@@ -102,6 +103,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_START_GAME = "startGame";
 	private static final String KEY_METHOD_CAN_RENDER_FIRE = "canRenderOnFire";
 	private static final String KEY_METHOD_CGS_POPULATE = "CGSpopulate";
+	private static final String KEY_METHOD_RENDER_MODEL = "renderModel";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -111,6 +113,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String CLASS_MUSIC_TICKER_GC = "micdoodle8/mods/galacticraft/core/client/sounds/MusicTickerGC";
 	private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
 	private static final String CLASS_GL11 = "org/lwjgl/opengl/GL11";
+	private static final String CLASS_RENDER_PLAYER_GC = "micdoodle8/mods/galacticraft/core/client/render/entities/RenderPlayerGC";
 
 	private static int operationCount = 0;
 	private static int injectionCount = 0;
@@ -169,6 +172,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER, new ObfuscationEntry("IChunkProvider", "aog"));
             this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "nd"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW, new ObfuscationEntry("net/minecraft/entity/projectile/EntityArrow", "xo"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY, new ObfuscationEntry("net/minecraft/client/renderer/entity/RendererLivingEntity", "bnz"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -206,6 +210,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CAN_RENDER_FIRE, new MethodObfuscationEntry("canRenderOnFire", "aA", "()Z"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CGS_POPULATE, new MethodObfuscationEntry("populate", "a", "(Laog;II)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_MODEL, new MethodObfuscationEntry("renderModel", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
         }
         else if (this.mcVersionMatches("[1.7.10]"))
         {
@@ -250,6 +255,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER, new ObfuscationEntry("IChunkProvider", "apu"));
             this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "nn"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW, new ObfuscationEntry("net/minecraft/entity/projectile/EntityArrow", "zc"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY, new ObfuscationEntry("net/minecraft/client/renderer/entity/RendererLivingEntity", "boh"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -287,6 +293,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CAN_RENDER_FIRE, new MethodObfuscationEntry("canRenderOnFire", "aA", "()Z"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CGS_POPULATE, new MethodObfuscationEntry("populate", "a", "(Lapu;II)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_MODEL, new MethodObfuscationEntry("renderModel", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
         }
 
         try
@@ -397,6 +404,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			return this.transformEntityArrow(bytes);
 		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY)))
+		{
+			return this.transformRendererLivingEntity(bytes);
+		}
 		
 		return bytes;
 	}
@@ -470,6 +481,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW).obfuscatedName))
 		{
 			return this.transformEntityArrow(bytes);
+		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY).obfuscatedName))
+		{
+			return this.transformRendererLivingEntity(bytes);
 		}
 		
 		return bytes;
@@ -1677,6 +1692,44 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 						method.instructions.set(nodeAt, overwriteNode);
 						MicdoodleTransformer.injectionCount++;
 					}
+				}
+			}
+		}
+
+		return this.finishInjection(node);
+	}
+
+	public byte[] transformRendererLivingEntity(byte[] bytes)
+	{
+		ClassNode node = this.startInjection(bytes);
+
+		MicdoodleTransformer.operationCount = 1;
+
+		MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_RENDER_MODEL);
+
+		if (method != null)
+		{
+			for (int count = 0; count < method.instructions.size(); count++)
+			{
+				final AbstractInsnNode list = method.instructions.get(count);
+
+				if (list.getOpcode() == Opcodes.RETURN)
+				{
+					AbstractInsnNode nodeAbove = method.instructions.get(count - 2);
+					
+					InsnList toAdd = new InsnList();
+					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 2));
+					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 3));
+					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 4));
+					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 5));
+					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 6));
+					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 7));
+					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_RENDER_PLAYER_GC, "renderModelS", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V", false));
+					method.instructions.insertBefore(nodeAbove, toAdd);
+					MicdoodleTransformer.injectionCount++;
+					break;
 				}
 			}
 		}

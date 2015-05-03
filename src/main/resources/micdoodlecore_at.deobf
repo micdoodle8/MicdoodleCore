@@ -21,6 +21,7 @@ public net.minecraft.client.audio.MusicTicker field_147677_b
 public net.minecraft.client.audio.MusicTicker field_147678_c
 public net.minecraft.client.audio.MusicTicker field_147676_d
 public net.minecraft.client.gui.GuiIngame recordPlaying
+public net.minecraft.client.renderer.entity.RendererLivingEntity mainModel
 # Methods
 public net.minecraft.entity.player.EntityPlayer closeScreen()V
 public net.minecraft.entity.player.EntityPlayerMP closeScreen()V
