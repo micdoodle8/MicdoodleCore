@@ -1667,8 +1667,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				if (list instanceof LdcInsnNode)
 				{
 					final LdcInsnNode nodeAt = (LdcInsnNode) list;
-					
-					System.err.println(nodeAt.cst);
 
 					if (nodeAt.cst.equals(0.05F))
 					{
