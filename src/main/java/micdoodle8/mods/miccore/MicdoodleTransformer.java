@@ -64,6 +64,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_CHUNK_PROVIDER_SERVER = "chunkProviderServer";
 	private static final String KEY_CLASS_ICHUNKPROVIDER = "IChunkProvider";
     private static final String KEY_NET_HANDLER_LOGIN_SERVER = "netHandlerLoginServer";
+    private static final String KEY_CLASS_ENTITY_ARROW = "entityArrow";
    
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
@@ -167,6 +168,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER, new ObfuscationEntry("net/minecraft/world/gen/ChunkProviderServer", "mi"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER, new ObfuscationEntry("IChunkProvider", "aog"));
             this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "nd"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW, new ObfuscationEntry("net/minecraft/entity/projectile/EntityArrow", "xo"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -247,6 +249,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER, new ObfuscationEntry("net/minecraft/world/gen/ChunkProviderServer", "ms"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER, new ObfuscationEntry("IChunkProvider", "apu"));
             this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "nn"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW, new ObfuscationEntry("net/minecraft/entity/projectile/EntityArrow", "zc"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -389,6 +392,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER)))
 		{
 			return this.transformChunkProviderServerClass(bytes);
+		}
+		else if (testName.equals(this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW)))
+		{
+			return this.transformEntityArrow(bytes);
 		}
 		
 		return bytes;
@@ -1638,6 +1645,43 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	        return finishInjection(node);
 	    }
 	*/
+
+	public byte[] transformEntityArrow(byte[] bytes)
+	{
+		ClassNode node = this.startInjection(bytes);
+
+		MicdoodleTransformer.operationCount = 1;
+
+		MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_ON_UPDATE);
+
+		if (method != null)
+		{
+			for (int count = 0; count < method.instructions.size(); count++)
+			{
+				final AbstractInsnNode list = method.instructions.get(count);
+
+				if (list instanceof LdcInsnNode)
+				{
+					final LdcInsnNode nodeAt = (LdcInsnNode) list;
+					
+					System.err.println(nodeAt.cst);
+
+					if (nodeAt.cst.equals(0.05F))
+					{
+						final VarInsnNode beforeNode = new VarInsnNode(Opcodes.ALOAD, 0);
+						final MethodInsnNode overwriteNode = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "getArrowGravity", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW) + ";)F");
+
+						method.instructions.insertBefore(nodeAt, beforeNode);
+						method.instructions.set(nodeAt, overwriteNode);
+						MicdoodleTransformer.injectionCount++;
+					}
+				}
+			}
+		}
+
+		return this.finishInjection(node);
+	}
+	
     public static class ObfuscationEntry
 	{
 		public String name;
