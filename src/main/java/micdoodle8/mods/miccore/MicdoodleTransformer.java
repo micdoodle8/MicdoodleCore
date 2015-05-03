@@ -467,6 +467,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			return this.transformChunkProviderServerClass(bytes);
 		}
+		else if (testName.equals(this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW).obfuscatedName))
+		{
+			return this.transformEntityArrow(bytes);
+		}
 		
 		return bytes;
 	}
