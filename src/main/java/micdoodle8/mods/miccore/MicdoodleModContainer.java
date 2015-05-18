@@ -1,6 +1,7 @@
 package micdoodle8.mods.miccore;
 
 import com.google.common.eventbus.EventBus;
+
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.ModMetadata;
@@ -25,7 +26,7 @@ public class MicdoodleModContainer extends DummyModContainer
 		meta.authorList = Arrays.asList("micdoodle8, radfast");
 		meta.url = "http://www.micdoodle8.com/";
 	}
-
+	
 	@Override
 	public boolean registerBus(EventBus bus, LoadController controller)
 	{
