@@ -1,12 +1,12 @@
 package micdoodle8.mods.miccore;
 
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
-import cpw.mods.fml.common.versioning.VersionParser;
-import cpw.mods.fml.relauncher.FMLInjectionData;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import net.minecraft.launchwrapper.Launch;
 
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
+import net.minecraftforge.fml.common.versioning.VersionParser;
+import net.minecraftforge.fml.relauncher.FMLInjectionData;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-@TransformerExclusions(value = { "micdoodle8.mods.miccore" })
+@IFMLLoadingPlugin.TransformerExclusions(value = { "micdoodle8.mods.miccore" })
 public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassTransformer
 {
 	HashMap<String, ObfuscationEntry> nodemap = new HashMap<String, ObfuscationEntry>();

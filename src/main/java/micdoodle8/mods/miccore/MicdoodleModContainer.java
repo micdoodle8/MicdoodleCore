@@ -1,17 +1,17 @@
 package micdoodle8.mods.miccore;
 
 import com.google.common.eventbus.EventBus;
-
-import cpw.mods.fml.common.DummyModContainer;
-import cpw.mods.fml.common.LoadController;
-import cpw.mods.fml.common.ModMetadata;
-import cpw.mods.fml.common.versioning.ArtifactVersion;
-import cpw.mods.fml.common.versioning.VersionParser;
-import cpw.mods.fml.common.versioning.VersionRange;
+import net.minecraftforge.fml.common.DummyModContainer;
+import net.minecraftforge.fml.common.LoadController;
+import net.minecraftforge.fml.common.ModMetadata;
+import net.minecraftforge.fml.common.versioning.ArtifactVersion;
+import net.minecraftforge.fml.common.versioning.VersionParser;
+import net.minecraftforge.fml.common.versioning.VersionRange;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
 
 public class MicdoodleModContainer extends DummyModContainer
 {

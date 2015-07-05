@@ -1,6 +1,6 @@
 package micdoodle8.mods.miccore;
 
-import cpw.mods.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,7 +11,7 @@ public interface Annotations
 {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	public @interface RuntimeInterface
+	@interface RuntimeInterface
 	{
 		String clazz();
 
@@ -22,21 +22,21 @@ public interface Annotations
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	public @interface AltForVersion
+	@interface AltForVersion
 	{
 		String version();
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
-	public @interface NetworkedField
+	@interface NetworkedField
 	{
 		Side targetSide();
 	}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface VersionSpecific
+    @interface VersionSpecific
     {
         String version();
     }
