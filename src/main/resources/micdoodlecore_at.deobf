@@ -11,8 +11,8 @@ public net.minecraft.entity.player.EntityPlayer sleeping
 public net.minecraft.entity.player.EntityPlayer sleepTimer
 public net.minecraft.entity.EntityLivingBase recentlyHit
 public net.minecraft.entity.EntityLivingBase attackingPlayer
-public net.minecraft.network.EnumConnectionState field_150761_f
-public net.minecraft.network.EnumConnectionState field_150770_i
+public net.minecraft.network.EnumConnectionState STATES_BY_CLASS
+public net.minecraft.network.EnumConnectionState directionMaps
 public net.minecraft.client.renderer.EntityRenderer thirdPersonDistance
 public net.minecraft.client.renderer.EntityRenderer thirdPersonDistanceTemp
 public net.minecraft.client.renderer.WorldRenderer glRenderList
