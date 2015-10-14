@@ -330,9 +330,13 @@ public class DepLoader implements IFMLLoadingPlugin, IFMLCallHook
 
             modsDir = new File(mcDir, "mods");
             v_modsDir = new File(mcDir, "mods/" + mcVer);
+            System.out.println("MicdoodleCore searching for dependencies in mods file: " + modsDir.getAbsolutePath());
             if (!v_modsDir.exists())
             {
-                v_modsDir.mkdirs();
+                if (!v_modsDir.mkdirs())
+                {
+                    System.err.println("Failed to create mods subdirectory: " + v_modsDir.getAbsolutePath() + " !!!");
+                }
             }
         }
 
