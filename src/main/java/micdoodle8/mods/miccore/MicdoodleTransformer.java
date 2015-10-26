@@ -46,6 +46,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private String nameEntityArrow;
 	private String nameRendererLivingEntity;
 	private String nameEntityGolem;
+	private String nameWorld;
 
 	private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
 	private static final String KEY_CLASS_WORLD = "worldClass";
@@ -127,6 +128,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_CAN_RENDER_FIRE = "canRenderOnFire";
 	private static final String KEY_METHOD_CGS_POPULATE = "CGSpopulate";
 	private static final String KEY_METHOD_RENDER_MODEL = "renderModel";
+	private static final String KEY_METHOD_RAIN_STRENGTH = "getRainStrength";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -234,6 +236,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CGS_POPULATE, new MethodObfuscationEntry("populate", "a", "(Laog;II)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_MODEL, new MethodObfuscationEntry("renderModel", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RAIN_STRENGTH, new MethodObfuscationEntry("getRainStrength", "j", "(F)F"));
         }
         else if (this.mcVersionMatches("[1.7.10]"))
         {
@@ -317,6 +320,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CGS_POPULATE, new MethodObfuscationEntry("populate", "a", "(Lapu;II)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_MODEL, new MethodObfuscationEntry("renderModel", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
+			this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RAIN_STRENGTH, new MethodObfuscationEntry("getRainStrength", "j", "(F)F"));
         }
 
         try
@@ -381,6 +385,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameEntityArrow  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW);
 		this.nameRendererLivingEntity  = this.getName(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY);
 		this.nameEntityGolem  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITYGOLEM);	
+		this.nameWorld  = this.getName(MicdoodleTransformer.KEY_CLASS_WORLD);
 	}
 
 	private void populateNamesObf()
@@ -403,6 +408,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameEntityArrow  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW).obfuscatedName;
 		this.nameRendererLivingEntity  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY).obfuscatedName;
 		this.nameEntityGolem  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITYGOLEM).obfuscatedName;		
+		this.nameWorld  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_WORLD).obfuscatedName;
 	}
 	
 	private byte[] transformVanilla(String testName, byte[] bytes)
@@ -478,6 +484,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		else if (testName.equals(this.nameEntityGolem))
 		{
 			return this.transformEntityGolem(bytes);			
+		}
+		else if (testName.equals(this.nameWorld))
+		{
+			return this.transformWorld(bytes);
 		}
 		
 		return bytes;
@@ -1714,6 +1724,43 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 7));
 					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_RENDER_PLAYER_GC, "renderModelS", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
 					method.instructions.insertBefore(nodeAbove, toAdd);
+					MicdoodleTransformer.injectionCount++;
+					break;
+				}
+			}
+		}
+
+		return this.finishInjection(node);
+	}
+
+	public byte[] transformWorld(byte[] bytes)
+	{
+		ClassNode node = this.startInjection(bytes);
+
+		MicdoodleTransformer.operationCount = 1;
+
+		MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_RAIN_STRENGTH);
+
+		if (method != null)
+		{
+			for (int count = 0; count < method.instructions.size(); ++count)
+			{
+				final AbstractInsnNode list = method.instructions.get(count);
+
+				if (list.getOpcode() == Opcodes.ALOAD)
+				{
+					// Remove ALOAD, GETFIELD, ALOAD, GETFIELD, ALOAD, GETFIELD, FSUB, FLOAD, FMUL, FADD, FRETURN
+					for (int i = 0; i < 6; ++i)
+					{
+						method.instructions.remove(method.instructions.get(count + i));
+					}
+
+					InsnList toAdd = new InsnList();
+					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
+					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "getRainStrength", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";F)F"));
+					toAdd.add(new InsnNode(Opcodes.FRETURN));
+					method.instructions.insertBefore(method.instructions.get(count), toAdd);
 					MicdoodleTransformer.injectionCount++;
 					break;
 				}
