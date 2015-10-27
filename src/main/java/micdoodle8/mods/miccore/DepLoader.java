@@ -3,13 +3,13 @@ package micdoodle8.mods.miccore;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import cpw.mods.fml.common.versioning.ComparableVersion;
+import cpw.mods.fml.relauncher.FMLInjectionData;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.IFMLCallHook;
+import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
-import net.minecraftforge.fml.common.versioning.ComparableVersion;
-import net.minecraftforge.fml.relauncher.FMLInjectionData;
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
-import net.minecraftforge.fml.relauncher.IFMLCallHook;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import sun.misc.URLClassPath;
 import sun.net.util.URLUtil;
 
@@ -330,9 +330,13 @@ public class DepLoader implements IFMLLoadingPlugin, IFMLCallHook
 
             modsDir = new File(mcDir, "mods");
             v_modsDir = new File(mcDir, "mods/" + mcVer);
+            System.out.println("MicdoodleCore searching for dependencies in mods file: " + modsDir.getAbsolutePath());
             if (!v_modsDir.exists())
             {
-                v_modsDir.mkdirs();
+                if (!v_modsDir.mkdirs())
+                {
+                    System.err.println("Failed to create mods subdirectory: " + v_modsDir.getAbsolutePath() + " !!!");
+                }
             }
         }
 
