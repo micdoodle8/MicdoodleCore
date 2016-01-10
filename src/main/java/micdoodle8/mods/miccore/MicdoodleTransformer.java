@@ -139,6 +139,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String CLASS_GL11 = "org/lwjgl/opengl/GL11";
 	private static final String CLASS_RENDER_PLAYER_GC = "micdoodle8/mods/galacticraft/core/client/render/entities/RenderPlayerGC";
 	private static final String CLASS_IENTITYBREATHABLE = "micdoodle8/mods/galacticraft/api/entity/IEntityBreathable";
+    private static final String CLASS_SYNCMOD_CLONEPLAYER = "sync/common/tileentity/TileEntityDualVertical";
 
 	private static int operationCount = 0;
 	private static int injectionCount = 0;
@@ -354,6 +355,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			if (testName.equals(this.nameForgeHooksClient))
 			{
 				return this.transformForgeHooks(bytes);
+			}
+
+			if (testName.equals(MicdoodleTransformer.CLASS_SYNCMOD_CLONEPLAYER))
+			{
+				return this.transformSyncMod(bytes);
 			}
 
 			if (testName.length() <= 3 || this.deobfuscated)
@@ -648,6 +654,58 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         {
                             String initDesc = "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V";
                             attemptLoginMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), initDesc));
+
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+		return this.finishInjection(node);
+	}
+
+	/**
+	 * replaces EntityPlayerMP initialization with custom one in Sync Mod
+	 */
+	public byte[] transformSyncMod(byte[] bytes)
+	{
+		ClassNode node = this.startInjection(bytes);
+
+        boolean playerAPI = this.isPlayerApiActive();
+		MicdoodleTransformer.operationCount = playerAPI ? 0 : 2;
+
+        if (!playerAPI)
+        {
+            MethodNode respawnPlayerMethod = this.getMethodNoDesc(node, "func_145845_h");
+
+            if (respawnPlayerMethod != null)
+            {
+                for (int count = 0; count < respawnPlayerMethod.instructions.size(); count++)
+                {
+                    final AbstractInsnNode list = respawnPlayerMethod.instructions.get(count);
+
+                    if (list instanceof TypeInsnNode)
+                    {
+                        final TypeInsnNode nodeAt = (TypeInsnNode) list;
+
+                        //Deobfuscated name for EntityPlayerMP, because this is in a mod
+                        if (nodeAt.getOpcode() == Opcodes.NEW && nodeAt.desc.contains(this.getName(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
+                        {
+                            final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP));
+
+                            respawnPlayerMethod.instructions.set(nodeAt, overwriteNode);
+                            MicdoodleTransformer.injectionCount++;
+                        }
+                    }
+                    else if (list instanceof MethodInsnNode)
+                    {
+                        final MethodInsnNode nodeAt = (MethodInsnNode) list;
+
+                        //Deobfuscated name for EntityPlayerMP, because this is in a mod
+                        if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getName(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
+                        {
+                            respawnPlayerMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP)));
 
                             MicdoodleTransformer.injectionCount++;
                         }
@@ -1831,6 +1889,19 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		for (MethodNode methodNode : node.methods)
 		{
 			if (this.methodMatches(keyName, methodNode))
+			{
+				return methodNode;
+			}
+		}
+
+		return null;
+	}
+
+	private MethodNode getMethodNoDesc(ClassNode node, String methodName)
+	{
+		for (MethodNode methodNode : node.methods)
+		{
+			if (methodNode.name.equals(methodName))
 			{
 				return methodNode;
 			}
