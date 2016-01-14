@@ -1,15 +1,16 @@
 package micdoodle8.mods.miccore;
 
+import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.LoaderException;
+import cpw.mods.fml.common.eventhandler.Event;
+import cpw.mods.fml.common.versioning.DefaultArtifactVersion;
+import cpw.mods.fml.common.versioning.VersionParser;
+import cpw.mods.fml.relauncher.FMLInjectionData;
+import cpw.mods.fml.relauncher.IFMLCallHook;
+import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import cpw.mods.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLLog;
-import net.minecraftforge.fml.common.LoaderException;
-import net.minecraftforge.fml.common.eventhandler.Event;
-import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
-import net.minecraftforge.fml.common.versioning.VersionParser;
-import net.minecraftforge.fml.relauncher.FMLInjectionData;
-import net.minecraftforge.fml.relauncher.IFMLCallHook;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
@@ -30,11 +31,11 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-@IFMLLoadingPlugin.TransformerExclusions(value = { "micdoodle8.mods.miccore" })
+@TransformerExclusions(value = { "micdoodle8.mods.miccore" })
 public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 {
 	public static boolean hasRegistered = false;
-	public static final String mcVersion = "[1.8]";
+	public static final String mcVersion = "[1.7.2],[1.7.10]";
 	public static File mcDir;
     public static File canonicalConfigDir;
     private static boolean checkedVersions = false;
