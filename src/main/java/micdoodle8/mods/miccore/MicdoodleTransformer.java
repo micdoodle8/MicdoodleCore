@@ -129,6 +129,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_CGS_POPULATE = "CGSpopulate";
 	private static final String KEY_METHOD_RENDER_MODEL = "renderModel";
 	private static final String KEY_METHOD_RAIN_STRENGTH = "getRainStrength";
+	private static final String KEY_METHOD_REGISTEROF = "registerOF";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -140,7 +141,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String CLASS_RENDER_PLAYER_GC = "micdoodle8/mods/galacticraft/core/client/render/entities/RenderPlayerGC";
 	private static final String CLASS_IENTITYBREATHABLE = "micdoodle8/mods/galacticraft/api/entity/IEntityBreathable";
     private static final String CLASS_SYNCMOD_CLONEPLAYER = "sync/common/tileentity/TileEntityDualVertical";
-
+    private static final String CLASS_RENDERPLAYEROF = "RenderPlayerOF";
+    
 	private static int operationCount = 0;
 	private static int injectionCount = 0;
 
@@ -322,6 +324,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_MODEL, new MethodObfuscationEntry("renderModel", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
 			this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RAIN_STRENGTH, new MethodObfuscationEntry("getRainStrength", "j", "(F)F"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_REGISTEROF, new MethodObfuscationEntry("register", "register", "()V"));
         }
 
         try
@@ -360,6 +363,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			if (testName.equals(MicdoodleTransformer.CLASS_SYNCMOD_CLONEPLAYER))
 			{
 				return this.transformSyncMod(bytes);
+			}
+
+			if (testName.equals(MicdoodleTransformer.CLASS_RENDERPLAYEROF))
+			{
+				return this.transformOptifine(bytes);
 			}
 
 			if (testName.length() <= 3 || this.deobfuscated)
@@ -836,10 +844,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		ClassNode node = this.startInjection(bytes);
 
 		MicdoodleTransformer.operationCount = 5;
-		if (this.optifinePresent)
-		{
-			MicdoodleTransformer.operationCount--;
-		}
 
 		MethodNode updateLightMapMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_LIGHTMAP);
 		MethodNode updateFogColorMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_FOG_COLOR);
@@ -1823,6 +1827,25 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					break;
 				}
 			}
+		}
+
+		return this.finishInjection(node);
+	}
+	
+	
+	public byte[] transformOptifine(byte[] bytes)
+	{
+		ClassNode node = this.startInjection(bytes);
+
+		MicdoodleTransformer.operationCount = 1;
+
+		MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_REGISTEROF);
+
+		if (method != null)
+		{
+			AbstractInsnNode toAdd = new InsnNode(Opcodes.RETURN);
+			method.instructions.insertBefore(method.instructions.get(0), toAdd);
+			MicdoodleTransformer.injectionCount++;
 		}
 
 		return this.finishInjection(node);
