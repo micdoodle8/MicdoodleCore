@@ -32,7 +32,7 @@ public net.minecraft.client.renderer.EntityRenderer cameraYaw
 public net.minecraft.client.renderer.EntityRenderer cameraPitch
 public net.minecraft.entity.EntityList classToIDMapping
 public net.minecraft.network.NetHandlerPlayServer floatingTickCount
-public net.minecraft.world.biome.BiomeProvider biomeIndexLayer
+public net.minecraft.world.biome.WorldChunkManager biomeIndexLayer
 # Methods
 public net.minecraft.entity.player.EntityPlayer closeScreen()V
 public net.minecraft.entity.player.EntityPlayerMP closeScreen()V

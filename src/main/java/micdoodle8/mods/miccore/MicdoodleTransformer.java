@@ -801,7 +801,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			final InsnList nodesToAdd = new InsnList();
 
-            System.err.println("1");
 			nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
 			nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_CLIENT_PROXY_MAIN, "orientCamera", "(F)V"));
 			orientCameraMethod.instructions.insertBefore(orientCameraMethod.instructions.get(orientCameraMethod.instructions.size() - 3), nodesToAdd);
@@ -1841,10 +1840,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		for (MethodNode methodNode : node.methods)
 		{
-            if (keyName.equals(MicdoodleTransformer.KEY_METHOD_BED_ORIENT_CAMERA))
-            {
-                System.err.println("" + methodNode.name + " " + methodNode.desc + " " + this.getNameDynamic(keyName) + " " + this.getDescDynamic(keyName));
-            }
 			if (this.methodMatches(keyName, methodNode))
 			{
 				return methodNode;
