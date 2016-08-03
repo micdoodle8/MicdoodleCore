@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-
 public class MicdoodleModContainer extends DummyModContainer
 {
 	public MicdoodleModContainer()

@@ -11,7 +11,7 @@ public interface Annotations
 {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	@interface RuntimeInterface
+	public @interface RuntimeInterface
 	{
 		String clazz();
 
@@ -22,21 +22,21 @@ public interface Annotations
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	@interface AltForVersion
+	public @interface AltForVersion
 	{
 		String version();
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
-	@interface NetworkedField
+	public @interface NetworkedField
 	{
 		Side targetSide();
 	}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    @interface VersionSpecific
+    public @interface VersionSpecific
     {
         String version();
     }

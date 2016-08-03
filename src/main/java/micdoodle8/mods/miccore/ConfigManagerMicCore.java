@@ -1,6 +1,5 @@
 package micdoodle8.mods.miccore;
 
-
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.FMLLog;
 
