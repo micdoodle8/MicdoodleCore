@@ -414,10 +414,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			return this.transformEntityArrow(bytes);
 		}
-		else if (testName.equals(this.nameRendererLivingEntity))
-		{
-			return this.transformRendererLivingEntity(bytes);
-		}
+//		else if (testName.equals(this.nameRendererLivingEntity))
+//		{
+//			return this.transformRendererLivingEntity(bytes);
+//		}
 		else if (testName.equals(this.nameEntityGolem))
 		{
 			return this.transformEntityGolem(bytes);			
@@ -1684,43 +1684,43 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformRendererLivingEntity(byte[] bytes)
-	{
-		ClassNode node = this.startInjection(bytes);
-
-		MicdoodleTransformer.operationCount = 1;
-
-		MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_RENDER_MODEL);
-
-		if (method != null)
-		{
-			for (int count = 0; count < method.instructions.size(); count++)
-			{
-				final AbstractInsnNode list = method.instructions.get(count);
-
-				if (list.getOpcode() == Opcodes.RETURN)
-				{
-					AbstractInsnNode nodeAbove = method.instructions.get(count - 2);
-					
-					InsnList toAdd = new InsnList();
-					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
-					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 2));
-					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 3));
-					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 4));
-					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 5));
-					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 6));
-					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 7));
-					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_RENDER_PLAYER_GC, "renderModelS", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
-					method.instructions.insertBefore(nodeAbove, toAdd);
-					MicdoodleTransformer.injectionCount++;
-					break;
-				}
-			}
-		}
-
-		return this.finishInjection(node);
-	}
+//	public byte[] transformRendererLivingEntity(byte[] bytes)
+//	{
+//		ClassNode node = this.startInjection(bytes);
+//
+//		MicdoodleTransformer.operationCount = 1;
+//
+//		MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_RENDER_MODEL);
+//
+//		if (method != null)
+//		{
+//			for (int count = 0; count < method.instructions.size(); count++)
+//			{
+//				final AbstractInsnNode list = method.instructions.get(count);
+//
+//				if (list.getOpcode() == Opcodes.RETURN)
+//				{
+//					AbstractInsnNode nodeAbove = method.instructions.get(count - 2);
+//
+//					InsnList toAdd = new InsnList();
+//					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+//					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+//					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 2));
+//					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 3));
+//					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 4));
+//					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 5));
+//					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 6));
+//					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 7));
+//					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_RENDER_PLAYER_GC, "renderModelS", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
+//					method.instructions.insertBefore(nodeAbove, toAdd);
+//					MicdoodleTransformer.injectionCount++;
+//					break;
+//				}
+//			}
+//		}
+//
+//		return this.finishInjection(node);
+//	}
 
 	public byte[] transformWorld(byte[] bytes)
 	{
