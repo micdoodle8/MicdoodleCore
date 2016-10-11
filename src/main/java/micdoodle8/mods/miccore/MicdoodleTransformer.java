@@ -248,6 +248,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_MODEL, new MethodObfuscationEntry("renderModel", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RAIN_STRENGTH, new MethodObfuscationEntry("getRainStrength", "j", "(F)F"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_REGISTEROF, new MethodObfuscationEntry("register", "register", "()V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_SETUP_TERRAIN, new MethodObfuscationEntry("setupTerrain", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";DL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICAMERA) + ";IZ)V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_GET_EYE_HEIGHT, new MethodObfuscationEntry("getEyeHeight", "aS", "()F"));
         }
 
         try
@@ -1298,7 +1300,37 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		ClassNode node = this.startInjection(bytes);
 		Boolean smallMoonsEnabled = this.getSmallMoonsEnabled();
 
-		MicdoodleTransformer.operationCount = smallMoonsEnabled ? 5 : 0;
+		MicdoodleTransformer.operationCount = smallMoonsEnabled ? 6 : 1;
+
+		MethodNode setupTerrainMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_SETUP_TERRAIN);
+
+		if (setupTerrainMethod != null)
+		{
+			for (int count = 0; count < setupTerrainMethod.instructions.size(); count++)
+			{
+				final AbstractInsnNode nodeTest = setupTerrainMethod.instructions.get(count);
+
+				if (nodeTest instanceof MethodInsnNode && ((MethodInsnNode) nodeTest).name.equals(this.getNameDynamic(MicdoodleTransformer.KEY_METHOD_GET_EYE_HEIGHT)))
+				{
+					/*
+					 * The following (hacky) bytecode insertion will always let entities render above y=256
+					 * This is necessary for rockets since the 1.8 update changed directional frustum culling
+					 * See WorldUtil.getRenderPosY
+					 */
+					InsnList list = new InsnList();
+					list.add(new VarInsnNode(Opcodes.ALOAD, 1));
+					list.add(new VarInsnNode(Opcodes.DLOAD, 15));
+					list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_WORLD_UTIL, "getRenderPosY", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";D)D", false));
+					setupTerrainMethod.instructions.remove(setupTerrainMethod.instructions.get(count - 2));
+					setupTerrainMethod.instructions.remove(setupTerrainMethod.instructions.get(count - 2));
+					setupTerrainMethod.instructions.remove(setupTerrainMethod.instructions.get(count - 2));
+					setupTerrainMethod.instructions.remove(setupTerrainMethod.instructions.get(count - 2));
+					setupTerrainMethod.instructions.remove(setupTerrainMethod.instructions.get(count - 2));
+					setupTerrainMethod.instructions.insertBefore(setupTerrainMethod.instructions.get(count - 2), list);
+					break;
+				}
+			}
+		}
 
 		if (smallMoonsEnabled)
 		{
