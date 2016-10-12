@@ -134,6 +134,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_REGISTEROF = "registerOF";
 	private static final String KEY_METHOD_SETUP_TERRAIN = "setupTerrain";
 	private static final String KEY_METHOD_GET_EYE_HEIGHT = "getEyeHeight";
+	private static final String KEY_METHOD_ENABLE_ALPHA = "enableAlphaMethod";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -214,7 +215,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("worldObj", "i"));
-            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN, new FieldObfuscationEntry("currentChunkProvider", "e"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN, new FieldObfuscationEntry("serverChunkGenerator", "e"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "g", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("recreatePlayerEntity", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
@@ -250,6 +251,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_REGISTEROF, new MethodObfuscationEntry("register", "register", "()V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_SETUP_TERRAIN, new MethodObfuscationEntry("setupTerrain", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";DL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICAMERA) + ";IZ)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_GET_EYE_HEIGHT, new MethodObfuscationEntry("getEyeHeight", "aS", "()F"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ENABLE_ALPHA, new MethodObfuscationEntry("enableAlpha", "d", "()V"));
         }
 
         try
@@ -458,7 +460,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					{
 						final InsnList nodesToAdd = new InsnList();
 
-						//(p_73153_2_, p_73153_3_, worldObj, currentChunkProvider, p_73153_1_)
+						//(p_73153_2_, p_73153_3_, worldObj, serverChunkGenerator, p_73153_1_)
 						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -1129,12 +1131,12 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				final AbstractInsnNode glEnable = renderOverlaysMethod.instructions.get(count);
 
-				if (glEnable instanceof MethodInsnNode && ((MethodInsnNode) glEnable).name.equals("glEnable"))
+				if (glEnable instanceof MethodInsnNode && ((MethodInsnNode) glEnable).name.equals(getNameDynamic(MicdoodleTransformer.KEY_METHOD_ENABLE_ALPHA)))
 				{
 					InsnList toAdd = new InsnList();
 
 					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
-					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_CLIENT_PROXY_MAIN, "renderLiquidOverlays", "(F)V"));
+					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_CLIENT_PROXY_MAIN, "renderLiquidOverlays", "(F)V", false));
 
 					renderOverlaysMethod.instructions.insertBefore(glEnable, toAdd);
 					MicdoodleTransformer.injectionCount++;
@@ -1327,6 +1329,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					setupTerrainMethod.instructions.remove(setupTerrainMethod.instructions.get(count - 2));
 					setupTerrainMethod.instructions.remove(setupTerrainMethod.instructions.get(count - 2));
 					setupTerrainMethod.instructions.insertBefore(setupTerrainMethod.instructions.get(count - 2), list);
+					MicdoodleTransformer.injectionCount++;
 					break;
 				}
 			}
