@@ -806,23 +806,23 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					{
 						final InsnList nodesToAdd = new InsnList();
 
-						nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 11));
-						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getColorRed", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)F"));
-						nodesToAdd.add(new InsnNode(Opcodes.FMUL));
-						nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 11));
-
 						nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 12));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getColorGreen", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)F"));
+						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getColorRed", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)F"));
 						nodesToAdd.add(new InsnNode(Opcodes.FMUL));
 						nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 12));
 
 						nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 13));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
-						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getColorBlue", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)F"));
+						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getColorGreen", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)F"));
 						nodesToAdd.add(new InsnNode(Opcodes.FMUL));
 						nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 13));
+
+						nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 14));
+						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
+						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getColorBlue", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";)F"));
+						nodesToAdd.add(new InsnNode(Opcodes.FMUL));
+						nodesToAdd.add(new VarInsnNode(Opcodes.FSTORE, 14));
 
 						updateLightMapMethod.instructions.insertBefore(nodeAt, nodesToAdd);
 						MicdoodleTransformer.injectionCount++;
