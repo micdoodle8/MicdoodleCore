@@ -34,7 +34,7 @@ import java.util.zip.ZipInputStream;
 public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 {
 	public static boolean hasRegistered = false;
-	public static final String mcVersion = "[1.8.9]";
+	public static final String mcVersion = "[1.10.2]";
 	public static File mcDir;
     public static File canonicalConfigDir;
     private static boolean checkedVersions = false;

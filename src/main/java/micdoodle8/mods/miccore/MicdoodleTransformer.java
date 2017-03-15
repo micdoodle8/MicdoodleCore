@@ -42,7 +42,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private String nameRenderManager;
 	private String nameTileEntityRenderer;
 	private String nameEntity;
-	private String nameChunkProviderServer;
+	private String nameChunkProviderOverworld;
+	private String nameChunk;
 	private String nameEntityArrow;
 	private String nameEntityGolem;
 	private String nameWorld;
@@ -83,8 +84,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_CLASS_SERVER = "minecraftServer";
 	private static final String KEY_CLASS_WORLD_SERVER = "worldServer";
 	private static final String KEY_CLASS_WORLD_CLIENT = "worldClient";
-    private static final String KEY_CLASS_CHUNK_PROVIDER_SERVER = "chunkProviderServer";
+    private static final String KEY_CLASS_CHUNK_PROVIDER_OVERWORLD = "chunkProviderServer";
 	private static final String KEY_CLASS_ICHUNKPROVIDER = "IChunkProvider";
+	private static final String KEY_CLASS_ICHUNKGENERATOR = "IChunkGenerator";
+	private static final String KEY_CLASS_CHUNK = "chunkClass";
     private static final String KEY_NET_HANDLER_LOGIN_SERVER = "netHandlerLoginServer";
     private static final String KEY_CLASS_ENTITY_ARROW = "entityArrow";
     private static final String KEY_CLASS_RENDERER_LIVING_ENTITY = "rendererLivingEntity";
@@ -127,7 +130,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_TILERENDERER_RENDERTILEAT = "renderTileAtMethod"; //TileEntityRendererDispatcher.renderTileEntityAt()
 	private static final String KEY_METHOD_START_GAME = "startGame";
 	private static final String KEY_METHOD_CAN_RENDER_FIRE = "canRenderOnFire";
-	private static final String KEY_METHOD_CGS_POPULATE = "CGSpopulate";
+	private static final String KEY_METHOD_POPULATE_CHUNK = "populateChunk";
 	private static final String KEY_METHOD_RENDER_MODEL = "renderModel";
 	private static final String KEY_METHOD_RAIN_STRENGTH = "getRainStrength";
 	private static final String KEY_METHOD_REGISTEROF = "registerOF";
@@ -162,7 +165,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
     	Launch.classLoader.addTransformerExclusion(CLASS_IENTITYBREATHABLE.replace('/', '.'));
 
-        if (this.mcVersionMatches("[1.8.9]"))
+        if (this.mcVersionMatches("[1.10.2]"))
         {
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_MP, new ObfuscationEntry("net/minecraft/entity/player/EntityPlayerMP", "lf"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD, new ObfuscationEntry("net/minecraft/world/World", "adm"));
@@ -171,7 +174,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER, new ObfuscationEntry("net/minecraft/server/management/ItemInWorldManager", "lg"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER, new ObfuscationEntry("net/minecraft/client/multiplayer/PlayerControllerMP", "bda"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_SP, new ObfuscationEntry("net/minecraft/client/entity/EntityPlayerSP", "bew"));
-            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER, new ObfuscationEntry("net/minecraft/stats/StatFileWriter", "nb"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER, new ObfuscationEntry("net/minecraft/stats/StatisticsManager", "nb"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY, new ObfuscationEntry("net/minecraft/client/network/NetHandlerPlayClient", "bcy"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING, new ObfuscationEntry("net/minecraft/entity/EntityLivingBase", "pr"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM, new ObfuscationEntry("net/minecraft/entity/item/EntityItem", "uz"));
@@ -195,20 +198,22 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityPlayerMP"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityClientPlayerMP"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CUSTOM_OTHER_PLAYER, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityOtherPlayerMP"));
-            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PACKET_SPAWN_PLAYER, new ObfuscationEntry("net/minecraft/network/play/server/S0CPacketSpawnPlayer", "fp"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PACKET_SPAWN_PLAYER, new ObfuscationEntry("net/minecraft/network/play/server/SPacketSpawnPlayer", "fp"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_OTHER_PLAYER, new ObfuscationEntry("net/minecraft/client/entity/EntityOtherPlayerMP", "bex"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_SERVER, new ObfuscationEntry("net/minecraft/server/MinecraftServer"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER, new ObfuscationEntry("net/minecraft/world/WorldServer", "le"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD_CLIENT, new ObfuscationEntry("net/minecraft/client/multiplayer/WorldClient", "bdb"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_TILEENTITY, new ObfuscationEntry("net/minecraft/tileentity/TileEntity", "akw"));
-            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER, new ObfuscationEntry("net/minecraft/world/gen/ChunkProviderServer", "ld"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_OVERWORLD, new ObfuscationEntry("net/minecraft/world/gen/ChunkProviderOverworld", "ld"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER, new ObfuscationEntry("net/minecraft/world/chunk/IChunkProvider", "amv"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICHUNKGENERATOR, new ObfuscationEntry("net/minecraft/world/chunk/IChunkGenerator", "amv"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK, new ObfuscationEntry("net/minecraft/world/chunk/Chunk", "amv"));
             this.nodemap.put(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER, new ObfuscationEntry("net/minecraft/server/network/NetHandlerLoginServer", "lo"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW, new ObfuscationEntry("net/minecraft/entity/projectile/EntityArrow", "wq"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY, new ObfuscationEntry("net/minecraft/client/renderer/entity/RendererLivingEntity", "bjl"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITYGOLEM, new ObfuscationEntry("net/minecraft/entity/monster/EntityGolem", "tq"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKACCESS, new ObfuscationEntry("net/minecraft/world/IBlockAccess", "adq"));
-            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCKPOS, new ObfuscationEntry("net/minecraft/util/BlockPos", "cj"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCKPOS, new ObfuscationEntry("net/minecraft/util/math/BlockPos", "cj"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKSTATE, new ObfuscationEntry("net/minecraft/block/state/IBlockState", "alz"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICAMERA, new ObfuscationEntry("net/minecraft/client/renderer/culling/ICamera", "bia"));
 
@@ -219,7 +224,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "g", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("recreatePlayerEntity", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
-            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_CLIENT_PLAYER, new MethodObfuscationEntry("func_178892_a", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP) + ";"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_CLIENT_PLAYER, new MethodObfuscationEntry("createClientPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_MOVE_ENTITY, new MethodObfuscationEntry("moveEntityWithHeading", "g", "(FF)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ON_UPDATE, new MethodObfuscationEntry("onUpdate", "t_", "()V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_UPDATE_LIGHTMAP, new MethodObfuscationEntry("updateLightmap", "g", "(F)V"));
@@ -244,7 +249,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TILERENDERER_RENDERTILEAT, new MethodObfuscationEntry("renderTileEntityAt", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_TILEENTITY) + ";DDDF)V")); //bmc/a (Land;DDDF)V net/minecraft/client/renderer/tileentity/TileEntityRendererDispatcher/func_147549_a (Lnet/minecraft/tileentity/TileEntity;DDDF)V
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_START_GAME, new MethodObfuscationEntry("startGame", "am", "()V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CAN_RENDER_FIRE, new MethodObfuscationEntry("canRenderOnFire", "aJ", "()Z"));
-            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CGS_POPULATE, new MethodObfuscationEntry("populate", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";II)V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_POPULATE_CHUNK, new MethodObfuscationEntry("populateChunk", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKGENERATOR) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTEMPT_LOGIN_BUKKIT, new MethodObfuscationEntry("attemptLogin", "attemptLogin", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_NET_HANDLER_LOGIN_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";Ljava/lang/String;)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_MODEL, new MethodObfuscationEntry("renderModel", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";FFFFFF)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RAIN_STRENGTH, new MethodObfuscationEntry("getRainStrength", "j", "(F)F"));
@@ -322,7 +327,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameRenderManager  = this.getName(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER);
 		this.nameTileEntityRenderer  = this.getName(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER);
 		this.nameEntity  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY);
-		this.nameChunkProviderServer  = this.getName(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER);
+		this.nameChunkProviderOverworld = this.getName(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_OVERWORLD);
+		this.nameChunk = this.getName(MicdoodleTransformer.KEY_CLASS_CHUNK);
 		this.nameEntityArrow  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW);
 		this.nameEntityGolem  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITYGOLEM);
 		this.nameWorld  = this.getName(MicdoodleTransformer.KEY_CLASS_WORLD);
@@ -344,7 +350,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameRenderManager  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDER_MANAGER).obfuscatedName;
 		this.nameTileEntityRenderer  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_TILEENTITY_RENDERER).obfuscatedName;
 		this.nameEntity  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY).obfuscatedName;
-		this.nameChunkProviderServer  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER).obfuscatedName;
+		this.nameChunkProviderOverworld = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_OVERWORLD).obfuscatedName;
+		this.nameChunk = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_CHUNK).obfuscatedName;
 		this.nameEntityArrow  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_ARROW).obfuscatedName;
 		this.nameEntityGolem  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITYGOLEM).obfuscatedName;
 		this.nameWorld  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_WORLD).obfuscatedName;
@@ -396,9 +403,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			return this.transformEntityClass(bytes);
 		}
-		else if (testName.equals(this.nameChunkProviderServer))
+		else if (testName.equals(this.nameChunk))
 		{
-			return this.transformChunkProviderServerClass(bytes);
+			return this.transformChunkClass(bytes);
 		}
 		else if (testName.equals(this.nameEntityArrow))
 		{
@@ -416,16 +423,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return bytes;
 	}
 
-	/**
-	 * replaces EntityPlayerMP initialization with custom ones
-	 */
-	public byte[] transformChunkProviderServerClass(byte[] bytes)
+	public byte[] transformChunkClass(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
 		MicdoodleTransformer.operationCount = 1;
 
-		MethodNode populateMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_CGS_POPULATE);
+		MethodNode populateMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_POPULATE_CHUNK);
 
 		if (populateMethod != null)
 		{
@@ -438,19 +442,26 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				{
 					final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-					if (nodeAt.getOpcode() == Opcodes.INVOKEINTERFACE && nodeAt.desc.equals(populateMethod.desc))
+					if (nodeAt.getOpcode() == Opcodes.INVOKEINTERFACE && nodeAt.desc.equals("(II)V"))
 					{
 						final InsnList nodesToAdd = new InsnList();
 
 						//(p_73153_2_, p_73153_3_, worldObj, serverChunkGenerator, p_73153_1_)
-						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
-						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";"));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/chunk/Chunk", "xPosition", "I"));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_SERVER), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";"));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/chunk/Chunk", "zPosition", "I"));
+						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/chunk/Chunk", "worldObj", "Lnet/minecraft/world/World;"));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
-						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "otherModPreventGenerate", "(IIL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";)Z", false));
+//						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
+//						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
+//						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+//						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_OVERWORLD), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";"));
+//						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+//						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_OVERWORLD), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";"));
+//						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
+						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "otherModPreventGenerate", "(IIL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKGENERATOR) + ";)Z", false));
 						nodesToAdd.add(new JumpInsnNode(Opcodes.IFNE, skipLabel)); 
 						populateMethod.instructions.insert(nodeAt, nodesToAdd);
 						MicdoodleTransformer.injectionCount++;
@@ -657,8 +668,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         if (nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
                         {
-                            System.err.println(nodeAt.getOpcode() + " " + nodeAt.desc);
-                            System.err.println(Opcodes.NEW + " " + this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP));
                             final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP));
 
                             method.instructions.set(nodeAt, overwriteNode);
@@ -671,8 +680,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
                         {
-                            System.err.println(nodeAt.desc);
-                            System.err.println(this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP));
                             method.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP)));
                             MicdoodleTransformer.injectionCount++;
                         }
