@@ -763,7 +763,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		ClassNode node = this.startInjection(bytes);
 
-		MicdoodleTransformer.operationCount = 5;
+		MicdoodleTransformer.operationCount = 6;
 
 		MethodNode updateLightMapMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_LIGHTMAP);
 		MethodNode updateFogColorMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_FOG_COLOR);
@@ -777,6 +777,29 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "orientCamera", "(F)V"));
 			orientCameraMethod.instructions.insertBefore(orientCameraMethod.instructions.get(orientCameraMethod.instructions.size() - 3), nodesToAdd);
 			MicdoodleTransformer.injectionCount++;
+
+			for (int count = 0; count < orientCameraMethod.instructions.size(); count++)
+			{
+				final AbstractInsnNode list = orientCameraMethod.instructions.get(count);
+
+				if (list instanceof VarInsnNode)
+				{
+					VarInsnNode varNode = (VarInsnNode) list;
+
+					if (varNode.getOpcode() == Opcodes.DSTORE && varNode.var == 10)
+					{
+						nodesToAdd.clear();
+						nodesToAdd.add(new VarInsnNode(Opcodes.DLOAD, 10));
+						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getCameraZoom", "(D)D"));
+						nodesToAdd.add(new VarInsnNode(Opcodes.DSTORE, 10));
+						orientCameraMethod.instructions.insert(list.getNext(), nodesToAdd);
+						MicdoodleTransformer.injectionCount++;
+						break;
+					}
+				}
+			}
+
+
 			if (ConfigManagerMicCore.enableDebug) System.out.println("bll.OrientCamera done");
 		}
 
