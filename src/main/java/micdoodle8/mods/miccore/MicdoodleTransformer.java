@@ -157,7 +157,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         try {
         	deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
             optifinePresent = Launch.classLoader.getClassBytes("CustomColorizer") != null;
-            playerApiActive = Launch.classLoader.getClassBytes("api.player.forge.PlayerAPITransformer") != null;
+            playerApiActive = Launch.classLoader.getClassBytes("api.player.forge.PlayerAPITransformer") != null && !deobfuscated;
         } catch (final Exception e) { }
 
     	Launch.classLoader.addTransformerExclusion(CLASS_IENTITYBREATHABLE.replace('/', '.'));
@@ -657,8 +657,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         if (nodeAt.desc.contains(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
                         {
-                            System.err.println(nodeAt.getOpcode() + " " + nodeAt.desc);
-                            System.err.println(Opcodes.NEW + " " + this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP));
                             final TypeInsnNode overwriteNode = new TypeInsnNode(Opcodes.NEW, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP));
 
                             method.instructions.set(nodeAt, overwriteNode);
