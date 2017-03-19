@@ -28,7 +28,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private DefaultArtifactVersion mcVersion;
 
     private String nameForgeHooksClient;
-	private String nameConfManager;
+	private String namePlayerList;
 	private String namePlayerController;
 	private String nameEntityLiving;
 	private String nameEntityItem;
@@ -50,9 +50,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 	private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
 	private static final String KEY_CLASS_WORLD = "worldClass";
-	private static final String KEY_CLASS_CONF_MANAGER = "confManagerClass";
+	private static final String KEY_PLAYER_LIST = "confManagerClass";
 	private static final String KEY_CLASS_GAME_PROFILE = "gameProfileClass";
-	private static final String KEY_CLASS_ITEM_IN_WORLD_MANAGER = "itemInWorldManagerClass";
+	private static final String KEY_CLASS_INTERACTION_MANAGER = "interactionManagerClass";
 	private static final String KEY_CLASS_PLAYER_CONTROLLER = "playerControllerClass";
 	private static final String KEY_CLASS_PLAYER_SP = "playerClient";
 	private static final String KEY_CLASS_STAT_FILE_WRITER = "statFileWriterClass";
@@ -169,9 +169,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         {
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_MP, new ObfuscationEntry("net/minecraft/entity/player/EntityPlayerMP", "lf"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD, new ObfuscationEntry("net/minecraft/world/World", "adm"));
-            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER, new ObfuscationEntry("net/minecraft/server/management/ServerConfigurationManager", "lx"));
+            this.nodemap.put(MicdoodleTransformer.KEY_PLAYER_LIST, new ObfuscationEntry("net/minecraft/server/management/PlayerList", "lx"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE, new ObfuscationEntry("com/mojang/authlib/GameProfile"));
-            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER, new ObfuscationEntry("net/minecraft/server/management/ItemInWorldManager", "lg"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_INTERACTION_MANAGER, new ObfuscationEntry("net/minecraft/server/management/PlayerInteractionManager", "lg"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER, new ObfuscationEntry("net/minecraft/client/multiplayer/PlayerControllerMP", "bda"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_SP, new ObfuscationEntry("net/minecraft/client/entity/EntityPlayerSP", "bew"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER, new ObfuscationEntry("net/minecraft/stats/StatisticsManager", "nb"));
@@ -235,7 +235,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_WAKE_ENTITY, new MethodObfuscationEntry("wakeFromSleep", "f", "()V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_BED_ORIENT_CAMERA, new MethodObfuscationEntry("orientBedCamera", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_IBLOCKACCESS) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCKPOS) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_IBLOCKSTATE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RENDER_PARTICLES, new MethodObfuscationEntry("renderParticles", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";F)V"));
-            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP, new MethodObfuscationEntry("<init>", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP, new MethodObfuscationEntry("<init>", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_INTERACTION_MANAGER) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP, new MethodObfuscationEntry("<init>", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_MINECRAFT) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_HANDLE_SPAWN_PLAYER, new MethodObfuscationEntry("handleSpawnPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PACKET_SPAWN_PLAYER) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "f", "(F)V"));
@@ -313,7 +313,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 	private void populateNamesDeObf()
 	{
-		this.nameConfManager  = this.getName(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER);
+		this.namePlayerList = this.getName(MicdoodleTransformer.KEY_PLAYER_LIST);
 		this.namePlayerController  = this.getName(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER);
 		this.nameEntityLiving  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING);
 		this.nameEntityItem  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM);
@@ -336,7 +336,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 	private void populateNamesObf()
 	{
-		this.nameConfManager  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_CONF_MANAGER).obfuscatedName;
+		this.namePlayerList = this.nodemap.get(MicdoodleTransformer.KEY_PLAYER_LIST).obfuscatedName;
 		this.namePlayerController  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_PLAYER_CONTROLLER).obfuscatedName;
 		this.nameEntityLiving  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING).obfuscatedName;
 		this.nameEntityItem  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_ITEM).obfuscatedName;
@@ -359,9 +359,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	
 	private byte[] transformVanilla(String testName, byte[] bytes)
 	{
-		if (testName.equals(this.nameConfManager))
+		if (testName.equals(this.namePlayerList))
 		{
-			return this.transformConfigManager(bytes);
+			return this.transformPlayerList(bytes);
 		}
 		else if (testName.equals(this.namePlayerController))
 		{
@@ -480,7 +480,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	/**
 	 * replaces EntityPlayerMP initialization with custom ones
 	 */
-	public byte[] transformConfigManager(byte[] bytes)
+	public byte[] transformPlayerList(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
@@ -580,7 +580,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         if (nodeAt.getOpcode() == Opcodes.INVOKESPECIAL && nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP)))
                         {
-                            String initDesc = "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ITEM_IN_WORLD_MANAGER) + ";)V";
+                            String initDesc = "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_INTERACTION_MANAGER) + ";)V";
                             attemptLoginMethod.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_MP), initDesc, false));
 
                             MicdoodleTransformer.injectionCount++;
