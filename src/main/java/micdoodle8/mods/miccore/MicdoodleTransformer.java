@@ -165,7 +165,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
     	Launch.classLoader.addTransformerExclusion(CLASS_IENTITYBREATHABLE.replace('/', '.'));
 
-        if (this.mcVersionMatches("[1.10.2]"))
+        if (this.mcVersionMatches("[1.11.2]"))
         {
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PLAYER_MP, new ObfuscationEntry("net/minecraft/entity/player/EntityPlayerMP", "lf"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_WORLD, new ObfuscationEntry("net/minecraft/world/World", "adm"));
