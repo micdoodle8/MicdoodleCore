@@ -18,7 +18,7 @@ public net.minecraft.client.audio.MusicTicker field_147678_c
 public net.minecraft.client.audio.MusicTicker field_147676_d
 public net.minecraft.client.gui.GuiIngame recordPlaying
 public net.minecraft.client.renderer.entity.RendererLivingEntity mainModel
-public net.minecraft.world.WorldProvider worldObj
+public net.minecraft.world.WorldProvider world
 public net.minecraft.world.chunk.Chunk heightMapMinimum
 public net.minecraft.world.chunk.Chunk precipitationHeightMap
 public net.minecraft.world.chunk.Chunk heightMap
