@@ -669,8 +669,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
                         if (nodeAt.name.equals("<init>") && nodeAt.owner.equals(this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP)))
                         {
-                            System.err.println(nodeAt.desc);
-                            System.err.println(this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP));
                             method.instructions.set(nodeAt, new MethodInsnNode(Opcodes.INVOKESPECIAL, this.getName(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_SP), this.getName(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP), this.getDescDynamic(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP)));
                             MicdoodleTransformer.injectionCount++;
                         }
@@ -1007,6 +1005,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					{
 						List<String> desiredInterfaces = new ArrayList<String>();
 						String modID = "";
+						String deobfName = "";
 
 						for (int i = 0; i < annotation.values.size(); i+=2)
 						{
@@ -1023,6 +1022,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 							else if (value.equals("altClasses"))
 							{
 								desiredInterfaces.addAll((ArrayList<String>) annotation.values.get(i + 1));
+							}
+							else if (value.equals("deobfName"))
+							{
+							    deobfName = String.valueOf(annotation.values.get(i + 1));
 							}
 						}
 
@@ -1051,6 +1054,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 										if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
 										node.interfaces.add(inter);
 										MicdoodleTransformer.injectionCount++;
+
+										if (!deobfName.isEmpty() && !deobfuscated)
+										{
+										    String nameBefore = methodnode.name;
+										    methodnode.name = deobfName;
+										    if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft renamed method " + nameBefore + " to " + deobfName + " in class " + node.name);
+										}
 									}
 
 									break;
@@ -1376,7 +1386,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			if (MicdoodleTransformer.injectionCount >= MicdoodleTransformer.operationCount)
 			{
-				this.printLog("Galacticraft successfully injected bytecode into: " + nodeName + " (" + MicdoodleTransformer.injectionCount + " / " + MicdoodleTransformer.operationCount + ")");
+			    if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft successfully injected bytecode into: " + nodeName + " (" + MicdoodleTransformer.injectionCount + " / " + MicdoodleTransformer.operationCount + ")");
 			}
 			else
 			{

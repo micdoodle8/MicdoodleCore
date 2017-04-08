@@ -17,6 +17,8 @@ public interface Annotations
 
 		String modID();
 
+        String deobfName() default "";
+	      
 		String[] altClasses() default {};
 	}
 
