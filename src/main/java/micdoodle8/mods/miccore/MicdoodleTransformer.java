@@ -1096,7 +1096,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 										node.interfaces.add(inter);
 										MicdoodleTransformer.injectionCount++;
 
-										if (!deobfName.isEmpty())
+										if (!deobfName.isEmpty() && !deobfuscated)
 										{
 											String nameBefore = methodnode.name;
 											methodnode.name = deobfName;
