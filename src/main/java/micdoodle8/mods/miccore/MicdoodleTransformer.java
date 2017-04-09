@@ -102,6 +102,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
 	private static final String KEY_FIELD_CPS_WORLDOBJ = "cps_worldObj";
 	private static final String KEY_FIELD_CPS_SERVER_CHUNK_GEN = "serverChunkGenerator";
+	private static final String KEY_FIELD_CHUNK_XPOS = "chunkXPos";
+	private static final String KEY_FIELD_CHUNK_ZPOS = "chunkZPos";
+	private static final String KEY_FIELD_CHUNK_WORLD = "world";
 
 	private static final String KEY_METHOD_CREATE_PLAYER = "createPlayerMethod";
 	private static final String KEY_METHOD_RESPAWN_PLAYER = "respawnPlayerMethod";
@@ -222,6 +225,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("world", "i"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN, new FieldObfuscationEntry("serverChunkGenerator", "e"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_XPOS, new FieldObfuscationEntry("xPosition", "b"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_ZPOS, new FieldObfuscationEntry("zPosition", "c"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_WORLD, new FieldObfuscationEntry("world", "k"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "g", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("recreatePlayerEntity", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
@@ -449,11 +455,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 						//(p_73153_2_, p_73153_3_, worldObj, serverChunkGenerator, p_73153_1_)
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/chunk/Chunk", "xPosition", "I"));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK), getNameDynamic(KEY_FIELD_CHUNK_XPOS), "I"));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/chunk/Chunk", "zPosition", "I"));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK), getNameDynamic(KEY_FIELD_CHUNK_ZPOS), "I"));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/chunk/Chunk", "world", "Lnet/minecraft/world/World;"));
+						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK), getNameDynamic(KEY_FIELD_CHUNK_WORLD), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";"));
 						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
 //						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
 //						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
