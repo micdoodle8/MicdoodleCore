@@ -269,6 +269,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		if (name.contains("galacticraft"))
 		{
+			if (bytes == null)
+			{
+				return null;
+			}
+
 			return this.transformCustomAnnotations(bytes);
 		}
 		else
