@@ -36,7 +36,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private String nameEntityRenderer;
 	private String nameItemRenderer;
 	private String nameGuiSleep;
-	private String nameEffectRenderer;
+	private String nameParticleManager;
 	private String nameNetHandlerPlay;
 	private String nameWorldRenderer;
 	private String nameRenderGlobal;
@@ -75,7 +75,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_CLASS_ENTITY = "entityClass";
 	private static final String KEY_CLASS_TILEENTITY = "tileEntityClass";
 	private static final String KEY_CLASS_GUI_SLEEP = "guiSleepClass";
-	private static final String KEY_CLASS_EFFECT_RENDERER = "effectRendererClass";
+	private static final String KEY_CLASS_PARTICLE_MANAGER = "effectRendererClass";
 	private static final String KEY_CLASS_FORGE_HOOKS_CLIENT = "forgeHooks";
 	private static final String KEY_CLASS_CUSTOM_PLAYER_MP = "customPlayerMP";
 	private static final String KEY_CLASS_CUSTOM_PLAYER_SP = "customPlayerSP";
@@ -196,7 +196,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_VEC3, new ObfuscationEntry("net/minecraft/util/Vec3"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITY, new ObfuscationEntry("net/minecraft/entity/Entity"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP, new ObfuscationEntry("net/minecraft/client/gui/GuiSleepMP"));
-            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER, new ObfuscationEntry("net/minecraft/client/particle/EffectRenderer"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_PARTICLE_MANAGER, new ObfuscationEntry("net/minecraft/client/particle/ParticleManager"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT, new ObfuscationEntry("net/minecraftforge/client/ForgeHooksClient"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CUSTOM_PLAYER_MP, new ObfuscationEntry("micdoodle8/mods/galacticraft/core/entities/player/GCEntityPlayerMP"));
@@ -332,7 +332,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameEntityRenderer  = this.getName(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER);
 		this.nameItemRenderer  = this.getName(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER);
 		this.nameGuiSleep  = this.getName(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP);
-		this.nameEffectRenderer  = this.getName(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER);
+		this.nameParticleManager = this.getName(MicdoodleTransformer.KEY_CLASS_PARTICLE_MANAGER);
 		this.nameNetHandlerPlay  = this.getName(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY);
 		this.nameWorldRenderer  = this.getName(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER);
 		this.nameRenderGlobal  = this.getName(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL);
@@ -355,7 +355,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameEntityRenderer  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER).obfuscatedName;
 		this.nameItemRenderer  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_ITEM_RENDERER).obfuscatedName;
 		this.nameGuiSleep  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_GUI_SLEEP).obfuscatedName;
-		this.nameEffectRenderer  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_EFFECT_RENDERER).obfuscatedName;
+		this.nameParticleManager = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_PARTICLE_MANAGER).obfuscatedName;
 		this.nameNetHandlerPlay  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY).obfuscatedName;
 		this.nameWorldRenderer  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_WORLD_RENDERER).obfuscatedName;
 		this.nameRenderGlobal  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDER_GLOBAL).obfuscatedName;
@@ -399,9 +399,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			return this.transformGuiSleep(bytes);
 		}
-		else if (testName.equals(this.nameEffectRenderer))
+		else if (testName.equals(this.nameParticleManager))
 		{
-			return this.transformEffectRenderer(bytes);
+			return this.transformParticleManager(bytes);
 		}
 		else if (testName.equals(this.nameNetHandlerPlay))
 		{
@@ -1133,7 +1133,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node, false);
 	}
 
-	public byte[] transformEffectRenderer(byte[] bytes)
+	public byte[] transformParticleManager(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
 
