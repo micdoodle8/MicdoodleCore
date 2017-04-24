@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+@MCVersion("1.8.9")
 public class MicdoodleModContainer extends DummyModContainer
 {
 	public MicdoodleModContainer()
