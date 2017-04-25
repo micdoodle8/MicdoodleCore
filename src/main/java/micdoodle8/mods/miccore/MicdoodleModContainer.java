@@ -7,6 +7,7 @@ import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
 import net.minecraftforge.fml.common.versioning.VersionParser;
 import net.minecraftforge.fml.common.versioning.VersionRange;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 
 import java.util.Arrays;
 import java.util.LinkedList;
