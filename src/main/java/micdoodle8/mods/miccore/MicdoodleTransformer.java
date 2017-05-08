@@ -1,13 +1,14 @@
 package micdoodle8.mods.miccore;
 
 import net.minecraft.launchwrapper.Launch;
-
+import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 import net.minecraftforge.fml.common.versioning.VersionParser;
 import net.minecraftforge.fml.relauncher.FMLInjectionData;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -97,6 +98,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_BLOCKPOS = "blockPos";
     private static final String KEY_CLASS_IBLOCKSTATE = "blockState";
     private static final String KEY_CLASS_ICAMERA = "icameraClass";
+    private static final String KEY_CLASS_INTCACHE = "intCache";
 
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 //	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
@@ -149,6 +151,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //	private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
 //	private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
 	private static final String CLASS_TRANSFORMER_HOOKS = "micdoodle8/mods/galacticraft/core/TransformerHooks";
+    private static final String CLASS_INTCACHE_VARIANT = "micdoodle8/mods/galacticraft/core/world/gen/IntCache";
 	private static final String CLASS_GL11 = "org/lwjgl/opengl/GL11";
 //	private static final String CLASS_RENDER_PLAYER_GC = "micdoodle8/mods/galacticraft/core/client/render/entities/RenderPlayerGC";
 	private static final String CLASS_IENTITYBREATHABLE = "micdoodle8/mods/galacticraft/api/entity/IEntityBreathable";
@@ -220,6 +223,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCKPOS, new ObfuscationEntry("net/minecraft/util/math/BlockPos"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKSTATE, new ObfuscationEntry("net/minecraft/block/state/IBlockState"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICAMERA, new ObfuscationEntry("net/minecraft/client/renderer/culling/ICamera"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_INTCACHE, new ObfuscationEntry("net/minecraft/world/gen/layer/IntCache"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -313,6 +317,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				return this.transformOptifine(bytes);
 			}
+
+			bytes = this.transformRefs(bytes);
 
 			if (testName.length() <= 3 || this.deobfuscated)
 			{
@@ -1345,6 +1351,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 				if (list.getOpcode() == Opcodes.ALOAD)
 				{
+				    if (count + 5 >= method.instructions.size())
+				    {
+                        MicdoodlePlugin.showErrorDialog(new Object[]{"Exit", "Ignore"}, "Are there two copies of MicdoodleCore in your mods folder?  Please remove one!");
+                        break;
+				    }
 					// Remove ALOAD, GETFIELD, ALOAD, GETFIELD, ALOAD, GETFIELD, FSUB, FLOAD, FMUL, FADD, FRETURN
 					for (int i = 0; i < 6; ++i)
 					{
@@ -1366,7 +1377,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 	
-	
 	public byte[] transformOptifine(byte[] bytes)
 	{
 		ClassNode node = this.startInjection(bytes);
@@ -1385,6 +1395,31 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 	
+    public byte[] transformRefs(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+        String intCache1 = this.getName(KEY_CLASS_INTCACHE);
+        String intCache2 = this.getObfName(KEY_CLASS_INTCACHE);
+
+        for (MethodNode m : node.methods)
+        {
+            for (int count = 0; count < m.instructions.size(); count++)
+            {
+                final AbstractInsnNode test = m.instructions.get(count);
+                if (test.getOpcode() == Opcodes.INVOKESTATIC)
+                {
+                    MethodInsnNode mn = (MethodInsnNode) test;
+                    if (mn.owner.equals(intCache1) || mn.owner.equals(intCache2))  //Vanilla uses obf name, mods use deobf class name
+                    {
+                        mn.owner = CLASS_INTCACHE_VARIANT;
+                    }
+                }
+            }
+        }
+
+        return this.finishInjection(node, false);
+    }
+    
     public static class ObfuscationEntry
 	{
 		public String name;
@@ -1432,7 +1467,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		{
 			if (MicdoodleTransformer.injectionCount >= MicdoodleTransformer.operationCount)
 			{
-				this.printLog("Galacticraft successfully injected bytecode into: " + nodeName + " (" + MicdoodleTransformer.injectionCount + " / " + MicdoodleTransformer.operationCount + ")");
+			    if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft successfully injected bytecode into: " + nodeName + " (" + MicdoodleTransformer.injectionCount + " / " + MicdoodleTransformer.operationCount + ")");
 			}
 			else
 			{
@@ -1515,7 +1550,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private void printLog(String message)
 	{
 		// TODO: Add custom log file
-		System.out.println(message);
+		FMLLog.info(message);
 	}
 
 	private ClassNode startInjection(byte[] bytes)
