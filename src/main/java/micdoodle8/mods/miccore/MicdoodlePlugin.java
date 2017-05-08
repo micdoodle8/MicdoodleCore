@@ -437,7 +437,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 
 	private static Constructor<?> sleepCancelledConstructor;
 	private static Constructor<?> orientCameraConstructor;
-	private static String galacticraftCoreClass = "micdoodle8.mods.galacticraft.core.event.EventHandlerGC";
+	private static String eventContainerClass = "micdoodle8.mods.galacticraft.core.event.EventHandlerGC";
 
 	public static void onSleepCancelled()
 	{
@@ -445,7 +445,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 		{
 			if (MicdoodlePlugin.sleepCancelledConstructor == null)
 			{
-				MicdoodlePlugin.sleepCancelledConstructor = Class.forName(MicdoodlePlugin.galacticraftCoreClass + "$SleepCancelledEvent").getConstructor();
+				MicdoodlePlugin.sleepCancelledConstructor = Class.forName(MicdoodlePlugin.eventContainerClass + "$SleepCancelledEvent").getConstructor();
 			}
 
 			MinecraftForge.EVENT_BUS.post((Event) MicdoodlePlugin.sleepCancelledConstructor.newInstance());
@@ -462,7 +462,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 		{
 			if (MicdoodlePlugin.orientCameraConstructor == null)
 			{
-				MicdoodlePlugin.orientCameraConstructor = Class.forName(MicdoodlePlugin.galacticraftCoreClass + "$OrientCameraEvent").getConstructor();
+				MicdoodlePlugin.orientCameraConstructor = Class.forName(MicdoodlePlugin.eventContainerClass + "$OrientCameraEvent").getConstructor();
 			}
 
 			MinecraftForge.EVENT_BUS.post((Event) MicdoodlePlugin.orientCameraConstructor.newInstance());
