@@ -318,7 +318,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				return this.transformOptifine(bytes);
 			}
 
-			bytes = this.transformRefs(bytes);
+            if (!testName.equals("b$7")) //b$7 is a part of vanilla CrashReport: called before Forge has loaded our mod so marks our version of IntCache as a non-existent class
+            {
+                bytes = this.transformRefs(bytes);
+            }
 
 			if (testName.length() <= 3 || this.deobfuscated)
 			{
