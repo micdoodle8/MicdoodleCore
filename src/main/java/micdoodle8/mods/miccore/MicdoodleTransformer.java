@@ -144,7 +144,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //	private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
 //	private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
 	private static final String CLASS_TRANSFORMER_HOOKS = "micdoodle8/mods/galacticraft/core/TransformerHooks";
-    private static final String CLASS_INTCACHE_VARIANT = "micdoodle8/mods/galacticraft/core/world/gen/IntCache";
+    private static final String CLASS_INTCACHE_VARIANT = "micdoodle8/mods/miccore/IntCache";
 	private static final String CLASS_GL11 = "org/lwjgl/opengl/GL11";
 //	private static final String CLASS_RENDER_PLAYER_GC = "micdoodle8/mods/galacticraft/core/client/render/entities/RenderPlayerGC";
 	private static final String CLASS_IENTITYBREATHABLE = "micdoodle8/mods/galacticraft/api/entity/IEntityBreathable";
@@ -215,7 +215,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKSTATE, new ObfuscationEntry("net/minecraft/block/state/IBlockState", "alz"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICAMERA, new ObfuscationEntry("net/minecraft/client/renderer/culling/ICamera", "bia"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_INTCACHE, new ObfuscationEntry("net/minecraft/world/gen/layer/IntCache", "asc"));
-
+            
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("worldObj", "i"));
@@ -271,7 +271,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes)
 	{
-		if (name.contains("galacticraft"))
+		if (name.contains("micdoodle8"))
 		{
 			if (bytes == null)
 			{
@@ -286,9 +286,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				this.nameForgeHooksClient = this.getName(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT);
 				if (this.deobfuscated)
+				{
 					this.populateNamesDeObf();
+				}
 				else
+				{
 					this.populateNamesObf();
+				}
 			}
 			String testName = name.replace('.', '/');
 			if (testName.equals(this.nameForgeHooksClient))
@@ -306,10 +310,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				return this.transformOptifine(bytes);
 			}
 
-            if (!testName.equals("b$7")) //b$7 is a part of vanilla CrashReport: called before Forge has loaded our mod so marks our version of IntCache as a non-existent class
-            {
-                bytes = this.transformRefs(bytes);
-            }
+            bytes = this.transformRefs(bytes);
 
 			if (testName.length() <= 3 || this.deobfuscated)
 			{
