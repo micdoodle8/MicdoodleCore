@@ -4,9 +4,7 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
-import micdoodle8.mods.galacticraft.core.Constants;
 import micdoodle8.mods.galacticraft.core.util.MapUtil;
-import micdoodle8.mods.miccore.Annotations.RuntimeInterface;
 
 public class IntCache
 {
@@ -21,8 +19,16 @@ public class IntCache
     private static List<int[]> freeLargeArrays2 = Lists.<int[]>newArrayList();
     private static List<int[]> inUseLargeArrays2 = Lists.<int[]>newArrayList();
 
-    @RuntimeInterface(clazz = "micdoodle8.mods.miccore.IIntCache", modID = Constants.MOD_ID_CORE, deobfName = "func_76445_a")
     public static int[] getIntCache(int p_76445_0_)
+    {
+        if (MapUtil.backgroundMapping(Thread.currentThread()))
+        {
+            return getIntCacheGC(p_76445_0_);
+        }
+        return getIntCacheVanilla(p_76445_0_);
+    }
+    
+    public static int[] func_76445_a(int p_76445_0_)
     {
         if (MapUtil.backgroundMapping(Thread.currentThread()))
         {
@@ -124,8 +130,17 @@ public class IntCache
         }
     }
 
-    @RuntimeInterface(clazz = "micdoodle8.mods.miccore.IIntCache", modID = Constants.MOD_ID_CORE, deobfName = "func_76446_b")
     public static void resetIntCache()
+    {
+        if (MapUtil.backgroundMapping(Thread.currentThread()))
+        {
+            resetIntCacheGC();
+            return;
+        }
+        resetIntCacheVanilla();
+    }
+
+    public static void func_76446_b()
     {
         if (MapUtil.backgroundMapping(Thread.currentThread()))
         {
@@ -185,8 +200,12 @@ public class IntCache
         inUseSmallArrays2.clear();
     }
 
-    @RuntimeInterface(clazz = "micdoodle8.mods.miccore.IIntCache", modID = Constants.MOD_ID_CORE, deobfName = "func_85144_b")
     public static String getCacheSizes()
+    {
+        return getCacheSizesVanilla();
+    }
+
+    public static String func_85144_b()
     {
         return getCacheSizesVanilla();
     }
