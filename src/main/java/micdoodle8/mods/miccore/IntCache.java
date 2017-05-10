@@ -140,7 +140,7 @@ public class IntCache
         resetIntCacheVanilla();
     }
 
-    public static void func_76446_b()
+    public static void func_76446_a()
     {
         if (MapUtil.backgroundMapping(Thread.currentThread()))
         {
