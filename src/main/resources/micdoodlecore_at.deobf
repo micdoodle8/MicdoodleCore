@@ -21,6 +21,7 @@ public net.minecraft.client.renderer.entity.RendererLivingEntity mainModel
 public net.minecraft.world.WorldProvider world
 public net.minecraft.world.chunk.Chunk heightMapMinimum
 public net.minecraft.world.chunk.Chunk precipitationHeightMap
+public net.minecraft.world.chunk.Chunk isChunkLoaded
 public net.minecraft.world.chunk.Chunk heightMap
 public net.minecraft.world.chunk.Chunk isModified
 public net.minecraft.client.renderer.EntityRenderer cameraZoom
