@@ -38,7 +38,7 @@ public class MicdoodleModContainer extends DummyModContainer
 	public List<ArtifactVersion> getDependencies()
 	{
 		LinkedList<ArtifactVersion> deps = new LinkedList<ArtifactVersion>();
-		deps.add(VersionParser.parseVersionReference("required-after:Forge@[10.12.2.1148,)"));
+		deps.add(VersionParser.parseVersionReference("required-after:Forge@[10.12.2.1147,10.13.4.1614]"));
 		return deps;
 	}
 
