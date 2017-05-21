@@ -283,13 +283,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes)
 	{
+        if (bytes == null)
+        {
+            return null;
+        }
+
 		if (name.startsWith("micdoodle8"))
 		{
-			if (bytes == null)
-			{
-				return null;
-			}
-
 			return this.transformCustomAnnotations(bytes);
 		}
 		else
