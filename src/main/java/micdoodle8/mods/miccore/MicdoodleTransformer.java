@@ -150,6 +150,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String CLASS_IENTITYBREATHABLE = "micdoodle8/mods/galacticraft/api/entity/IEntityBreathable";
     private static final String CLASS_SYNCMOD_CLONEPLAYER = "sync/common/tileentity/TileEntityDualVertical";
     private static final String CLASS_RENDERPLAYEROF = "RenderPlayerOF";
+    private static final String CLASS_IFORGEARMOR = "net/minecraftforge/common/ISpecialArmor$ArmorProperties";
     
 	private static int operationCount = 0;
 	private static int injectionCount = 0;
@@ -298,6 +299,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			if (testName.equals(this.nameForgeHooksClient))
 			{
 				return this.transformForgeHooks(bytes);
+			}
+
+			if (testName.equals(MicdoodleTransformer.CLASS_IFORGEARMOR))
+			{
+			    return this.transformForgeArmor(bytes);
 			}
 
 			if (testName.equals(MicdoodleTransformer.CLASS_SYNCMOD_CLONEPLAYER))
@@ -919,14 +925,50 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 
-	public byte[] transformEntityGolem(byte[] bytes)
-	{
-		ClassNode node = this.startInjection(bytes);
-		MicdoodleTransformer.operationCount = 0;
-		MicdoodleTransformer.injectionCount = 0;
-		String inter = CLASS_IENTITYBREATHABLE;
-		try
-		{
+    public byte[] transformForgeArmor(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+
+        MicdoodleTransformer.operationCount = 1;
+
+        final Iterator<MethodNode> methods = node.methods.iterator();
+        while (methods.hasNext())
+        {
+            MethodNode method = methods.next();
+            if (method.name.equals("applyArmor"))
+            {
+                for (int count = 0; count < method.instructions.size(); count++)
+                {
+                    final AbstractInsnNode test = method.instructions.get(count);
+                    if (test.getOpcode() == Opcodes.GETFIELD && ((FieldInsnNode) test).name.equals("AbsorbRatio"))
+                    {
+                        final AbstractInsnNode target = method.instructions.get(count + 1);
+                        if (target.getOpcode() == Opcodes.DMUL)
+                        {
+                            InsnList toAdd = new InsnList();
+                            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "armorDamageHook", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";)D", false));
+                            toAdd.add(new InsnNode(Opcodes.DMUL));
+                            method.instructions.insert(target, toAdd);
+                            MicdoodleTransformer.injectionCount++;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return this.finishInjection(node);
+    }
+
+    public byte[] transformEntityGolem(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+        MicdoodleTransformer.operationCount = 0;
+        MicdoodleTransformer.injectionCount = 0;
+        String inter = CLASS_IENTITYBREATHABLE;
+        try
+        {
 			Class.forName(inter.replace("/", "."));
 			if (!node.interfaces.contains(inter))
 			{
@@ -1363,15 +1405,16 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         ClassNode node = this.startInjection(bytes);
         String intCache1 = this.getName(KEY_CLASS_INTCACHE);
         String intCache2 = this.getObfName(KEY_CLASS_INTCACHE);
+        int invokeStatic = Opcodes.INVOKESTATIC;
 
         for (MethodNode m : node.methods)
         {
-            for (int count = 0; count < m.instructions.size(); count++)
+            int listsize = m.instructions.size();
+            for (int count = 0; count < listsize; count++)
             {
-                final AbstractInsnNode test = m.instructions.get(count);
-                if (test.getOpcode() == Opcodes.INVOKESTATIC)
+                if (m.instructions.get(count).getOpcode() == invokeStatic)
                 {
-                    MethodInsnNode mn = (MethodInsnNode) test;
+                    MethodInsnNode mn = (MethodInsnNode) m.instructions.get(count);
                     if (mn.owner.equals(intCache1) || mn.owner.equals(intCache2))  //Vanilla uses obf name, mods use deobf class name
                     {
                         mn.owner = CLASS_INTCACHE_VARIANT;
