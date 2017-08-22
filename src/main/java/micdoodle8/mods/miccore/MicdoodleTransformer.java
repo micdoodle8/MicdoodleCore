@@ -143,6 +143,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_SETUP_TERRAIN = "setupTerrain";
 	private static final String KEY_METHOD_GET_EYE_HEIGHT = "getEyeHeight";
 	private static final String KEY_METHOD_ENABLE_ALPHA = "enableAlphaMethod";
+	private static final String KEY_METHOD_VALIDATE = "teValidate";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -269,6 +270,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_SETUP_TERRAIN, new MethodObfuscationEntry("setupTerrain", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";DL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICAMERA) + ";IZ)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_GET_EYE_HEIGHT, new MethodObfuscationEntry("getEyeHeight", "bq", "()F"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ENABLE_ALPHA, new MethodObfuscationEntry("enableAlpha", "e", "()V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_VALIDATE, new MethodObfuscationEntry("validate", "func_145829_t", "()V"));  //SRG name for obfuscated because it's inside a Forge mod class
         }
 
         try
@@ -332,6 +334,14 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				return this.transformOptifine(bytes);
 			}
+			
+			if (testName.equals("ic2/core/block/TileEntityBlock"))
+			{
+				ClassNode node = this.startInjection(bytes);
+				MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_VALIDATE);
+				method.access &= ~Opcodes.ACC_FINAL;
+				return this.finishInjection(node);
+			}
 
             bytes = this.transformRefs(bytes);
 
@@ -343,7 +353,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		
 		return bytes;
 	}
-
+	
 	private void populateNamesDeObf()
 	{
 		this.namePlayerList = this.getName(MicdoodleTransformer.KEY_PLAYER_LIST);
