@@ -291,6 +291,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		if (name.startsWith("micdoodle8"))
 		{
+			if (name.equals("micdoodle8.mods.galacticraft.core.energy.tile.TileCableIC2Sealed"))
+			{
+			    bytes = this.transformTileCableIC2Sealed(bytes);
+			}
+
 			return this.transformCustomAnnotations(bytes);
 		}
 		else
@@ -1026,6 +1031,30 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 	
+    public byte[] transformTileCableIC2Sealed(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+        MicdoodleTransformer.operationCount = 1;
+        MethodNode method = this.getMethodNoDesc(node, "<init>");
+        if (method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); count++)
+            {
+                final AbstractInsnNode insn = method.instructions.get(count);
+
+                if (insn instanceof MethodInsnNode)
+                {
+                    ((MethodInsnNode)insn).owner = "ic2/core/block/wiring/TileEntityCable";
+                    MicdoodleTransformer.injectionCount++;
+                    break;
+                }
+                
+            }
+        }
+
+        return this.finishInjection(node);
+    }
+
 	@SuppressWarnings("unchecked")
 	public byte[] transformCustomAnnotations(byte[] bytes)
 	{
@@ -1147,6 +1176,14 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 									inter = inter.replace(".", "/");
 
+									if (deobfName.equals("EXTENDS"))
+									{
+                                        if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft added superclass \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
+                                        node.superName = inter;
+                                        MicdoodleTransformer.injectionCount++;
+                                        continue;
+									}
+									
 									if (!node.interfaces.contains(inter))
 									{
 										if (ConfigManagerMicCore.enableDebug) this.printLog("Galacticraft added interface \"" + inter + "\" dynamically from \"" + modID + "\" to class \"" + node.name + "\".");
