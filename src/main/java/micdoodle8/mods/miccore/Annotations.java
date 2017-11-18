@@ -22,12 +22,12 @@ public interface Annotations
 		String[] altClasses() default {};
 	}
 
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
-	public @interface AltForVersion
-	{
-		String version();
-	}
+//	@Retention(RetentionPolicy.RUNTIME)
+//	@Target(ElementType.METHOD)
+//	public @interface AltForVersion
+//	{
+//		String version();
+//	}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
@@ -36,10 +36,10 @@ public interface Annotations
 		Side targetSide();
 	}
 
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
-    public @interface VersionSpecific
-    {
-        String version();
-    }
+//    @Retention(RetentionPolicy.RUNTIME)
+//    @Target(ElementType.METHOD)
+//    public @interface VersionSpecific
+//    {
+//        String version();
+//    }
 }
