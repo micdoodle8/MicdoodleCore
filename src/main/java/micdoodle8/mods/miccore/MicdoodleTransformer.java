@@ -3,8 +3,6 @@ package micdoodle8.mods.miccore;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
-import net.minecraftforge.fml.common.versioning.VersionParser;
 import net.minecraftforge.fml.relauncher.FMLInjectionData;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
@@ -26,7 +24,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private boolean optifinePresent;
 	private boolean isServer;
     private boolean playerApiActive;
-    private DefaultArtifactVersion mcVersion;
+    private String mcVersion;
 
     private String nameForgeHooksClient;
 	private String nameConfManager;
@@ -138,8 +136,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_ENABLE_ALPHA = "enableAlphaMethod";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
-	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
-	private static final String CLASS_VERSION_SPECIFIC = "micdoodle8/mods/miccore/Annotations$VersionSpecific";
+//	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
+//	private static final String CLASS_VERSION_SPECIFIC = "micdoodle8/mods/miccore/Annotations$VersionSpecific";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
 //	private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
 //	private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
@@ -156,7 +154,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static int injectionCount = 0;
 
 	public MicdoodleTransformer() {
-        this.mcVersion = new DefaultArtifactVersion((String) FMLInjectionData.data()[4]);
+        this.mcVersion = (String) FMLInjectionData.data()[4];
 
         try {
         	deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
@@ -277,53 +275,55 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             return null;
         }
 
-		if (name.startsWith("micdoodle8"))
-		{
-			return this.transformCustomAnnotations(bytes);
-		}
-		else
-		{
-			if (this.nameForgeHooksClient == null)
-			{
-				this.nameForgeHooksClient = this.getName(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT);
-				if (this.deobfuscated)
-				{
-					this.populateNamesDeObf();
-				}
-				else
-				{
-					this.populateNamesObf();
-				}
-			}
-			String testName = name.replace('.', '/');
-			if (testName.equals(this.nameForgeHooksClient))
-			{
-				return this.transformForgeHooks(bytes);
-			}
+        try {
+            if (name.startsWith("micdoodle8"))
+            {
+                return this.transformCustomAnnotations(bytes);
+            }
+            else
+            {
+                if (this.nameForgeHooksClient == null)
+                {
+                    this.nameForgeHooksClient = this.getName(MicdoodleTransformer.KEY_CLASS_FORGE_HOOKS_CLIENT);
+                    if (this.deobfuscated)
+                    {
+                        this.populateNamesDeObf();
+                    }
+                    else
+                    {
+                        this.populateNamesObf();
+                    }
+                }
+                String testName = name.replace('.', '/');
+                if (testName.equals(this.nameForgeHooksClient))
+                {
+                    return this.transformForgeHooks(bytes);
+                }
 
-			if (testName.equals(MicdoodleTransformer.CLASS_IFORGEARMOR))
-			{
-			    return this.transformForgeArmor(bytes);
-			}
+                if (testName.equals(MicdoodleTransformer.CLASS_IFORGEARMOR))
+                {
+                    return this.transformForgeArmor(bytes);
+                }
 
-			if (testName.equals(MicdoodleTransformer.CLASS_SYNCMOD_CLONEPLAYER))
-			{
-				return this.transformSyncMod(bytes);
-			}
+                if (testName.equals(MicdoodleTransformer.CLASS_SYNCMOD_CLONEPLAYER))
+                {
+                    return this.transformSyncMod(bytes);
+                }
 
-			if (testName.equals(MicdoodleTransformer.CLASS_RENDERPLAYEROF))
-			{
-				return this.transformOptifine(bytes);
-			}
+                if (testName.equals(MicdoodleTransformer.CLASS_RENDERPLAYEROF))
+                {
+                    return this.transformOptifine(bytes);
+                }
 
-            bytes = this.transformRefs(bytes);
+                bytes = this.transformRefs(bytes);
 
-			if (testName.length() <= 3 || this.deobfuscated)
-			{
-				return this.transformVanilla(testName, bytes);
-			}
-		}
-		
+                if (testName.length() <= 3 || this.deobfuscated)
+                {
+                    return this.transformVanilla(testName, bytes);
+                }
+            }
+        }
+        catch (Exception e) { e.printStackTrace(); }
 		return bytes;
 	}
 
@@ -1005,58 +1005,58 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				for (AnnotationNode annotation : methodnode.visibleAnnotations)
 				{
-                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_VERSION_SPECIFIC + ";"))
-                    {
-                        String toMatch = null;
-
-                        for (int i = 0; i < annotation.values.size(); i+=2)
-                        {
-                            if ("version".equals(annotation.values.get(i)))
-                            {
-                                toMatch = String.valueOf(annotation.values.get(i + 1));
-                            }
-                        }
-
-                        if (toMatch != null)
-                        {
-                            boolean doRemove = true;
-                            if (mcVersionMatches(toMatch))
-                            {
-                            	doRemove = false;
-                            }
-
-                            if (doRemove)
-                            {
-	                            methods.remove();
-	                            break methodLabel;
-                            }
-                        }
-                    }
-
-                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_ALT_FORVERSION + ";"))
-                    {
-                        String toMatch = null;
-
-                        for (int i = 0; i < annotation.values.size(); i+=2)
-                        {
-                            if ("version".equals(annotation.values.get(i)))
-                            {
-                                toMatch = String.valueOf(annotation.values.get(i + 1));
-                            }
-                        }
-
-                        if (toMatch != null)
-                        {
-                            if (mcVersionMatches(toMatch))
-                            {
-                            	String existing = new String(methodnode.name);
-                            	existing = existing.substring(0, existing.length() - 1);
-                            	if (ConfigManagerMicCore.enableDebug) this.printLog("Renaming method "+existing+" for version "+toMatch);
-                            	methodnode.name = new String(existing);
-                            	break;
-                            }
-                        }
-                    }
+//                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_VERSION_SPECIFIC + ";"))
+//                    {
+//                        String toMatch = null;
+//
+//                        for (int i = 0; i < annotation.values.size(); i+=2)
+//                        {
+//                            if ("version".equals(annotation.values.get(i)))
+//                            {
+//                                toMatch = String.valueOf(annotation.values.get(i + 1));
+//                            }
+//                        }
+//
+//                        if (toMatch != null)
+//                        {
+//                            boolean doRemove = true;
+//                            if (mcVersionMatches(toMatch))
+//                            {
+//                            	doRemove = false;
+//                            }
+//
+//                            if (doRemove)
+//                            {
+//	                            methods.remove();
+//	                            break methodLabel;
+//                            }
+//                        }
+//                    }
+//
+//                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_ALT_FORVERSION + ";"))
+//                    {
+//                        String toMatch = null;
+//
+//                        for (int i = 0; i < annotation.values.size(); i+=2)
+//                        {
+//                            if ("version".equals(annotation.values.get(i)))
+//                            {
+//                                toMatch = String.valueOf(annotation.values.get(i + 1));
+//                            }
+//                        }
+//
+//                        if (toMatch != null)
+//                        {
+//                            if (mcVersionMatches(toMatch))
+//                            {
+//                            	String existing = new String(methodnode.name);
+//                            	existing = existing.substring(0, existing.length() - 1);
+//                            	if (ConfigManagerMicCore.enableDebug) this.printLog("Renaming method "+existing+" for version "+toMatch);
+//                            	methodnode.name = new String(existing);
+//                            	break;
+//                            }
+//                        }
+//                    }
 
 					if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_RUNTIME_INTERFACE + ";"))
 					{
@@ -1594,6 +1594,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
     private boolean mcVersionMatches(String testVersion)
     {
-        return VersionParser.parseRange(testVersion).containsVersion(this.mcVersion);
+        return testVersion.contains(this.mcVersion);
     }
 }
