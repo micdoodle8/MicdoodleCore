@@ -5,8 +5,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.LoaderException;
 import net.minecraftforge.fml.common.eventhandler.Event;
-import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
-import net.minecraftforge.fml.common.versioning.VersionParser;
 import net.minecraftforge.fml.relauncher.FMLInjectionData;
 import net.minecraftforge.fml.relauncher.IFMLCallHook;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
@@ -48,7 +46,7 @@ public class MicdoodlePlugin implements IFMLLoadingPlugin, IFMLCallHook
 	{
 		final String mcVersion = (String) FMLInjectionData.data()[4];
 
-		if (!VersionParser.parseRange(reqVersion).containsVersion(new DefaultArtifactVersion(mcVersion)))
+		if (!reqVersion.contains(mcVersion))
 		{
 			final String err = "This version of " + mod + " does not support minecraft version " + mcVersion;
 			System.err.println(err);
