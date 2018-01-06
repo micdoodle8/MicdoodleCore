@@ -24,11 +24,13 @@ public net.minecraft.world.chunk.Chunk precipitationHeightMap
 public net.minecraft.world.chunk.Chunk isChunkLoaded
 public net.minecraft.world.chunk.Chunk heightMap
 public net.minecraft.world.chunk.Chunk isModified
+public net.minecraft.world.chunk.Chunk storageArrays
 public net.minecraft.client.renderer.EntityRenderer cameraZoom
 public net.minecraft.client.renderer.EntityRenderer cameraYaw
 public net.minecraft.client.renderer.EntityRenderer cameraPitch
 #public net.minecraft.entity.EntityList CLASS_TO_ID
 public net.minecraft.network.NetHandlerPlayServer floatingTickCount
+public net.minecraft.util.SoundEvent soundEventId
 public net.minecraft.world.biome.WorldChunkManager biomeIndexLayer
 # Methods
 public net.minecraft.entity.player.EntityPlayer closeScreen()V

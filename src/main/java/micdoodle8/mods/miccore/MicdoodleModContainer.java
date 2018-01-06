@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-@MCVersion("1.11.2")
+@MCVersion("1.12.2")
 public class MicdoodleModContainer extends DummyModContainer
 {
 	public MicdoodleModContainer()
@@ -39,7 +39,7 @@ public class MicdoodleModContainer extends DummyModContainer
 	public List<ArtifactVersion> getDependencies()
 	{
 		LinkedList<ArtifactVersion> deps = new LinkedList<ArtifactVersion>();
-		deps.add(VersionParser.parseVersionReference("required-after:Forge@[10.12.2.1148,)"));
+        deps.add(VersionParser.parseVersionReference("required-after:Forge@[14.23.1.2555,)"));
 		return deps;
 	}
 
