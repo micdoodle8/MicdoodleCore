@@ -20,7 +20,7 @@ public class MicdoodleModContainer extends DummyModContainer
 	{
 		super(new ModMetadata());
 		ModMetadata meta = this.getMetadata();
-		meta.modId = "Micdoodlecore";
+		meta.modId = "micdoodlecore";
 		meta.name = "Micdoodle8 Core";
 		meta.updateUrl = "http://www.micdoodle8.com/";
 		meta.description = "Provides core features of Micdoodle8's mods";
