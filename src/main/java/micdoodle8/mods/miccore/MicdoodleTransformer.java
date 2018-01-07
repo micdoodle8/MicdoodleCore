@@ -478,8 +478,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 		if (populateMethod != null)
 		{
-			LabelNode skipLabel = new LabelNode();
-			for (int count = 0; count < populateMethod.instructions.size(); count++)
+			for (int count = populateMethod.instructions.size() - 1; count > 0; count--)
 			{
 				final AbstractInsnNode list = populateMethod.instructions.get(count);
 				
@@ -487,35 +486,13 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				{
 					final MethodInsnNode nodeAt = (MethodInsnNode) list;
 
-					if (nodeAt.getOpcode() == Opcodes.INVOKEINTERFACE && nodeAt.desc.equals("(II)V"))
-					{
-						final InsnList nodesToAdd = new InsnList();
-
-						//(p_73153_2_, p_73153_3_, worldObj, serverChunkGenerator, p_73153_1_)
-						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK), getNameDynamic(KEY_FIELD_CHUNK_XPOS), "I"));
-						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK), getNameDynamic(KEY_FIELD_CHUNK_ZPOS), "I"));
-						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK), getNameDynamic(KEY_FIELD_CHUNK_WORLD), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";"));
-						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
-//						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
-//						nodesToAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
-//						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-//						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_OVERWORLD), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD_SERVER) + ";"));
-//						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-//						nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CHUNK_PROVIDER_OVERWORLD), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN), "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";"));
-//						nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
-						nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "otherModPreventGenerate", "(IIL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKGENERATOR) + ";)Z", false));
-						nodesToAdd.add(new JumpInsnNode(Opcodes.IFNE, skipLabel)); 
-						populateMethod.instructions.insert(nodeAt, nodesToAdd);
+                    if (nodeAt.getOpcode() == Opcodes.INVOKESTATIC && nodeAt.owner.contains("GameRegistry"))
+                    {
+						final MethodInsnNode hook = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "otherModGenerate", "(IIL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKGENERATOR) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ICHUNKPROVIDER) + ";)V", false);
+						populateMethod.instructions.set(nodeAt, hook);
 						MicdoodleTransformer.injectionCount++;
-					} else
-						if (nodeAt.getOpcode() == Opcodes.INVOKESTATIC && nodeAt.owner.contains("GameRegistry"))
-						{
-							populateMethod.instructions.insert(nodeAt, skipLabel);
-						}
-				
+						break;
+					}
 				}
 			}
 		}
@@ -1409,25 +1386,26 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			for (int count = 0; count < method.instructions.size(); ++count)
 			{
 				final AbstractInsnNode list = method.instructions.get(count);
-
+				
 				if (list.getOpcode() == Opcodes.ALOAD)
 				{
-				    if (count + 5 >= method.instructions.size())
+				    if (count + 10 >= method.instructions.size())
 				    {
                         MicdoodlePlugin.showErrorDialog(new Object[]{"Exit", "Ignore"}, "Are there two copies of MicdoodleCore in your mods folder?  Please remove one!");
                         break;
 				    }
-					// Remove ALOAD, GETFIELD, ALOAD, GETFIELD, ALOAD, GETFIELD, FSUB, FLOAD, FMUL, FADD, FRETURN
-					for (int i = 0; i < 6; ++i)
+					// Remove ALOAD, GETFIELD, ALOAD, GETFIELD, ALOAD, GETFIELD, FSUB, FLOAD, FMUL, FADD but keep FRETURN
+					for (int i = 0; i < 10; ++i)
 					{
-						method.instructions.remove(method.instructions.get(count + i));
+					    final AbstractInsnNode removed = method.instructions.get(count);
+						method.instructions.remove(removed);
 					}
 
 					InsnList toAdd = new InsnList();
 					toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
 					toAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
 					toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "getRainStrength", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";F)F"));
-					toAdd.add(new InsnNode(Opcodes.FRETURN));
+					//toAdd.add(new InsnNode(Opcodes.FRETURN));
 					method.instructions.insertBefore(method.instructions.get(count), toAdd);
 					MicdoodleTransformer.injectionCount++;
 					break;
