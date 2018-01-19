@@ -30,7 +30,9 @@ public net.minecraft.client.renderer.EntityRenderer cameraYaw
 public net.minecraft.client.renderer.EntityRenderer cameraPitch
 #public net.minecraft.entity.EntityList CLASS_TO_ID
 public net.minecraft.network.NetHandlerPlayServer floatingTickCount
+public net.minecraft.util.SoundEvent soundEventId
 public net.minecraft.world.biome.WorldChunkManager biomeIndexLayer
+public net.minecraft.world.biome.Biome$BiomeProperties biomeName
 # Methods
 public net.minecraft.entity.player.EntityPlayer closeScreen()V
 public net.minecraft.entity.player.EntityPlayerMP closeScreen()V
