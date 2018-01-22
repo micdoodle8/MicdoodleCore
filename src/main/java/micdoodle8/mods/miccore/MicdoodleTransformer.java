@@ -93,6 +93,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_RENDERER_LIVING_ENTITY = "rendererLivingEntity";
     private static final String KEY_CLASS_ENTITYGOLEM = "entityGolem";
     private static final String KEY_CLASS_IBLOCKACCESS = "iBlockAccess";
+    private static final String KEY_CLASS_BLOCK = "blockClass";
     private static final String KEY_CLASS_BLOCKPOS = "blockPos";
     private static final String KEY_CLASS_IBLOCKSTATE = "blockState";
     private static final String KEY_CLASS_ICAMERA = "icameraClass";
@@ -219,6 +220,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY, new ObfuscationEntry("net/minecraft/client/renderer/entity/RendererLivingEntity"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITYGOLEM, new ObfuscationEntry("net/minecraft/entity/monster/EntityGolem"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKACCESS, new ObfuscationEntry("net/minecraft/world/IBlockAccess"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCK, new ObfuscationEntry("net/minecraft/block/Block"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCKPOS, new ObfuscationEntry("net/minecraft/util/math/BlockPos"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKSTATE, new ObfuscationEntry("net/minecraft/block/state/IBlockState"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICAMERA, new ObfuscationEntry("net/minecraft/client/renderer/culling/ICamera"));
@@ -330,6 +332,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				return this.transformOptifine(bytes);
 			}
+
+            if (testName.equals("appeng/worldgen/MeteoritePlacer"))
+            {
+                return this.transformAEMeteorite(bytes);
+            }
 
             bytes = this.transformRefs(bytes);
 
@@ -1476,6 +1483,30 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 	
+    public byte[] transformAEMeteorite(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+        MethodNode method = this.getMethodNoDesc(node, "<init>");
+        MicdoodleTransformer.operationCount = 1;
+
+        if (method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); ++count)
+            {
+                final AbstractInsnNode list = method.instructions.get(count);
+                if (list.getOpcode() == Opcodes.GETFIELD && ((FieldInsnNode) list).name.equals("skyStoneDefinition"))
+                {
+                    AbstractInsnNode toAdd = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "addAE2MeteorSpawn", "(Ljava/lang/Object;L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCK) + ";)Z");
+                    method.instructions.set(method.instructions.get(count - 5), toAdd);
+                    MicdoodleTransformer.injectionCount++;
+                    break;
+                }
+            }
+        }
+
+        return this.finishInjection(node);
+    }
+    
     public byte[] transformRefs(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
