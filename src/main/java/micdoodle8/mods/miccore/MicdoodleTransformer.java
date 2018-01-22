@@ -1,15 +1,9 @@
 package micdoodle8.mods.miccore;
 
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.launchwrapper.Launch;
-import net.minecraft.stats.RecipeBook;
-import net.minecraft.stats.StatisticsManager;
-import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
-import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
-import net.minecraftforge.fml.common.versioning.VersionParser;
 import net.minecraftforge.fml.relauncher.FMLInjectionData;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
@@ -31,7 +25,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private boolean optifinePresent;
 	private boolean isServer;
     private boolean playerApiActive;
-    private DefaultArtifactVersion mcVersion;
+    private String mcVersion;
 
     private String nameForgeHooksClient;
 	private String namePlayerList;
@@ -100,6 +94,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //    private static final String KEY_CLASS_RENDERER_LIVING_ENTITY = "rendererLivingEntity";
     private static final String KEY_CLASS_ENTITYGOLEM = "entityGolem";
     private static final String KEY_CLASS_IBLOCKACCESS = "iBlockAccess";
+    private static final String KEY_CLASS_BLOCK = "blockClass";
     private static final String KEY_CLASS_BLOCKPOS = "blockPos";
     private static final String KEY_CLASS_IBLOCKSTATE = "blockState";
     private static final String KEY_CLASS_ICAMERA = "icameraClass";
@@ -149,8 +144,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_VALIDATE = "teValidate";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
-	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
-	private static final String CLASS_VERSION_SPECIFIC = "micdoodle8/mods/miccore/Annotations$VersionSpecific";
+//	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
+//	private static final String CLASS_VERSION_SPECIFIC = "micdoodle8/mods/miccore/Annotations$VersionSpecific";
 	private static final String CLASS_MICDOODLE_PLUGIN = "micdoodle8/mods/miccore/MicdoodlePlugin";
 //	private static final String CLASS_CLIENT_PROXY_MAIN = "micdoodle8/mods/galacticraft/core/proxy/ClientProxyCore";
 //	private static final String CLASS_WORLD_UTIL = "micdoodle8/mods/galacticraft/core/util/WorldUtil";
@@ -167,7 +162,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static int injectionCount = 0;
 
 	public MicdoodleTransformer() {
-        this.mcVersion = new DefaultArtifactVersion((String) FMLInjectionData.data()[4]);
+        this.mcVersion = (String) FMLInjectionData.data()[4];
 
         try {
         	deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
@@ -226,6 +221,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDERER_LIVING_ENTITY, new ObfuscationEntry("net/minecraft/client/renderer/entity/RendererLivingEntity"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ENTITYGOLEM, new ObfuscationEntry("net/minecraft/entity/monster/EntityGolem"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKACCESS, new ObfuscationEntry("net/minecraft/world/IBlockAccess"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCK, new ObfuscationEntry("net/minecraft/block/Block"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCKPOS, new ObfuscationEntry("net/minecraft/util/math/BlockPos"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKSTATE, new ObfuscationEntry("net/minecraft/block/state/IBlockState"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICAMERA, new ObfuscationEntry("net/minecraft/client/renderer/culling/ICamera"));
@@ -344,6 +340,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				method.access &= ~Opcodes.ACC_FINAL;
 				return this.finishInjection(node);
 			}
+
+            if (testName.equals("appeng/worldgen/MeteoritePlacer"))
+            {
+                return this.transformAEMeteorite(bytes);
+            }
 
             bytes = this.transformRefs(bytes);
 
@@ -1030,7 +1031,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 				for (AnnotationNode annotation : methodnode.visibleAnnotations)
 				{
-                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_VERSION_SPECIFIC + ";"))
+/*                    if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_VERSION_SPECIFIC + ";"))
                     {
                         String toMatch = null;
 
@@ -1082,7 +1083,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                             }
                         }
                     }
-
+*/
 					if (annotation.desc.equals("L" + MicdoodleTransformer.CLASS_RUNTIME_INTERFACE + ";"))
 					{
 						List<String> desiredInterfaces = new ArrayList<String>();
@@ -1434,6 +1435,30 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		return this.finishInjection(node);
 	}
 	
+    public byte[] transformAEMeteorite(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+        MethodNode method = this.getMethodNoDesc(node, "<init>");
+        MicdoodleTransformer.operationCount = 1;
+
+        if (method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); ++count)
+            {
+                final AbstractInsnNode list = method.instructions.get(count);
+                if (list.getOpcode() == Opcodes.GETFIELD && ((FieldInsnNode) list).name.equals("skyStoneDefinition"))
+                {
+                    AbstractInsnNode toAdd = new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "addAE2MeteorSpawn", "(Ljava/lang/Object;L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCK) + ";)Z");
+                    method.instructions.set(method.instructions.get(count - 5), toAdd);
+                    MicdoodleTransformer.injectionCount++;
+                    break;
+                }
+            }
+        }
+
+        return this.finishInjection(node);
+    }
+    
     public byte[] transformRefs(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
@@ -1628,6 +1653,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
     private boolean mcVersionMatches(String testVersion)
     {
-        return VersionParser.parseRange(testVersion).containsVersion(this.mcVersion);
+        return testVersion.contains(this.mcVersion);
     }
 }

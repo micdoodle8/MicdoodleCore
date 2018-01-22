@@ -4,14 +4,9 @@ import com.google.common.eventbus.EventBus;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
-import net.minecraftforge.fml.common.versioning.ArtifactVersion;
-import net.minecraftforge.fml.common.versioning.VersionParser;
-import net.minecraftforge.fml.common.versioning.VersionRange;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.MCVersion;
 
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
 @MCVersion("1.12.2")
 public class MicdoodleModContainer extends DummyModContainer
@@ -33,19 +28,5 @@ public class MicdoodleModContainer extends DummyModContainer
 	{
 		bus.register(this);
 		return true;
-	}
-
-	@Override
-	public List<ArtifactVersion> getDependencies()
-	{
-		LinkedList<ArtifactVersion> deps = new LinkedList<ArtifactVersion>();
-        deps.add(VersionParser.parseVersionReference("required-after:Forge@[14.23.1.2555,)"));
-		return deps;
-	}
-
-	@Override
-	public VersionRange acceptableMinecraftVersionRange()
-	{
-		return VersionParser.parseRange(MicdoodlePlugin.mcVersion);
 	}
 }
