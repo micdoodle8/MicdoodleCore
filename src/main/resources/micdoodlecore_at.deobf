@@ -42,3 +42,13 @@ public net.minecraft.client.multiplayer.WorldClient onEntityRemoved(Lnet/minecra
 public net.minecraft.world.WorldServer onEntityRemoved(Lnet/minecraft/entity/Entity;)V
 public net.minecraft.entity.DataWatcher getWatchedObject(I)Lnet/minecraft/entity/DataWatcher$WatchableObject;
 public net.minecraft.client.renderer.EntityRenderer orientCamera(F)V
+
+public-f net.minecraft.world.biome.Biome getTemperature(Lnet/minecraft/util/math/BlockPos;)F
+public-f net.minecraft.world.biome.Biome generateBiomeTerrain(Lnet/minecraft/world/World;Ljava/util/Random;Lnet/minecraft/world/chunk/ChunkPrimer;IID)V
+public-f net.minecraft.world.biome.Biome getBaseHeight()F
+public-f net.minecraft.world.biome.Biome getRainfall()F
+public-f net.minecraft.world.biome.Biome getBiomeName()Ljava/lang/String;
+public-f net.minecraft.world.biome.Biome getHeightVariation()F
+public-f net.minecraft.world.biome.Biome getDefaultTemperature()F
+public-f net.minecraft.world.biome.Biome getWaterColor()I
+public-f net.minecraft.world.biome.Biome isSnowyBiome()Z
