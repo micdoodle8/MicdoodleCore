@@ -1362,15 +1362,15 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 				if (list.getOpcode() == Opcodes.ALOAD)
 				{
-				    if (count + 5 >= method.instructions.size())
+				    if (count + 10 >= method.instructions.size())
 				    {
                         MicdoodlePlugin.showErrorDialog(new Object[]{"Exit", "Ignore"}, "Are there two copies of MicdoodleCore in your mods folder?  Please remove one!");
                         break;
 				    }
 					// Remove ALOAD, GETFIELD, ALOAD, GETFIELD, ALOAD, GETFIELD, FSUB, FLOAD, FMUL, FADD, FRETURN
-					for (int i = 0; i < 6; ++i)
+					for (int i = 0; i < 11; ++i)
 					{
-						method.instructions.remove(method.instructions.get(count + i));
+						method.instructions.remove(method.instructions.get(count));
 					}
 
 					InsnList toAdd = new InsnList();
