@@ -1397,8 +1397,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 					// Remove ALOAD, GETFIELD, ALOAD, GETFIELD, ALOAD, GETFIELD, FSUB, FLOAD, FMUL, FADD but keep FRETURN
 					for (int i = 0; i < 10; ++i)
 					{
-					    final AbstractInsnNode removed = method.instructions.get(count);
-						method.instructions.remove(removed);
+						method.instructions.remove(method.instructions.get(count));
 					}
 
 					InsnList toAdd = new InsnList();
