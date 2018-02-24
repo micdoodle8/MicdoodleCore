@@ -16,7 +16,7 @@ public net.minecraft.client.audio.MusicTicker field_147679_a
 public net.minecraft.client.audio.MusicTicker field_147677_b
 public net.minecraft.client.audio.MusicTicker field_147678_c
 public net.minecraft.client.audio.MusicTicker field_147676_d
-public net.minecraft.client.gui.GuiIngame recordPlaying
+public net.minecraft.client.gui.GuiIngame overlayMessage
 public net.minecraft.client.renderer.entity.RendererLivingEntity mainModel
 public net.minecraft.world.WorldProvider world
 public net.minecraft.world.chunk.Chunk heightMapMinimum
