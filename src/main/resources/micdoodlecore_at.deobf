@@ -52,3 +52,10 @@ public-f net.minecraft.world.biome.Biome getHeightVariation()F
 public-f net.minecraft.world.biome.Biome getDefaultTemperature()F
 public-f net.minecraft.world.biome.Biome getWaterColor()I
 public-f net.minecraft.world.biome.Biome isSnowyBiome()Z
+
+#Formerly from NEI
+public net.minecraft.client.gui.inventory.GuiContainer xSize
+public net.minecraft.client.gui.inventory.GuiContainer ySize
+public net.minecraft.client.gui.inventory.GuiContainer dragSplitting
+public net.minecraft.client.gui.inventory.GuiContainer dragSplittingSlots
+public net.minecraft.client.gui.inventory.GuiContainer getSlotAtPosition(II)Lnet/minecraft/inventory/Slot;
