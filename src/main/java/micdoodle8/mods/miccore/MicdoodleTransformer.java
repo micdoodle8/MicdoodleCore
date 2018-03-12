@@ -907,7 +907,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private byte[] transformModelBiped(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
-
         MicdoodleTransformer.operationCount = 1;
 
         MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_BIPED_SET_ROTATION);
@@ -925,11 +924,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             toAdd.add(new VarInsnNode(Opcodes.FLOAD, 6));
             toAdd.add(new VarInsnNode(Opcodes.ALOAD, 7));
             toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_MODEL_BIPED_GC, "setRotationAngles", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_MODEL_BIPED) + ";FFFFFFL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";)V"));
-            method.instructions.insertBefore(method.instructions.get(method.instructions.size() - 3), toAdd);
+            method.instructions.insertBefore(method.instructions.get(method.instructions.size() - 2), toAdd);
             MicdoodleTransformer.injectionCount++;
         }
 
-        return this.finishInjection(node);
+        return this.finishInjectionWithFrames(node, true);
     }
 
 	public byte[] transformGuiSleep(byte[] bytes)
@@ -969,7 +968,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     public byte[] transformForgeArmor(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
-
         MicdoodleTransformer.operationCount = 1;
 
         final Iterator<MethodNode> methods = node.methods.iterator();
@@ -1682,6 +1680,19 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		}
 
 		return writer.toByteArray();
+	}
+
+	private byte[] finishInjectionWithFrames(ClassNode node, boolean printToLog)
+	{
+	    final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+	    node.accept(writer);
+
+	    if (printToLog)
+	    {
+	        this.printResultsAndReset(node.name);
+	    }
+
+	    return writer.toByteArray();
 	}
 
     private boolean isPlayerApiActive()
