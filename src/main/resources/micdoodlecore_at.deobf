@@ -12,10 +12,10 @@ public net.minecraft.network.EnumConnectionState STATES_BY_CLASS
 public net.minecraft.network.EnumConnectionState directionMaps
 public net.minecraft.client.renderer.EntityRenderer thirdPersonDistance
 public net.minecraft.client.renderer.EntityRenderer thirdPersonDistanceTemp
-public net.minecraft.client.audio.MusicTicker field_147679_a
-public net.minecraft.client.audio.MusicTicker field_147677_b
-public net.minecraft.client.audio.MusicTicker field_147678_c
-public net.minecraft.client.audio.MusicTicker field_147676_d
+public net.minecraft.client.audio.MusicTicker rand
+public net.minecraft.client.audio.MusicTicker mc
+public net.minecraft.client.audio.MusicTicker currentMusic
+public net.minecraft.client.audio.MusicTicker timeUntilNextMusic
 public net.minecraft.client.gui.GuiIngame overlayMessage
 public net.minecraft.client.renderer.entity.RendererLivingEntity mainModel
 public net.minecraft.world.WorldProvider world
