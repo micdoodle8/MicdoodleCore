@@ -901,7 +901,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			}
 		}
 
-		return this.finishInjection(node);
+		return this.finishInjectionWithFrames(node, true);
 	}
 
     private byte[] transformModelBiped(byte[] bytes)
