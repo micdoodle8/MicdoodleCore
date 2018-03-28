@@ -1010,7 +1010,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 {
                     InsnList toAdd = new InsnList();
                     toAdd.add(new InsnNode(Opcodes.DUP));
-                    toAdd.add(new FieldInsnNode(Opcodes.PUTSTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "renderBuilder", "L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER) + ";"));
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "setCurrentBuffer", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER) + ";)V"));
                     method.instructions.insertBefore(test, toAdd);
                     MicdoodleTransformer.injectionCount++;
                     break;
