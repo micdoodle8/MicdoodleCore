@@ -49,6 +49,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private String nameWorld;
     private String nameModelBiped;
     private String nameRRCB;
+    private String nameRenderChunk;
 
 	private static final String KEY_CLASS_PLAYER_MP = "PlayerMP";
 	private static final String KEY_CLASS_WORLD = "worldClass";
@@ -104,6 +105,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_MODEL_BIPED = "modelBiped";
     private static final String KEY_CLASS_RRCB = "rrcb";
     private static final String KEY_CLASS_VERTEX_BUFFER = "vertexBuffer";
+    private static final String KEY_CLASS_CCTG = "cctg";
+    private static final String KEY_CLASS_RENDER_CHUNK = "renderChunk";
 
 //	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
 //    private static final String KEY_FIELD_CPS_WORLDOBJ = "cps_worldObj";
@@ -149,6 +152,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_VALIDATE = "teValidate";
     private static final String KEY_METHOD_BIPED_SET_ROTATION = "bipedSetRotation";
     private static final String KEY_METHOD_RRCB_GET_WORLD_RENDERER = "getWorldRenderer";
+    private static final String KEY_METHOD_REBUILD_CHUNK = "rebuildChunk";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 //	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -237,6 +241,8 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_MODEL_BIPED, new ObfuscationEntry("net/minecraft/client/model/ModelBiped"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RRCB, new ObfuscationEntry("net/minecraft/client/renderer/RegionRenderCacheBuilder"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER, new ObfuscationEntry("net/minecraft/client/renderer/BufferBuilder"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CCTG, new ObfuscationEntry("net/minecraft/client/renderer/chunk/ChunkCompileTaskGenerator"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK, new ObfuscationEntry("net/minecraft/client/renderer/chunk/RenderChunk"));
 
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("world", **CHECK** "i"));
@@ -282,6 +288,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_VALIDATE, new MethodObfuscationEntry("validate", "func_145829_t", "()V"));  //SRG name for obfuscated because it's inside a Forge mod class
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_BIPED_SET_ROTATION, new MethodObfuscationEntry("setRotationAngles", "a", "(FFFFFFL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RRCB_GET_WORLD_RENDERER, new MethodObfuscationEntry("getWorldRendererByLayerId", "a", "(I)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER) + ";"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_REBUILD_CHUNK, new MethodObfuscationEntry("rebuildChunk", "b", "(FFFL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CCTG) + ";)V"));
         }
 
         try
@@ -393,6 +400,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameWorld  = this.getName(MicdoodleTransformer.KEY_CLASS_WORLD);
         this.nameModelBiped = this.getName(MicdoodleTransformer.KEY_CLASS_MODEL_BIPED);
         this.nameRRCB = this.getName(MicdoodleTransformer.KEY_CLASS_RRCB);
+        this.nameRenderChunk = this.getName(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK);
 	}
 
 	private void populateNamesObf()
@@ -418,6 +426,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		this.nameWorld  = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_WORLD).obfuscatedName;
         this.nameModelBiped = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_MODEL_BIPED).obfuscatedName;
         this.nameRRCB = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RRCB).obfuscatedName;
+        this.nameRenderChunk = this.nodemap.get(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK).obfuscatedName;
 	}
 	
 	private byte[] transformVanilla(String testName, byte[] bytes)
@@ -489,6 +498,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         else if (testName.equals(this.nameRRCB))
         {
             return this.transformRRCB(bytes);
+        }
+        else if (testName.equals(this.nameRenderChunk))
+        {
+            return this.transformRenderChunk(bytes);
         }
 		
 		return bytes;
@@ -968,6 +981,32 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             }
         }
 
+        return this.finishInjection(node);
+    }
+
+    private byte[] transformRenderChunk(byte[] bytes)
+    {
+        ClassNode node = this.startInjection(bytes);
+        MicdoodleTransformer.operationCount = 1;
+
+        MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_REBUILD_CHUNK);
+
+        if (method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); count++)
+            {
+                final AbstractInsnNode test = method.instructions.get(count);
+                if (test.getOpcode() == Opcodes.IOR)
+                {
+                    InsnList toAdd = new InsnList();
+                    toAdd.add(new VarInsnNode(Opcodes.ALOAD, 16));
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "isGrating", "(ZL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCK) + ";)Z"));
+                    method.instructions.insertBefore(test, toAdd); 
+                    MicdoodleTransformer.injectionCount++;
+                    break;
+                }
+            }
+        }
         return this.finishInjection(node);
     }
 
