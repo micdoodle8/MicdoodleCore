@@ -1047,17 +1047,18 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     public byte[] transformForgeArmor(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
-        MicdoodleTransformer.operationCount = 1;
-
+        MicdoodleTransformer.operationCount = 2;
         final Iterator<MethodNode> methods = node.methods.iterator();
         while (methods.hasNext())
         {
             MethodNode method = methods.next();
             if (method.name.equals("applyArmor"))
             {
-                for (int count = 0; count < method.instructions.size(); count++)
+                int count = 0;
+                for (int maxCount = method.instructions.size(); count < maxCount; count++)
                 {
                     final AbstractInsnNode test = method.instructions.get(count);
+                    // Search for: double absorb = damage * prop.AbsorbRatio;
                     if (test.getOpcode() == Opcodes.GETFIELD && ((FieldInsnNode) test).name.equals("AbsorbRatio"))
                     {
                         final AbstractInsnNode target = method.instructions.get(count + 1);
@@ -1073,10 +1074,28 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                         }
                     }
                 }
+                for (int maxCount = method.instructions.size(); count < maxCount; count++)
+                {
+                    final AbstractInsnNode test = method.instructions.get(count);
+                    // Search for: double armorDamage = Math.max(1.0F, damage / 4.0F);
+                    if (test.getOpcode() == Opcodes.INVOKESTATIC && ((MethodInsnNode) test).name.equals("max")) //Math.max
+                    {
+                        final AbstractInsnNode target = method.instructions.get(count + 1);
+                        if (target.getOpcode() == Opcodes.DSTORE && ((VarInsnNode) target).var == 10) //DSTORE 10 is armorDamage (check in any future updates)
+                        {
+                            InsnList toAdd = new InsnList();
+                            toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "armorDamageHook", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";)D", false));
+                            toAdd.add(new InsnNode(Opcodes.DMUL));
+                            method.instructions.insertBefore(target, toAdd);
+                            MicdoodleTransformer.injectionCount++;
+                            break;
+                        }
+                    }
+                }
             }
         }
-
-        return this.finishInjection(node);
+        return this.finishInjection(node, true);
     }
 
     public byte[] transformEntityGolem(byte[] bytes)
