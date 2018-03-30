@@ -179,7 +179,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         try {
         	deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
-            optifinePresent = Launch.classLoader.getClassBytes("CustomColorizer") != null;
+            optifinePresent = Launch.classLoader.getClassBytes("PlayerControllerOF") != null;
             playerApiActive = Launch.classLoader.getClassBytes("api.player.forge.PlayerAPITransformer") != null && !deobfuscated;
         } catch (final Exception e) { }
 
@@ -1059,7 +1059,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 if (test.getOpcode() == Opcodes.IOR)
                 {
                     InsnList toAdd = new InsnList();
-                    toAdd.add(new VarInsnNode(Opcodes.ALOAD, 16));
+                    toAdd.add(new VarInsnNode(Opcodes.ALOAD, optifinePresent ? 19 : 16));
                     toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "isGrating", "(ZL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCK) + ";)Z"));
                     method.instructions.insertBefore(test, toAdd); 
                     MicdoodleTransformer.injectionCount++;
