@@ -169,7 +169,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String CLASS_RENDERPLAYEROF = "RenderPlayerOF";
     private static final String CLASS_IFORGEARMOR = "net/minecraftforge/common/ISpecialArmor$ArmorProperties";
     private static final String CLASS_MODEL_BIPED_GC = "micdoodle8/mods/galacticraft/core/client/model/ModelBipedGC";
-    private static final String CLASS_FML_LOADER = "net/minecraftforge/fml/common/Loader";
     
 	private static int operationCount = 0;
 	private static int injectionCount = 0;
@@ -343,11 +342,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			{
 			    return this.transformForgeArmor(bytes);
 			}
-
-            if (testName.equals(MicdoodleTransformer.CLASS_FML_LOADER))
-            {
-                return this.transformLoader(bytes);
-            }
 
 			if (testName.equals(MicdoodleTransformer.CLASS_SYNCMOD_CLONEPLAYER))
 			{
@@ -1103,27 +1097,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             }
         }
         return this.finishInjection(node, true);
-    }
-    
-    public byte[] transformLoader(byte[] bytes)
-    {
-        ClassNode node = this.startInjection(bytes);
-
-        MicdoodleTransformer.operationCount = 1;
-
-        final Iterator<MethodNode> methods = node.methods.iterator();
-        while (methods.hasNext())
-        {
-            MethodNode method = methods.next();
-            if (method.name.equals("preinitializeMods"))
-            {
-                AbstractInsnNode target = method.instructions.get(method.instructions.size() - 3);
-                method.instructions.insertBefore(target, new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "preInitFinal", "()V"));
-                break;
-            }
-        }
-        
-        return this.finishInjection(node);
     }
 
     public byte[] transformEntityGolem(byte[] bytes)
