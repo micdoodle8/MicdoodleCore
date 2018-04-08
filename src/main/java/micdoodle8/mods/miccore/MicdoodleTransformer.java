@@ -132,6 +132,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_METHOD_CUSTOM_PLAYER_SP = "customPlayerSPConstructor";
 	private static final String KEY_METHOD_HANDLE_SPAWN_PLAYER = "handleSpawnPlayerMethod";
 	private static final String KEY_METHOD_ORIENT_CAMERA = "orientCamera";
+    private static final String KEY_METHOD_ADD_RAIN = "addRainParticles";
 //    private static final String KEY_METHOD_DO_RENDER_ENTITY = "doRenderEntityMethod";
 //    private static final String KEY_METHOD_PRERENDER_BLOCKS = "preRenderBlocksMethod"; //WorldRenderer.preRenderBlocks(int)
 //    private static final String KEY_METHOD_SETUP_GL = "setupGLTranslationMethod"; //WorldRenderer.setupGLTranslation()
@@ -268,6 +269,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CUSTOM_PLAYER_SP, new MethodObfuscationEntry("<init>", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_MINECRAFT) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_NET_HANDLER_PLAY) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RECIPE_BOOK) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_HANDLE_SPAWN_PLAYER, new MethodObfuscationEntry("handleSpawnPlayer", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PACKET_SPAWN_PLAYER) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ORIENT_CAMERA, new MethodObfuscationEntry("orientCamera", "f", "(F)V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ADD_RAIN, new MethodObfuscationEntry("addRainParticles", "q", "()V"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_DO_RENDER_ENTITY, new MethodObfuscationEntry("doRenderEntity", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";DDDFFZ)Z"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_SETUP_GL, new MethodObfuscationEntry("setupGLTranslation", "f", "()V")); //func_78905_g
 //            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_PRERENDER_BLOCKS, new MethodObfuscationEntry("preRenderBlocks", "a", **BufferBuilder** **BlockPos** "()V")); //func_147890_b
@@ -795,6 +797,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 		MethodNode updateLightMapMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_LIGHTMAP);
 		MethodNode updateFogColorMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_FOG_COLOR);
 		MethodNode orientCameraMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_ORIENT_CAMERA);
+        MethodNode addRainMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_ADD_RAIN);
 
 		if (orientCameraMethod != null)
 		{
@@ -926,6 +929,31 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 				}
 			}
 		}
+
+        if (addRainMethod != null)
+        {
+            int aloadcount = 0;
+            for (int count = 0; count < addRainMethod.instructions.size(); count++)
+            {
+                final AbstractInsnNode list = addRainMethod.instructions.get(count);
+
+                if (list.getOpcode() == Opcodes.ALOAD && ++aloadcount == 3)
+                {
+                    AbstractInsnNode insertPos = addRainMethod.instructions.get(count + 3);
+
+                    if (insertPos.getPrevious().getOpcode() == Opcodes.ALOAD)
+                    {
+                        final InsnList nodesToAdd = new InsnList();
+                        nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
+                        nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "addRainParticles", "(Ljava/util/Random;IF)V"));
+                        nodesToAdd.add(new InsnNode(Opcodes.RETURN));
+                        addRainMethod.instructions.insert(insertPos, nodesToAdd);
+                        MicdoodleTransformer.injectionCount++;
+                        break;
+                    }
+                }
+            }
+        }
 
 		return this.finishInjectionWithFrames(node, true);
 	}
