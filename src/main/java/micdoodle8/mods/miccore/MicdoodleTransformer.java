@@ -847,7 +847,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		ClassNode node = this.startInjection(bytes);
 
-		MicdoodleTransformer.operationCount = 6;
+		MicdoodleTransformer.operationCount = this.optifinePresent ? 6 : 7;
 
 		MethodNode updateLightMapMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_LIGHTMAP);
 		MethodNode updateFogColorMethod = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_UPDATE_FOG_COLOR);
@@ -992,11 +992,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             {
                 final AbstractInsnNode list = addRainMethod.instructions.get(count);
 
-                if (list.getOpcode() == Opcodes.ALOAD && ++aloadcount == 3)
+                if (list.getOpcode() == Opcodes.ALOAD && addRainMethod.instructions.get(count + 2).getOpcode() == Opcodes.ALOAD)
                 {
                     AbstractInsnNode insertPos = addRainMethod.instructions.get(count + 3);
 
-                    if (insertPos.getPrevious().getOpcode() == Opcodes.ALOAD)
+                    if (insertPos.getOpcode() == Opcodes.GETFIELD)
                     {
                         final InsnList nodesToAdd = new InsnList();
                         nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
