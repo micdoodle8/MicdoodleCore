@@ -25,6 +25,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private boolean optifinePresent;
 	private boolean isServer;
     private boolean playerApiActive;
+    private boolean deepSpaceToTest = true;
     private boolean deepSpacePresent;
     private String mcVersion;
 
@@ -101,6 +102,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_BLOCK = "blockClass";
     private static final String KEY_CLASS_BLOCKPOS = "blockPos";
     private static final String KEY_CLASS_IBLOCKSTATE = "blockState";
+    private static final String KEY_CLASS_AABB = "aabb";
     private static final String KEY_CLASS_ICAMERA = "icameraClass";
     private static final String KEY_CLASS_INTCACHE = "intCache";
     private static final String KEY_CLASS_MODEL_BIPED = "modelBiped";
@@ -117,6 +119,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	private static final String KEY_FIELD_CHUNK_XPOS = "chunkXPos";
 	private static final String KEY_FIELD_CHUNK_ZPOS = "chunkZPos";
 	private static final String KEY_FIELD_CHUNK_WORLD = "world";
+    private static final String KEY_FIELD_RENDERPOSITION_X = "rp_x";
+    private static final String KEY_FIELD_RENDERPOSITION_Y = "rp_y";
+    private static final String KEY_FIELD_RENDERPOSITION_Z = "rp_z";
 
 	private static final String KEY_METHOD_CREATE_PLAYER = "createPlayerMethod";
 	private static final String KEY_METHOD_RESPAWN_PLAYER = "respawnPlayerMethod";
@@ -157,6 +162,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_METHOD_REBUILD_CHUNK = "rebuildChunk";
     private static final String KEY_METHOD_CRC_PRERENDER_CHUNK = "preRenderChunk";
     private static final String KEY_METHOD_TER_RENDER_TE_AT = "renderTileEntityAt";
+    private static final String KEY_METHOD_SET_POSITION = "rcSetPosition";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 //	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -191,10 +197,6 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         try {
             playerApiActive = Launch.classLoader.getClassBytes("api.player.forge.PlayerAPITransformer") != null && !deobfuscated;
-        } catch (final Exception ignore) { }
-
-        try {
-            deepSpacePresent = Launch.classLoader.getClassBytes(CLASS_TRANSFORMER_HOOKS_CLIENT) != null;
         } catch (final Exception ignore) { }
 
     	Launch.classLoader.addTransformerExclusion(CLASS_IENTITYBREATHABLE.replace('/', '.'));
@@ -250,6 +252,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCK, new ObfuscationEntry("net/minecraft/block/Block"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_BLOCKPOS, new ObfuscationEntry("net/minecraft/util/math/BlockPos"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_IBLOCKSTATE, new ObfuscationEntry("net/minecraft/block/state/IBlockState"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_AABB, new ObfuscationEntry("net/minecraft/util/math/AxisAlignedBB"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_ICAMERA, new ObfuscationEntry("net/minecraft/client/renderer/culling/ICamera"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_INTCACHE, new ObfuscationEntry("net/minecraft/world/gen/layer/IntCache"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_MODEL_BIPED, new ObfuscationEntry("net/minecraft/client/model/ModelBiped"));
@@ -265,7 +268,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN, new FieldObfuscationEntry("serverChunkGenerator", "e"));
 			this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_XPOS, new FieldObfuscationEntry("xPosition", "b"));
 			this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_ZPOS, new FieldObfuscationEntry("zPosition", "c"));
-			this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_WORLD, new FieldObfuscationEntry("worldObj", "k"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_WORLD, new FieldObfuscationEntry("worldObj", "k"));
+			this.nodemap.put(MicdoodleTransformer.KEY_FIELD_RENDERPOSITION_X, new FieldObfuscationEntry("viewEntityX", "c"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_RENDERPOSITION_Y, new FieldObfuscationEntry("viewEntityY", "d"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_RENDERPOSITION_Z, new FieldObfuscationEntry("viewEntityZ", "e"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "g", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("recreatePlayerEntity", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
@@ -306,6 +312,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_REBUILD_CHUNK, new MethodObfuscationEntry("rebuildChunk", "b", "(FFFL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CCTG) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CRC_PRERENDER_CHUNK, new MethodObfuscationEntry("preRenderChunk", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_TER_RENDER_TE_AT, new MethodObfuscationEntry("renderTileEntityAt", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_TILEENTITY) + ";DDDFI)V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_SET_POSITION, new MethodObfuscationEntry("setPosition", "a", "(III)V"));
         }
 
         try
@@ -325,13 +332,21 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
         {
             return null;
         }
-
-		if (name.startsWith("micdoodle8"))
+        
+		if (name.startsWith("micdoodle8.mods.galacticraft"))
 		{
 			if (name.equals("micdoodle8.mods.galacticraft.core.energy.tile.TileCableIC2Sealed"))
 			{
 			    bytes = this.transformTileCableIC2Sealed(bytes);
 			}
+
+			if (deepSpaceToTest && name.startsWith("micdoodle8.mods.galacticraft.planets"))
+	        {
+	            deepSpaceToTest = false;
+	            try {
+	                deepSpacePresent = Launch.classLoader.getClassBytes(CLASS_TRANSFORMER_HOOKS_CLIENT.replace("/", ".")) != null;
+	            } catch (final Exception ignore) { }
+	        }
 
 			return this.transformCustomAnnotations(bytes);
 		}
@@ -1103,10 +1118,9 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private byte[] transformRenderChunk(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
-        MicdoodleTransformer.operationCount = 1;
+        MicdoodleTransformer.operationCount = deepSpacePresent ? 2 : 1;
 
         MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_REBUILD_CHUNK);
-
         if (method != null)
         {
             for (int count = 0; count < method.instructions.size(); count++)
@@ -1123,6 +1137,25 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 }
             }
         }
+
+        method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_SET_POSITION);
+        if (deepSpacePresent && method != null)
+        {
+            for (int count = 0; count < method.instructions.size(); count++)
+            {
+                final AbstractInsnNode test = method.instructions.get(count);
+                if (test.getOpcode() == Opcodes.PUTFIELD)
+                {
+                    InsnList toAdd = new InsnList();
+                    toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS_CLIENT, "renderChunkAABB", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_AABB) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_AABB) + ";"));
+                    method.instructions.insertBefore(test, toAdd); 
+                    MicdoodleTransformer.injectionCount++;
+                    break;
+                }
+            }
+        }
+
         return this.finishInjection(node);
     }
 
@@ -1141,14 +1174,15 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 if (test.getOpcode() == Opcodes.RETURN)
                 {
                     InsnList toAdd = new InsnList();
+                    toAdd.add(new VarInsnNode(Opcodes.ALOAD, 1));
                     toAdd.add(new VarInsnNode(Opcodes.ALOAD, 2));
                     toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                    toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK_RENDER_CONTAINER), "viewEntityX", "D"));  //TODO  obf names for field
+                    toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK_RENDER_CONTAINER), this.getNameDynamic(KEY_FIELD_RENDERPOSITION_X), "D"));
                     toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                    toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK_RENDER_CONTAINER), "viewEntityY", "D"));  //TODO  obf names for field
+                    toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK_RENDER_CONTAINER), this.getNameDynamic(KEY_FIELD_RENDERPOSITION_Y), "D"));
                     toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                    toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK_RENDER_CONTAINER), "viewEntityZ", "D"));  //TODO  obf names for field
-                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS_CLIENT, "preRenderChunk", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCKPOS) + ";DDD)V"));
+                    toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_CHUNK_RENDER_CONTAINER), this.getNameDynamic(KEY_FIELD_RENDERPOSITION_Z), "D"));
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS_CLIENT, "preRenderChunk", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCKPOS) + ";DDD)V"));
                     method.instructions.insertBefore(test, toAdd); 
                     MicdoodleTransformer.injectionCount++;
                     break;
@@ -1328,6 +1362,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             {
                 AbstractInsnNode target = method.instructions.get(method.instructions.size() - 3);
                 method.instructions.insertBefore(target, new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "preInitFinal", "()V"));
+                MicdoodleTransformer.injectionCount++;
                 break;
             }
         }
