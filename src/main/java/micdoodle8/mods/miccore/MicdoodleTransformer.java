@@ -101,6 +101,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 //	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
 	private static final String KEY_FIELD_CPS_WORLDOBJ = "cps_worldObj";
 	private static final String KEY_FIELD_CPS_SERVER_CHUNK_GEN = "serverChunkGenerator";
+    private static final String KEY_FIELD_ENTITY_RENDERER_RAINCOUNT = "entRenderRaincount";
 
 	private static final String KEY_METHOD_CREATE_PLAYER = "createPlayerMethod";
 	private static final String KEY_METHOD_RESPAWN_PLAYER = "respawnPlayerMethod";
@@ -224,10 +225,10 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_MODEL_BIPED, new ObfuscationEntry("net/minecraft/client/model/ModelBiped", "bbj"));
             
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
-//            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_WORLDOBJ, new FieldObfuscationEntry("worldObj", "i"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CPS_SERVER_CHUNK_GEN, new FieldObfuscationEntry("serverChunkGenerator", "e"));
-
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_ENTITY_RENDERER_RAINCOUNT, new FieldObfuscationEntry("rendererUpdateCount", "m"));
+            
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_PLAYER, new MethodObfuscationEntry("createPlayerForUser", "g", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_GAME_PROFILE) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RESPAWN_PLAYER, new MethodObfuscationEntry("recreatePlayerEntity", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";IZ)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_MP) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_CREATE_CLIENT_PLAYER, new MethodObfuscationEntry("func_178892_a", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_WORLD) + ";L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_STAT_FILE_WRITER) + ";)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_PLAYER_SP) + ";"));
@@ -914,22 +915,18 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             int aloadcount = 0;
             for (int count = 0; count < addRainMethod.instructions.size(); count++)
             {
-                final AbstractInsnNode list = addRainMethod.instructions.get(count);
+                final AbstractInsnNode listPos = addRainMethod.instructions.get(count);
 
-                if (list.getOpcode() == Opcodes.ALOAD && addRainMethod.instructions.get(count + 2).getOpcode() == Opcodes.ALOAD)
+                if (listPos.getOpcode() == Opcodes.FCMPL && listPos.getPrevious().getOpcode() == Opcodes.FCONST_0)
                 {
-                    AbstractInsnNode insertPos = addRainMethod.instructions.get(count + 3);
-
-                    if (insertPos.getOpcode() == Opcodes.GETFIELD)
-                    {
-                        final InsnList nodesToAdd = new InsnList();
-                        nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
-                        nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "addRainParticles", "(Ljava/util/Random;IF)V"));
-                        nodesToAdd.add(new InsnNode(Opcodes.RETURN));
-                        addRainMethod.instructions.insert(insertPos, nodesToAdd);
-                        MicdoodleTransformer.injectionCount++;
-                        break;
-                    }
+                    final InsnList nodesToAdd = new InsnList();
+                    nodesToAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    nodesToAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_RENDERER), this.getNameDynamic(MicdoodleTransformer.KEY_FIELD_ENTITY_RENDERER_RAINCOUNT), "I"));
+                    nodesToAdd.add(new VarInsnNode(Opcodes.FLOAD, 1));
+                    nodesToAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "addRainParticles", "(IIF)I"));
+                    addRainMethod.instructions.insert(listPos, nodesToAdd);
+                    MicdoodleTransformer.injectionCount++;
+                    break;
                 }
             }
         }
