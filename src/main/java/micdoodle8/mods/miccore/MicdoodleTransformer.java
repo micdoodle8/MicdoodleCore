@@ -111,16 +111,18 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_VERTEX_BUFFER = "vertexBuffer";
     private static final String KEY_CLASS_CCTG = "cctg";
     private static final String KEY_CLASS_RENDER_CHUNK = "renderChunk";
+    private static final String KEY_CLASS_COMPILEDCHUNK = "compiledChunk";
     private static final String KEY_CLASS_CHUNK_RENDER_CONTAINER = "renderChunkContainer";
     private static final String KEY_CLASS_RAYTRACE_RESULT = "rayTraceRes";
-
+    
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 //	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
 	private static final String KEY_FIELD_CPS_WORLDOBJ = "cps_worldObj";
 	private static final String KEY_FIELD_CPS_SERVER_CHUNK_GEN = "serverChunkGenerator";
 	private static final String KEY_FIELD_CHUNK_XPOS = "chunkXPos";
 	private static final String KEY_FIELD_CHUNK_ZPOS = "chunkZPos";
-	private static final String KEY_FIELD_CHUNK_WORLD = "world";
+	private static final String KEY_FIELD_CHUNK_WORLD = "c_world";
+    private static final String KEY_FIELD_RENDERCHUNK_WORLD = "rc_world";
     private static final String KEY_FIELD_RENDERPOSITION_X = "rp_x";
     private static final String KEY_FIELD_RENDERPOSITION_Y = "rp_y";
     private static final String KEY_FIELD_RENDERPOSITION_Z = "rp_z";
@@ -264,6 +266,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER, new ObfuscationEntry("net/minecraft/client/renderer/VertexBuffer"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CCTG, new ObfuscationEntry("net/minecraft/client/renderer/chunk/ChunkCompileTaskGenerator"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK, new ObfuscationEntry("net/minecraft/client/renderer/chunk/RenderChunk"));
+            this.nodemap.put(MicdoodleTransformer.KEY_CLASS_COMPILEDCHUNK, new ObfuscationEntry("net/minecraft/client/renderer/chunk/CompiledChunk"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CHUNK_RENDER_CONTAINER, new ObfuscationEntry("net/minecraft/client/renderer/ChunkRenderContainer"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RAYTRACE_RESULT, new ObfuscationEntry("net/minecraft/util/math/RayTraceResult"));
 
@@ -274,6 +277,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 			this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_XPOS, new FieldObfuscationEntry("xPosition", "b"));
 			this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_ZPOS, new FieldObfuscationEntry("zPosition", "c"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_CHUNK_WORLD, new FieldObfuscationEntry("worldObj", "k"));
+            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_RENDERCHUNK_WORLD, new FieldObfuscationEntry("world", "d"));
 			this.nodemap.put(MicdoodleTransformer.KEY_FIELD_RENDERPOSITION_X, new FieldObfuscationEntry("viewEntityX", "c"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_RENDERPOSITION_Y, new FieldObfuscationEntry("viewEntityY", "d"));
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_RENDERPOSITION_Z, new FieldObfuscationEntry("viewEntityZ", "e"));
@@ -1124,7 +1128,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private byte[] transformRenderChunk(byte[] bytes)
     {
         ClassNode node = this.startInjection(bytes);
-        MicdoodleTransformer.operationCount = deepSpacePresent ? 2 : 1;
+        MicdoodleTransformer.operationCount = deepSpacePresent ? 3 : 1;
 
         MethodNode method = this.getMethod(node, MicdoodleTransformer.KEY_METHOD_REBUILD_CHUNK);
         if (method != null)
@@ -1136,9 +1140,30 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
                 {
                     InsnList toAdd = new InsnList();
                     toAdd.add(new VarInsnNode(Opcodes.ALOAD, optifinePresent ? 19 : 16));
-                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "isGrating", "(ZL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_BLOCK) + ";)Z"));
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "isGrating", "(Z" + type(KEY_CLASS_BLOCK) + ")Z"));
                     method.instructions.insertBefore(test, toAdd); 
                     MicdoodleTransformer.injectionCount++;
+                    
+                    if (deepSpacePresent)
+                    {
+                        for (int j = 2; j < 18; j++)
+                        {
+                            final AbstractInsnNode test1 = method.instructions.get(count + j);
+                            if (test1.getNext().getOpcode() == Opcodes.INVOKESTATIC && ((MethodInsnNode)test1.getNext()).owner.equals("net/minecraftforge/client/ForgeHooksClient"))
+                            {
+                                toAdd = new InsnList();
+                                toAdd.add(new VarInsnNode(Opcodes.ALOAD, 14)); //optifinePresent ? 19 : 16));  //blockpos$mutableblockpos
+                                toAdd.add(new VarInsnNode(Opcodes.ALOAD, 15)); //optifinePresent ? 19 : 16));  //iblockstate
+                                toAdd.add(new VarInsnNode(Opcodes.ALOAD, 4));
+                                toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                                toAdd.add(new FieldInsnNode(Opcodes.GETFIELD, this.getNameDynamic(KEY_CLASS_RENDER_CHUNK), this.getNameDynamic(KEY_FIELD_RENDERCHUNK_WORLD), type(KEY_CLASS_WORLD)));
+                                toAdd.add(new VarInsnNode(Opcodes.ALOAD, 5));
+                                toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CLASS_TRANSFORMER_HOOKS_CLIENT, "edgeBlocks", "(" + type(KEY_CLASS_BLOCKPOS) + type(KEY_CLASS_IBLOCKSTATE) + type(KEY_CLASS_CCTG) + type(KEY_CLASS_WORLD) + type(KEY_CLASS_COMPILEDCHUNK) + ")V"));
+                                method.instructions.insertBefore(test, toAdd); 
+                                MicdoodleTransformer.injectionCount++;
+                            }
+                        }
+                    }
                     break;
                 }
             }
@@ -2054,6 +2079,11 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	{
 		return ((MethodObfuscationEntry) this.nodemap.get(keyName)).methodDesc;
 	}
+
+    private String type(String key)
+    {
+        return "L" + this.getNameDynamic(key) + ";";
+    }
 
 	private void printLog(String message)
 	{
