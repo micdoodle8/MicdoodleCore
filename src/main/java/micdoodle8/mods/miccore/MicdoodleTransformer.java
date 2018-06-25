@@ -180,7 +180,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
         try {
         	deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
-            optifinePresent = Launch.classLoader.getClassBytes("PlayerControllerOF") != null;
+            optifinePresent = Launch.classLoader.getClassBytes("optifine.OptiFineClassTransformer") != null;
             playerApiActive = Launch.classLoader.getClassBytes("api.player.forge.PlayerAPITransformer") != null && !deobfuscated;
         } catch (final Exception e) { }
 
