@@ -248,7 +248,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER, new ObfuscationEntry("net/minecraft/client/renderer/VertexBuffer"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CCTG, new ObfuscationEntry("net/minecraft/client/renderer/chunk/ChunkCompileTaskGenerator"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK, new ObfuscationEntry("net/minecraft/client/renderer/chunk/RenderChunk"));
-			this.nodemap.put(MicdoodleTransformer.KEY_CLASS_DAMAGE_SOURCE, new ObfuscationEntry("net/minecraft/util/DamageSource", "rh"));
+			this.nodemap.put(MicdoodleTransformer.KEY_CLASS_DAMAGE_SOURCE, new ObfuscationEntry("net/minecraft/util/DamageSource", "ry"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
