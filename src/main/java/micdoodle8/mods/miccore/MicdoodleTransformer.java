@@ -106,6 +106,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_CLASS_VERTEX_BUFFER = "vertexBuffer";
     private static final String KEY_CLASS_CCTG = "cctg";
     private static final String KEY_CLASS_RENDER_CHUNK = "renderChunk";
+    private static final String KEY_CLASS_DAMAGE_SOURCE = "damageSource";
 
 	private static final String KEY_FIELD_THE_PLAYER = "thePlayer";
 //	private static final String KEY_FIELD_WORLDRENDERER_GLRENDERLIST = "glRenderList";
@@ -156,6 +157,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
     private static final String KEY_METHOD_BIPED_SET_ROTATION = "bipedSetRotation";
     private static final String KEY_METHOD_RRCB_GET_WORLD_RENDERER = "getWorldRenderer";
     private static final String KEY_METHOD_REBUILD_CHUNK = "rebuildChunk";
+    private static final String KEY_METHOD_ATTACK_ENTITY_FROM = "attackEntityFrom";
 
 	private static final String CLASS_RUNTIME_INTERFACE = "micdoodle8/mods/miccore/Annotations$RuntimeInterface";
 //	private static final String CLASS_ALT_FORVERSION = "micdoodle8/mods/miccore/Annotations$AltForVersion";
@@ -246,6 +248,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER, new ObfuscationEntry("net/minecraft/client/renderer/VertexBuffer"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_CCTG, new ObfuscationEntry("net/minecraft/client/renderer/chunk/ChunkCompileTaskGenerator"));
             this.nodemap.put(MicdoodleTransformer.KEY_CLASS_RENDER_CHUNK, new ObfuscationEntry("net/minecraft/client/renderer/chunk/RenderChunk"));
+			this.nodemap.put(MicdoodleTransformer.KEY_CLASS_DAMAGE_SOURCE, new ObfuscationEntry("net/minecraft/util/DamageSource", "rh"));
 
             this.nodemap.put(MicdoodleTransformer.KEY_FIELD_THE_PLAYER, new FieldObfuscationEntry("thePlayer", "h"));
 //            this.nodemap.put(MicdoodleTransformer.KEY_FIELD_WORLDRENDERER_GLRENDERLIST, new FieldObfuscationEntry("glRenderList", "z"));
@@ -296,6 +299,7 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_BIPED_SET_ROTATION, new MethodObfuscationEntry("setRotationAngles", "a", "(FFFFFFL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY) + ";)V"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_RRCB_GET_WORLD_RENDERER, new MethodObfuscationEntry("getWorldRendererByLayerId", "a", "(I)L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_VERTEX_BUFFER) + ";"));
             this.nodemap.put(MicdoodleTransformer.KEY_METHOD_REBUILD_CHUNK, new MethodObfuscationEntry("rebuildChunk", "b", "(FFFL" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_CCTG) + ";)V"));
+            this.nodemap.put(MicdoodleTransformer.KEY_METHOD_ATTACK_ENTITY_FROM, new MethodObfuscationEntry("attackEntityFrom", "a", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_DAMAGE_SOURCE) + ";F)Z"));
         }
 
         try
@@ -812,6 +816,43 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 
 						method.instructions.insertBefore(nodeAt, beforeNode);
 						method.instructions.set(nodeAt, overwriteNode);
+						MicdoodleTransformer.injectionCount++;
+					}
+				}
+			}
+		}
+
+		method = this.getMethod(node, KEY_METHOD_ATTACK_ENTITY_FROM);
+
+		if (method != null)
+		{
+			for (int count = 0; count < method.instructions.size(); count++)
+			{
+				AbstractInsnNode test = method.instructions.get(count);
+
+				if (test.getOpcode() == Opcodes.FCONST_2)
+				{
+					test = method.instructions.get(count + 1);
+					if (test.getOpcode() == Opcodes.FMUL)
+					{
+						InsnList toAdd = new InsnList();
+						toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+						toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "armorDamageHookF", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";)F", false));
+						toAdd.add(new InsnNode(Opcodes.FMUL));
+						method.instructions.insertBefore(method.instructions.get(count + 2), toAdd);
+						MicdoodleTransformer.injectionCount++;
+					}
+				}
+
+				if (test instanceof LdcInsnNode)
+				{
+					if (((LdcInsnNode) test).cst.equals(4.0F))
+					{
+						InsnList toAdd = new InsnList();
+						toAdd.add(new VarInsnNode(Opcodes.ALOAD, 0));
+						toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MicdoodleTransformer.CLASS_TRANSFORMER_HOOKS, "armorDamageHookF", "(L" + this.getNameDynamic(MicdoodleTransformer.KEY_CLASS_ENTITY_LIVING) + ";)F", false));
+						toAdd.add(new InsnNode(Opcodes.FMUL));
+						method.instructions.insertBefore(method.instructions.get(count + 2), toAdd);
 						MicdoodleTransformer.injectionCount++;
 					}
 				}
