@@ -180,11 +180,15 @@ public class MicdoodleTransformer implements net.minecraft.launchwrapper.IClassT
 	public MicdoodleTransformer() {
         this.mcVersion = (String) FMLInjectionData.data()[4];
 
-        try {
+        try 
+	{
         	deobfuscated = Launch.classLoader.getClassBytes("net.minecraft.world.World") != null;
             optifinePresent = Launch.classLoader.getClassBytes("optifine.OptiFineClassTransformer") != null;
             playerApiActive = Launch.classLoader.getClassBytes("api.player.forge.PlayerAPITransformer") != null && !deobfuscated;
-        } catch (final Exception e) { }
+        } 
+	catch (final Exception e) 
+	{ 
+	}
 
     	Launch.classLoader.addTransformerExclusion(CLASS_IENTITYBREATHABLE.replace('/', '.'));
 
